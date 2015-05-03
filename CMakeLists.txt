@@ -9,9 +9,9 @@ set(fdsb_VERSION_MAJOR "0")
 set(fdsb_VERSION_MINOR "1")
 set(fdsb_VERSION_PATCH "1")
 
-set(CMAKE_C_FLAGS "-Wall -Werror")
-set(CMAKE_C_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
-set(CMAKE_C_FLAGS_RELEASE "-O3")
+set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror")
+set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(FDSBDSOURCE daemon/src/nid.cpp)
 
