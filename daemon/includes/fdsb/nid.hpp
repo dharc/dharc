@@ -4,28 +4,54 @@
 namespace fdsb
 {
 
-enum struct NidType : unsigned char
-{
-	special,
-	integer,
-	real,
-	character,
-	custom,
-};
-
 struct Nid
 {
-	Nid(NidType t, unsigned long long v)
-			: t(t), v(v) {}
+	enum struct Type : unsigned char
+	{
+		special,
+		integer,
+		real,
+		character,
+		allocated,
+	};
+	
+	enum struct Special
+	{
+		null,
+		bool_true,
+		bool_false,
+	};
 
-	NidType t;
+	Type t;
+	union
+	{
 	unsigned long long v;
+	double vd;
+	}
+	
+	static Nid unique();
 };
 
-Nid operator"" _nid(long long v)
+
+constexpr Nid operator"" _nid(unsigned long long v)
 {
-	return Nid(NidType::integer, (unsigned long long)v);
+	return {Nid::Type::integer, .v = v};
 }
+
+constexpr Nid operator"" _nid(long double v)
+{
+	return {Nid::Type::real, .vd = v};
+}
+
+constexpr Nid operator"" _nid(char v)
+{
+	return {Nid::Type::character, .v = v};
+}
+
+constexpr Nid null_nid = {Nid::Type::special,Nid::Special::null};
+constexpr Nid true_nid = {Nid::Type::special,Nid::Special::bool_true};
+constexpr Nid false_nid = {Nid::Type::special,Nid::Special::bool_false};
+
 };
 
 #endif
