@@ -30,9 +30,12 @@ Nid fdsb::path(const std::vector<std::vector<Nid>> &p)
 {
 	int ix = 0;
 	std::vector<Nid> res(p.size());
+	
+	//These can all be done in different threads!
 	for (auto i : p)
 	{
 		res[ix++] = path(i);
 	}
+	//Final recombination
 	return path(res);
 }
