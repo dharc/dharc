@@ -18,7 +18,7 @@ struct Nid
 		allocated,
 	};
 	
-	enum struct Special : unsigned long long
+	enum struct Special
 	{
 		null,
 		bool_true,
@@ -29,7 +29,9 @@ struct Nid
 	union
 	{
 	unsigned long long i;
-	double d;
+	Special s;
+	long double d;
+	char c;
 	};
 	
 	/** Generate a new unique node id. */
@@ -49,12 +51,12 @@ constexpr Nid operator"" _nid(long double v)
 
 constexpr Nid operator"" _nid(char v)
 {
-	return Nid{Nid::Type::character, { .i = v }};
+	return Nid{Nid::Type::character, { .c = v }};
 }
 
-constexpr Nid null_nid = {Nid::Type::special,Nid::Special::null};
-constexpr Nid true_nid = {Nid::Type::special,Nid::Special::bool_true};
-constexpr Nid false_nid = {Nid::Type::special,Nid::Special::bool_false};
+constexpr Nid null_nid = {Nid::Type::special,{ .s = Nid::Special::null }};
+constexpr Nid true_nid = {Nid::Type::special,{ .s = Nid::Special::bool_true }};
+constexpr Nid false_nid = {Nid::Type::special,{ .s = Nid::Special::bool_false }};
 
 };
 

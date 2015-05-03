@@ -7,7 +7,7 @@ void test_nid_ilit()
 {
 	Nid n1 = 123_nid;
 	CHECK(n1.t == Nid::Type::integer);
-	CHECK(n1.v == 123);
+	CHECK(n1.i == 123);
 	DONE;
 }
 
