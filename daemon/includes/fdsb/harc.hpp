@@ -44,7 +44,7 @@ public:
 	/**
 	 * Is this Harc out-of-date?
 	 */
-	bool is_out_of_date() { return m_out_of_date; }
+	bool is_out_of_date() const { return m_out_of_date; }
 	
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
@@ -64,6 +64,7 @@ public:
 		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
 		return m_tail[I];
 	}
+
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -75,6 +76,7 @@ private:
 	//Definition;
 	bool m_out_of_date;
 	std::list<Harc*> m_dependants;
+	std::list<Harc*> m_dependencies;
 	
 	/* Prevent empty harc */
 	Harc() {}
