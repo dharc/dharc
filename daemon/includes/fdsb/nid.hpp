@@ -36,28 +36,49 @@ struct Nid
 	char c;
 	};
 	
-	/** Generate a new unique node id. */
+	/**
+	 * Generate a new unique node id.
+	 */
 	static Nid unique();
 	
+	/**
+	 * Generate a combined hash value from two NIDs.
+	 * Order is not important.
+	 */
 	constexpr static unsigned long long dual_hash(const Nid &a, const Nid &b)
 	{
 		return a.i ^ b.i;
 	}
 	
+	/**
+	 * Combine with a second NID to retrieve a Harc.
+	 * NOTE: Implemented as part of fabric(.cpp).
+	 */
 	Harc &operator[](const Nid &);
 };
 
-
+/**
+ * Integer NID literals.
+ * e.g. Nid x = 1234_nid;
+ */
 constexpr Nid operator"" _nid(unsigned long long v)
 {
 	return Nid{Nid::Type::integer, { .i = v }};
 }
 
+/**
+ * Real NID literals.
+ * e.g. Nid x = 12.34_nid;
+ */
 constexpr Nid operator"" _nid(long double v)
 {
 	return Nid{Nid::Type::real, { .d = v }};
 }
 
+/**
+ * Character NID literals.
+ * e.g. Nid x = 'a'_nid;
+ */
 constexpr Nid operator"" _nid(char v)
 {
 	return Nid{Nid::Type::character, { .c = v }};
@@ -67,11 +88,17 @@ constexpr Nid null_nid = {Nid::Type::special,{ .s = Nid::Special::null }};
 constexpr Nid true_nid = {Nid::Type::special,{ .s = Nid::Special::bool_true }};
 constexpr Nid false_nid = {Nid::Type::special,{ .s = Nid::Special::bool_false }};
 
+/**
+ * NID equality comparison.
+ */
 constexpr bool operator==(const Nid &a, const Nid &b)
 {
 	return a.t == b.t && a.i == b.i;
 }
 
+/**
+ * NID inequality comparison.
+ */
 constexpr bool operator!=(const Nid &a, const Nid &b)
 {
 	return a.t != b.t || a.i != b.i;
