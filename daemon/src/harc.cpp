@@ -25,14 +25,20 @@ void Harc::add_dependant(Harc &h)
 void Harc::mark()
 {
 	m_out_of_date = true;
-	//Mark all dependants.
+	for (auto i : m_dependants)
+	{
+		(*i)->mark();
+	}
 }
 
 void Harc::define(const Nid &n)
 {
 	m_head = n;
 	m_out_of_date = false;
-	//Mark all dependants.
+	for (auto i : m_dependants)
+	{
+		(*i)->mark();
+	}
 }
 
 Harc &Harc::operator=(const Nid &n)
