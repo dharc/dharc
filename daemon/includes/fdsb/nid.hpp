@@ -28,8 +28,8 @@ struct Nid
 	Type t;
 	union
 	{
-	unsigned long long v;
-	double vd;
+	unsigned long long i;
+	double d;
 	};
 	
 	/** Generate a new unique node id. */
@@ -39,17 +39,17 @@ struct Nid
 
 constexpr Nid operator"" _nid(unsigned long long v)
 {
-	return {Nid::Type::integer, { .v = v }};
+	return Nid{Nid::Type::integer, { .i = v }};
 }
 
 constexpr Nid operator"" _nid(long double v)
 {
-	return {Nid::Type::real, { .vd = v }};
+	return Nid{Nid::Type::real, { .d = v }};
 }
 
 constexpr Nid operator"" _nid(char v)
 {
-	return {Nid::Type::character, { .v = v }};
+	return Nid{Nid::Type::character, { .i = v }};
 }
 
 constexpr Nid null_nid = {Nid::Type::special,Nid::Special::null};
