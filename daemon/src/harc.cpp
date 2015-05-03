@@ -19,7 +19,7 @@ const Nid &Harc::query()
 
 void Harc::add_dependant(Harc &h)
 {
-	m_dependants.push(&h);
+	m_dependants.push_back(&h);
 }
 
 void Harc::mark()
