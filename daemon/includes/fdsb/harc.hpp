@@ -15,17 +15,17 @@ class Harc
 	void add_dependant(Harc &);
 	void mark();
 	void define(const Nid &);
-	const Nid &tail(int i) { return tail[i]; }
+	const Nid &tail(int i) { return m_tail[i]; }
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
 	
 	private:
-	Nid tail[2];
-	Nid head;
+	Nid m_tail[2];
+	Nid m_head;
 	//Definition;
-	bool out_of_date;
-	std::list<Harc*> dependants;
+	bool m_out_of_date;
+	std::list<Harc*> m_dependants;
 };
 
 };
