@@ -49,7 +49,7 @@ public:
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
 	 */
-	constexpr bool equal_tail(const Nid &a, const Nid &b)
+	bool equal_tail(const Nid &a, const Nid &b)
 	{
 		return (m_tail[0] == a && m_tail[1] == b) || (m_tail[0] == b && m_tail[1] == a);
 	}
