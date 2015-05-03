@@ -40,3 +40,8 @@ Harc &Harc::operator=(const Nid &n)
 	define(n);
 	return *this;
 }
+
+bool Harc::operator==(const Nid &n)
+{
+	return query() == n;
+}

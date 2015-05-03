@@ -14,8 +14,26 @@ void test_harc_defquery()
 	DONE;
 }
 
+void test_harc_assign()
+{
+	Harc h1(44_nid,55_nid);
+	h1 = 66_nid;
+	CHECK(h1.query() == 66_nid);
+	DONE;
+}
+
+void test_harc_eqnid()
+{
+	Harc h1(33_nid, 22_nid);
+	h1 = 78_nid;
+	CHECK(h1 == 78_nid);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_harc_defquery);
+	test(test_harc_assign);
+	test(test_harc_eqnid);
 	return 0;
 }

@@ -19,6 +19,7 @@ class Harc
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
+	bool operator==(const Nid &);
 	
 	private:
 	Nid m_tail[2];
