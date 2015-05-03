@@ -10,7 +10,8 @@ std::unordered_multimap<unsigned long long,Harc*> fabric;
 
 Harc &fdsb::get(const Nid &a, const Nid &b)
 {
-	for (auto i : fabric.find(Nid::dual_hash(a,b)))
+	auto range = fabric.equal_range(Nid::dual_hash(a,b));
+	for (auto i : range)
 	{
 		if ((i->tail(0) == a && i->tail(1) == b) || (i->tail(0) == b && i->tail(1) == a))
 		{
