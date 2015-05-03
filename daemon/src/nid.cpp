@@ -1,5 +1,7 @@
-#include <fdsb/nid.hpp>
+#include "fdsb/nid.hpp"
 #include <atomic>
+
+using namespace fdsb;
 
 std::atomic<unsigned long long> last_nid(0);
 

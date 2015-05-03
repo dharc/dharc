@@ -4,6 +4,9 @@
 namespace fdsb
 {
 
+/**
+ * Node Identifier Plain Old Data type.
+ */
 struct Nid
 {
 	enum struct Type : unsigned char
@@ -29,6 +32,7 @@ struct Nid
 	double vd;
 	}
 	
+	/** Generate a new unique node id. */
 	static Nid unique();
 };
 
