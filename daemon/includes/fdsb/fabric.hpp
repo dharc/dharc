@@ -9,6 +9,7 @@ struct Nid;
 
 Harc &get(const Nid &, const Nid &);
 void add(Harc &);
+void add(const Nid &, const Nid &);
 
 };
 

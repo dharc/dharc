@@ -18,6 +18,11 @@ void fdsb::add(Harc &h)
 	fabric[Nid::dual_hash(h.tail(0),h.tail(1))] = &h;
 }
 
+void fdsb::add(const Nid &n1, const Nid &n2)
+{
+	fdsb::add(new Harc(n1,n2));
+}
+
 Harc &Nid::operator[](const Nid &n)
 {
 	return fdsb::get(*this,n);

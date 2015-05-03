@@ -11,6 +11,9 @@ void test_fabric_addget()
 	add(h1);
 	get(1_nid,2_nid) = 47_nid;
 	CHECK(get(1_nid,2_nid) == 47_nid);
+	add(3_nid,4_nid);
+	get(3_nid,4_nid) = 56_nid;
+	CHECK(get(3_nid,4_nid) == 56_nid);
 	DONE;
 }
 
