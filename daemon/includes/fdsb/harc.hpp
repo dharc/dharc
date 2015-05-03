@@ -24,7 +24,7 @@ class Harc
 	template <int I>
 	const Nid &tail()
 	{
-		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.").
+		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
 		return m_tail[I];
 	}
 	
