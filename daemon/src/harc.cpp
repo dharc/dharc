@@ -27,7 +27,7 @@ void Harc::mark()
 	m_out_of_date = true;
 	for (auto i : m_dependants)
 	{
-		(*i)->mark();
+		i->mark();
 	}
 }
 
@@ -37,7 +37,7 @@ void Harc::define(const Nid &n)
 	m_out_of_date = false;
 	for (auto i : m_dependants)
 	{
-		(*i)->mark();
+		i->mark();
 	}
 }
 
