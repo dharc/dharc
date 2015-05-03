@@ -16,7 +16,7 @@ Harc &fdsb::get(const Nid &a, const Nid &b)
 	for (auto i = range.first; i != range.second; i++)
 	{
 		h = i->second;
-		if ((h->equal_tail(a,b))
+		if (h->equal_tail(a,b))
 		{
 			return *h;
 		}
