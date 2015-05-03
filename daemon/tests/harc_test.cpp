@@ -30,10 +30,29 @@ void test_harc_eqnid()
 	DONE;
 }
 
+void test_harc_dependants()
+{
+	Harc h1(22_nid,23_nid);
+	Harc h2(24_nid,25_nid);
+	Harc h3(26_nid,27_nid);
+	h2.add_dependant(h1);
+	h3.add_dependant(h2);
+	
+	CHECK(h1.is_out_of_date() == false);
+	CHECK(h2.is_out_of_date() == false);
+	CHECK(h3.is_out_of_date() == false);
+	h3 = 44_nid;
+	CHECK(h3.is_out_of_date() == false);
+	CHECK(h2.is_out_of_date() == true);
+	CHECK(h1.is_out_of_date() == true);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_harc_defquery);
 	test(test_harc_assign);
 	test(test_harc_eqnid);
+	test(test_harc_dependants);
 	return 0;
 }

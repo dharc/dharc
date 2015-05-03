@@ -16,6 +16,7 @@ class Harc
 	void mark();
 	void define(const Nid &);
 	const Nid &tail(int i) { return m_tail[i]; }
+	bool is_out_of_date() { return m_out_of_date; }
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
