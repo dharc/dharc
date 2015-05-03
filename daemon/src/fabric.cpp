@@ -20,7 +20,7 @@ void fdsb::add(Harc &h)
 
 void fdsb::add(const Nid &n1, const Nid &n2)
 {
-	fdsb::add(new Harc(n1,n2));
+	fdsb::add(*(new Harc(n1,n2)));
 }
 
 Harc &Nid::operator[](const Nid &n)
