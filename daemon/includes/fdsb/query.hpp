@@ -1,6 +1,8 @@
 #ifndef _FDSB_QUERY_H_
 #define _FDSB_QUERY_H_
 
+#include <vector>
+
 namespace fdsb
 {
 	
