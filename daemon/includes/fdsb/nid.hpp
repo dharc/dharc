@@ -18,7 +18,7 @@ struct Nid
 		allocated,
 	};
 	
-	enum struct Special
+	enum struct Special : unsigned long long
 	{
 		null,
 		bool_true,
@@ -39,17 +39,17 @@ struct Nid
 
 constexpr Nid operator"" _nid(unsigned long long v)
 {
-	return {Nid::Type::integer, .v = v};
+	return {Nid::Type::integer, { .v = v }};
 }
 
 constexpr Nid operator"" _nid(long double v)
 {
-	return {Nid::Type::real, .vd = v};
+	return {Nid::Type::real, { .vd = v }};
 }
 
 constexpr Nid operator"" _nid(char v)
 {
-	return {Nid::Type::character, .v = v};
+	return {Nid::Type::character, { .v = v }};
 }
 
 constexpr Nid null_nid = {Nid::Type::special,Nid::Special::null};
