@@ -15,8 +15,18 @@ class Harc
 	void add_dependant(Harc &);
 	void mark();
 	void define(const Nid &);
-	const Nid &tail(int i) { return m_tail[i]; }
 	bool is_out_of_date() { return m_out_of_date; }
+	bool equal_tail(const Nid &a, const Nid &b)
+	{
+		return (m_tail[0] == a && m_tail[1] == b) || (m_tail[0] == b && m_tail[1] == a);
+	}
+	
+	template <int I>
+	const Nid &tail()
+	{
+		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.").
+		return m_tail[I];
+	}
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
