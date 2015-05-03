@@ -3,6 +3,9 @@
 
 namespace fdsb
 {
+	
+class Harc;
+struct Nid;
 
 Harc &get(const Nid &, const Nid &);
 void add(Harc &);
