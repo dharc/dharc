@@ -8,8 +8,7 @@ void test_harc_defquery()
 {
 	Harc h1(123_nid,999_nid);
 	h1.define(55_nid);
-	CHECK(h1.tail(0) == 123_nid);
-	CHECK(h1.tail(1) == 999_nid);
+	CHECK(h1.equal_tail(123_nid,999_nid));
 	CHECK(h1.query() == 55_nid);
 	DONE;
 }
