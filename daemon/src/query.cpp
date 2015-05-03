@@ -12,7 +12,7 @@ Nid fdsb::path(const std::vector<Nid> &p)
 		Nid temp = p[0];
 		for (auto i = ++p.begin(); i != p.end(); ++i)
 		{
-			temp = get(temp,*i);
+			temp = get(temp,*i).query();
 		}
 		return temp;
 	}
