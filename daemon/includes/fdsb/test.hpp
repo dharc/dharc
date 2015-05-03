@@ -29,12 +29,15 @@ either expressed or implied, of the FreeBSD Project.
 #ifndef _FDSB_TEST_H_
 #define _FDSB_TEST_H_
 
-#define CHECK(A) if (!(A)) { fdsb_test_checkfailed(__LINE__,__func__,"__FILE__"); } else { fdsb_test_checkpassed(); }
-#define DONE fdsb_test_done(__func__);
+#define CHECK(A) if (!(A)) { fdsb::test_checkfailed(__LINE__,__func__,"__FILE__"); } else { fdsb::test_checkpassed(); }
+#define DONE fdsb::test_done(__func__);
 
-void fdsb_test_done(const char *function);
-void fdsb_test_checkfailed(int line, const char *function, const char *file);
-void fdsb_test_checkpassed();
-void fdsb_test(void (*test)(void));
+namespace fdsb
+{
+void test_done(const char *function);
+void test_checkfailed(int line, const char *function, const char *file);
+void test_checkpassed();
+void test(void (*t)(void));
+};
 
 #endif //_FDSB_TEST_H_

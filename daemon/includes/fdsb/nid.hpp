@@ -36,6 +36,11 @@ struct Nid
 	
 	/** Generate a new unique node id. */
 	static Nid unique();
+	
+	constexpr static unsigned long long dual_hash(const Nid &a, const Nid &b)
+	{
+		return a.i ^ (b.i << 16);
+	}
 };
 
 
@@ -57,6 +62,16 @@ constexpr Nid operator"" _nid(char v)
 constexpr Nid null_nid = {Nid::Type::special,{ .s = Nid::Special::null }};
 constexpr Nid true_nid = {Nid::Type::special,{ .s = Nid::Special::bool_true }};
 constexpr Nid false_nid = {Nid::Type::special,{ .s = Nid::Special::bool_false }};
+
+constexpr bool operator==(const Nid &a, const Nid &b)
+{
+	return a.t == b.t && a.i == b.i;
+}
+
+constexpr bool operator!=(const Nid &a, const Nid &b)
+{
+	return a.t != b.t || a.i != b.i;
+}
 
 };
 
