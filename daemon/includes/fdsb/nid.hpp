@@ -30,7 +30,7 @@ struct Nid
 	{
 	unsigned long long v;
 	double vd;
-	}
+	};
 	
 	/** Generate a new unique node id. */
 	static Nid unique();

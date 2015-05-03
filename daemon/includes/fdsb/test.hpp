@@ -32,7 +32,7 @@ either expressed or implied, of the FreeBSD Project.
 #define CHECK(A) if (!(A)) { fdsb_test_checkfailed(__LINE__,__func__,"__FILE__"); } else { fdsb_test_checkpassed(); }
 #define DONE fdsb_test_done(__func__);
 
-void fdsb_test_done();
+void fdsb_test_done(const char *function);
 void fdsb_test_checkfailed(int line, const char *function, const char *file);
 void fdsb_test_checkpassed();
 void fdsb_test(void (*test)(void));
