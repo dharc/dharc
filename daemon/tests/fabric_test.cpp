@@ -7,7 +7,8 @@ using namespace fdsb;
 
 void test_fabric_addget()
 {
-	add(Harc(1_nid,2_nid));
+	Harc h1(1_nid,2_nid);
+	add(h1);
 	get(1_nid,2_nid) = 47_nid;
 	CHECK(get(1_nid,2_nid) == 47_nid);
 	DONE;
