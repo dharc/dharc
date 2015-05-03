@@ -6,16 +6,26 @@
 
 using namespace fdsb;
 
-std::map<unsigned long long,Harc*> fabric;
+std::unordered_multimap<unsigned long long,Harc*> fabric;
 
 Harc &fdsb::get(const Nid &a, const Nid &b)
 {
-	return *fabric[Nid::dual_hash(a,b)];
+	for (auto i : fabric.find(Nid::dual_hash(a,b)))
+	{
+		if ((i->tail(0) == a && i->tail(1) == b) || (i->tail(0) == b && i->tail(1) == a))
+		{
+			return *i;
+		}
+	}
+	
+	Harc *nh = new Harc(a,b);
+	add(*nh);
+	return *nh;
 }
 
 void fdsb::add(Harc &h)
 {
-	fabric[Nid::dual_hash(h.tail(0),h.tail(1))] = &h;
+	fabric.insert({{Nid::dual_hash(h.tail(0),h.tail(1)), &h}});
 }
 
 void fdsb::add(const Nid &n1, const Nid &n2)

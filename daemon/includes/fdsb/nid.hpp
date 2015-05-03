@@ -41,7 +41,7 @@ struct Nid
 	
 	constexpr static unsigned long long dual_hash(const Nid &a, const Nid &b)
 	{
-		return a.i ^ (b.i << 16);
+		return a.i ^ b.i;
 	}
 	
 	Harc &operator[](const Nid &);
