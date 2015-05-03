@@ -3,6 +3,8 @@
 
 namespace fdsb
 {
+	
+class Harc;
 
 /**
  * Node Identifier Plain Old Data type.
@@ -41,6 +43,8 @@ struct Nid
 	{
 		return a.i ^ (b.i << 16);
 	}
+	
+	Harc &operator[](const Nid &);
 };
 
 

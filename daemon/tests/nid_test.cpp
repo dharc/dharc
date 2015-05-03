@@ -15,7 +15,7 @@ void test_nid_dlit()
 {
 	Nid n1 = 23.67_nid;
 	CHECK(n1.t == Nid::Type::real);
-	CHECK(n1.d == 23.67);
+	CHECK(n1.d > 23.66 && n1.d < 23.68);
 	DONE;
 }
 
