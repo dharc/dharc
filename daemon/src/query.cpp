@@ -12,7 +12,7 @@ Nid fdsb::path(const std::vector<Nid> &p, Harc *dep)
 		Nid temp = p[0];
 		for (auto i = ++p.begin(); i != p.end(); ++i)
 		{
-			const Harc &h = get(temp,*i);
+			Harc &h = get(temp,*i);
 			if (dep)
 			{
 				h.add_dependant(*dep);
