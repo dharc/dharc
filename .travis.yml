@@ -1,0 +1,11 @@
+before_script:
+ - mkdir -p build
+ - cd build
+
+script:
+ - cmake ..
+ - make
+ - "./nid-test"
+ - "./fabric-test"
+ - "./harc-test"
+ - "./query-test"
