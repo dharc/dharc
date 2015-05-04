@@ -40,7 +40,7 @@ void test_fabric_subscript()
 {
 	19_n[20_n] = 21_n;
 	CHECK(19_n[20_n] == 21_n);
-	CHECK(20_n[19_nid] == 21_n);
+	CHECK(20_n[19_n] == 21_n);
 	DONE;
 }
 
