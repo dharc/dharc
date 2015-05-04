@@ -72,5 +72,6 @@ int main(int argc, char *argv[])
 	test(test_harc_eqnid);
 	test(test_harc_dependants);
 	test(test_harc_definition);
+	test(test_harc_dependency);
 	return 0;
 }
