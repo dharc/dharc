@@ -27,7 +27,7 @@ Nid fdsb::path(const std::vector<Nid> &p, Harc *dep)
 	}
 	else
 	{
-		return null_nid;
+		return null_n;
 	}
 }
 

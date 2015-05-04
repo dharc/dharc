@@ -8,7 +8,7 @@ Harc::Harc(const Nid &a, const Nid &b)
 {
 	m_tail[0] = a;
 	m_tail[1] = b;
-	m_head = null_nid;
+	m_head = null_n;
 	m_out_of_date = false;
 }
 
