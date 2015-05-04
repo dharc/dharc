@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(FDSBDSOURCE daemon/src/nid.cpp daemon/src/harc.cpp)
 
 add_executable(nid-test daemon/tests/nid_test.cpp daemon/src/test.cpp daemon/src/nid.cpp)
-add_executable(harc-test daemon/tests/harc_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp)
-add_executable(fabric-test daemon/tests/fabric_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp)
+add_executable(harc-test daemon/tests/harc_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/query.cpp)
+add_executable(fabric-test daemon/tests/fabric_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/query.cpp)
 add_executable(query-test daemon/tests/query_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/query.cpp)
 

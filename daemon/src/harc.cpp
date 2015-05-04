@@ -1,5 +1,6 @@
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
+#include "fdsb/query.hpp"
 
 using namespace fdsb;
 
@@ -9,11 +10,16 @@ Harc::Harc(const Nid &a, const Nid &b)
 	m_tail[1] = b;
 	m_head = null_nid;
 	m_out_of_date = false;
+	m_def = nullptr;
 }
 
 const Nid &Harc::query()
 {
-	//Check if out_of_date.
+	if (m_out_of_date && m_def.size() > 0)
+	{
+		m_out_of_date = false;
+		m_head = path(m_def);
+	}
 	return m_head;
 }
 
@@ -39,6 +45,12 @@ void Harc::define(const Nid &n)
 	{
 		i->mark();
 	}
+}
+	
+void Harc::define(const std::vector<std::vector<Nid>> &p)
+{
+	m_def = p;
+	mark();
 }
 
 Harc &Harc::operator=(const Nid &n)

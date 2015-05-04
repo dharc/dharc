@@ -3,9 +3,12 @@
 
 #include "fdsb/nid.hpp"
 #include <list>
+#include <vector>
 
 namespace fdsb
 {
+	
+class Definition;
 
 /**
  * Hyper-arc class to represent relations between 3 nodes.
@@ -41,6 +44,8 @@ public:
 	 */
 	void define(const Nid &);
 	
+	void define(const std::vector<std::vector<Nid>> &);
+	
 	/**
 	 * Is this Harc out-of-date?
 	 */
@@ -73,7 +78,7 @@ public:
 private:
 	Nid m_tail[2];
 	Nid m_head;
-	//Definition;
+	std::vector<std::vector<Nid>> m_def;
 	bool m_out_of_date;
 	std::list<Harc*> m_dependants;
 	std::list<Harc*> m_dependencies;
