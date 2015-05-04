@@ -5,14 +5,19 @@
 
 using namespace fdsb;
 
-Nid fdsb::path(const std::vector<Nid> &p)
+Nid fdsb::path(const std::vector<Nid> &p, Harc *dep)
 {
 	if (p.size() > 1)
 	{
 		Nid temp = p[0];
 		for (auto i = ++p.begin(); i != p.end(); ++i)
 		{
-			temp = get(temp,*i).query();
+			const Harc &h = get(temp,*i);
+			if (dep)
+			{
+				h.add_dependant(*dep);
+			}
+			temp = h.query();
 		}
 		return temp;
 	}
@@ -26,7 +31,7 @@ Nid fdsb::path(const std::vector<Nid> &p)
 	}
 }
 
-Nid fdsb::path(const std::vector<std::vector<Nid>> &p)
+Nid fdsb::path(const std::vector<std::vector<Nid>> &p, Harc *dep)
 {
 	int ix = 0;
 	std::vector<Nid> res(p.size());
@@ -34,8 +39,8 @@ Nid fdsb::path(const std::vector<std::vector<Nid>> &p)
 	//These can all be done in different threads!
 	for (auto i : p)
 	{
-		res[ix++] = path(i);
+		res[ix++] = path(i,dep);
 	}
 	//Final recombination
-	return path(res);
+	return path(res,dep);
 }

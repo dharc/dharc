@@ -55,6 +55,16 @@ void test_harc_definition()
 	DONE;
 }
 
+void test_harc_dependency()
+{
+	100_nid[101_nid] = 49_nid;
+	102_nid[103_nid].define({{100_nid,101_nid}});
+	CHECK(102_nid[103_nid].query() == 49_nid);
+	100_nid[101_nid] = 56_nid;
+	CHECK(102_nid[103_nid].query() == 56_nid);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_harc_defquery);

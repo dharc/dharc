@@ -17,7 +17,7 @@ const Nid &Harc::query()
 	if (m_out_of_date && m_def.size() > 0)
 	{
 		m_out_of_date = false;
-		m_head = path(m_def);
+		m_head = path(m_def,this);
 	}
 	return m_head;
 }
