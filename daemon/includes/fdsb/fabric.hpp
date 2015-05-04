@@ -1,15 +1,15 @@
 #ifndef _FDSB_FABRIC_H_
 #define _FDSB_FABRIC_H_
 
+#include "fdsb/nid.hpp"
+#include "fdsp/harc.hpp"
+
 namespace fdsb
 {
-	
-class Harc;
-struct Nid;
 
-Harc &get(const Nid &, const Nid &);
-void add(Harc &);
-void add(const Nid &, const Nid &);
+inline Harc &get(const Nid &a, const Nid &b) { return Harc::get(a,b); }
+inline Nid path(const std::vector<Nid> &p) { return Harc::path(p,nullptr); }
+inline Nid path(const std::vector<std::vector<Nid>> &p) { return Harc::path(p,nullptr); }
 
 };
 

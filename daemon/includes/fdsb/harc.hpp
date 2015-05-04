@@ -2,8 +2,9 @@
 #define _FDSB_HARC_H_
 
 #include "fdsb/nid.hpp"
-#include <list>
+#include <set>
 #include <vector>
+#include <unordered_map>
 
 namespace fdsb
 {
@@ -18,26 +19,7 @@ class Definition;
 class Harc
 {
 public:
-	/**
-	 * A Harc must be constructed with explicit nodes.
-	 */
-	Harc(const Nid &, const Nid &);
-	
-	/**
-	 * Queries either the cached head node or calculates a new head node.
-	 */
-	const Nid &query();
-	
-	/**
-	 * Add another Harc as being dependant upon this one.
-	 */
-	void add_dependant(Harc &);
-	
-	/**
-	 * Mark this Harc as out-of-date. Also mark all dependant Harc's as
-	 * out-of-date.
-	 */
-	void mark();
+	const Nid &query() const { return m_head; }
 	
 	/**
 	 * Define the Harc as having a fixed head node.
@@ -45,11 +27,6 @@ public:
 	void define(const Nid &);
 	
 	void define(const std::vector<std::vector<Nid>> &);
-	
-	/**
-	 * Is this Harc out-of-date?
-	 */
-	bool is_out_of_date() const { return m_out_of_date; }
 	
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
@@ -69,22 +46,43 @@ public:
 		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
 		return m_tail[I];
 	}
-
 	
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 	
+	static Harc &get(const Nid &, const Nid &);
+	static Nid path(const std::vector<Nid> &, Harc *dep=nullptr);
+	static Nid path(const std::vector<std::vector<Nid>> &, Harc *dep=nullptr);
+	
+	/**
+	 * Perform a single coalescence step. Each step obtains new values for
+	 * out-of-date Harcs and then, together, writes those changes to Harcs.
+	 * If there are cyclical dependencies then each call to coalesce() will
+	 * cause changes even if no external changes have been made. Therefore,
+	 * in dynamic scenarios coalesce() should be called repeatedly. It returns
+	 * the number of changes that have been made, or 0 if no changes.
+	 */
+	static int coalesce();
+	
 private:
 	Nid m_tail[2];
 	Nid m_head;
 	std::vector<std::vector<Nid>> m_def;
-	bool m_out_of_date;
-	std::list<Harc*> m_dependants;
-	std::list<Harc*> m_dependencies;
+	std::set<Harc*> m_dependants;
 	
 	/* Prevent empty harc */
 	Harc() {}
+	Harc(const Nid &, const Nid &);
+	void dirty();
+	void add_dependant(Harc &);
+	
+	static std::unordered_multimap<unsigned long long,Harc*> s_fabric;
+	static std::set<Harc*> s_dirty;
+	static std::unordered_map<Harc*,Nid> s_changes;
+	
+	static void process_dirty();
+	static void write_changes();
 };
 
 };
