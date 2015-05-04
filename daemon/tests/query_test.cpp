@@ -32,5 +32,5 @@ int main(int argc, char *argv[])
 {
 	test(test_query_path);
 	test(test_query_paths);
-	return 0;
+	return test_fail_count();
 }

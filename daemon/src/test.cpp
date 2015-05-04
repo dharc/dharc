@@ -8,6 +8,11 @@ unsigned int test_failed = 0;
 int test_pass = 1;
 int test_pretty = 1;
 
+int fdsb::test_fail_count()
+{
+	return check_failed;
+}
+
 void fdsb::test_done(const char *function)
 {
 	if (test_pass == 1)

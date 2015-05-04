@@ -57,5 +57,5 @@ int main(int argc, char *argv[])
 	test(test_nid_clit);
 	test(test_nid_unique);
 	test(test_nid_eqne);
-	return 0;
+	return test_fail_count();
 }

@@ -50,5 +50,5 @@ int main(int argc, char *argv[])
 	test(test_fabric_symetric);
 	test(test_fabric_autocreate);
 	test(test_fabric_subscript);
-	return 0;
+	return test_fail_count();
 }

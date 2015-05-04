@@ -34,6 +34,7 @@ either expressed or implied, of the FreeBSD Project.
 
 namespace fdsb
 {
+int test_fail_count();
 void test_done(const char *function);
 void test_checkfailed(int line, const char *function, const char *file);
 void test_checkpassed();
