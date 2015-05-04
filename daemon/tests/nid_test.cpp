@@ -5,7 +5,7 @@ using namespace fdsb;
 
 void test_nid_ilit()
 {
-	Nid n1 = 123_nid;
+	Nid n1 = 123_n;
 	CHECK(n1.t == Nid::Type::integer);
 	CHECK(n1.i == 123);
 	DONE;
@@ -13,7 +13,7 @@ void test_nid_ilit()
 
 void test_nid_dlit()
 {
-	Nid n1 = 23.67_nid;
+	Nid n1 = 23.67_n;
 	CHECK(n1.t == Nid::Type::real);
 	CHECK(n1.d > 23.66 && n1.d < 23.68);
 	DONE;
@@ -21,7 +21,7 @@ void test_nid_dlit()
 
 void test_nid_clit()
 {
-	Nid n1 = 'f'_nid;
+	Nid n1 = 'f'_n;
 	CHECK(n1.t == Nid::Type::character);
 	CHECK(n1.c == 'f');
 	DONE;
@@ -40,11 +40,11 @@ void test_nid_unique()
 
 void test_nid_eqne()
 {
-	Nid n1 = 1234_nid;
-	Nid n2 = 99_nid;
+	Nid n1 = 1234_n;
+	Nid n2 = 99_n;
 	CHECK(!(n1 == n2));
 	CHECK(n1 != n2);
-	n2 = 1234_nid;
+	n2 = 1234_n;
 	CHECK(n1 == n2);
 	CHECK(!(n1 != n2));
 	DONE;

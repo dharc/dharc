@@ -7,40 +7,40 @@ using namespace fdsb;
 
 void test_fabric_addget()
 {
-	Harc h1(1_nid,2_nid);
+	Harc h1(1_n,2_n);
 	add(h1);
-	get(1_nid,2_nid) = 47_nid;
-	add(3_nid,4_nid);
-	get(3_nid,4_nid) = 56_nid;
-	CHECK(get(1_nid,2_nid) == 47_nid);
-	CHECK(get(3_nid,4_nid) == 56_nid);
+	get(1_n,2_n) = 47_n;
+	add(3_n,4_n);
+	get(3_n,4_n) = 56_n;
+	CHECK(get(1_n,2_n) == 47_n);
+	CHECK(get(3_n,4_n) == 56_n);
 	DONE;
 }
 
 void test_fabric_symetric()
 {
-	add(10_nid,11_nid);
-	get(10_nid,11_nid) = 55_nid;
-	CHECK(get(10_nid,11_nid) == 55_nid);
-	CHECK(get(11_nid,10_nid) == 55_nid);
-	get(11_nid,10_nid) = 66_nid;
-	CHECK(get(10_nid,11_nid) == 66_nid);
-	CHECK(get(11_nid,10_nid) == 66_nid);
+	add(10_n,11_n);
+	get(10_n,11_n) = 55_n;
+	CHECK(get(10_n,11_n) == 55_n);
+	CHECK(get(11_n,10_n) == 55_n);
+	get(11_n,10_n) = 66_n;
+	CHECK(get(10_n,11_n) == 66_n);
+	CHECK(get(11_n,10_n) == 66_n);
 	DONE;
 }
 
 void test_fabric_autocreate()
 {
-	get(15_nid,16_nid) = 67_nid;
-	CHECK(get(15_nid,16_nid) == 67_nid);
+	get(15_n,16_n) = 67_n;
+	CHECK(get(15_n,16_n) == 67_n);
 	DONE;
 }
 
 void test_fabric_subscript()
 {
-	19_nid[20_nid] = 21_nid;
-	CHECK(19_nid[20_nid] == 21_nid);
-	CHECK(20_nid[19_nid] == 21_nid);
+	19_n[20_n] = 21_n;
+	CHECK(19_n[20_n] == 21_n);
+	CHECK(20_n[19_nid] == 21_n);
 	DONE;
 }
 

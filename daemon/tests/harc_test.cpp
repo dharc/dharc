@@ -6,41 +6,41 @@ using namespace fdsb;
 
 void test_harc_defquery()
 {
-	Harc h1(123_nid,999_nid);
-	h1.define(55_nid);
-	CHECK(h1.equal_tail(123_nid,999_nid));
-	CHECK(h1.query() == 55_nid);
+	Harc h1(123_n,999_n);
+	h1.define(55_n);
+	CHECK(h1.equal_tail(123_n,999_n));
+	CHECK(h1.query() == 55_n);
 	DONE;
 }
 
 void test_harc_assign()
 {
-	Harc h1(44_nid,55_nid);
-	h1 = 66_nid;
-	CHECK(h1.query() == 66_nid);
+	Harc h1(44_n,55_n);
+	h1 = 66_n;
+	CHECK(h1.query() == 66_n);
 	DONE;
 }
 
 void test_harc_eqnid()
 {
-	Harc h1(33_nid, 22_nid);
-	h1 = 78_nid;
-	CHECK(h1 == 78_nid);
+	Harc h1(33_n, 22_n);
+	h1 = 78_n;
+	CHECK(h1 == 78_n);
 	DONE;
 }
 
 void test_harc_dependants()
 {
-	Harc h1(22_nid,23_nid);
-	Harc h2(24_nid,25_nid);
-	Harc h3(26_nid,27_nid);
+	Harc h1(22_n,23_n);
+	Harc h2(24_n,25_n);
+	Harc h3(26_n,27_n);
 	h2.add_dependant(h1);
 	h3.add_dependant(h2);
 	
 	CHECK(h1.is_out_of_date() == false);
 	CHECK(h2.is_out_of_date() == false);
 	CHECK(h3.is_out_of_date() == false);
-	h3 = 44_nid;
+	h3 = 44_n;
 	CHECK(h3.is_out_of_date() == false);
 	CHECK(h2.is_out_of_date() == true);
 	CHECK(h1.is_out_of_date() == true);
@@ -49,19 +49,19 @@ void test_harc_dependants()
 
 void test_harc_definition()
 {
-	100_nid[101_nid] = 49_nid;
-	102_nid[103_nid].define({{100_nid,101_nid}});
-	CHECK(102_nid[103_nid].query() == 49_nid);
+	100_n[101_n] = 49_n;
+	102_n[103_n].define({{100_n,101_n}});
+	CHECK(102_n[103_n].query() == 49_n);
 	DONE;
 }
 
 void test_harc_dependency()
 {
-	100_nid[101_nid] = 49_nid;
-	102_nid[103_nid].define({{100_nid,101_nid}});
-	CHECK(102_nid[103_nid].query() == 49_nid);
-	100_nid[101_nid] = 56_nid;
-	CHECK(102_nid[103_nid].query() == 56_nid);
+	100_n[101_n] = 49_n;
+	102_n[103_n].define({{100_n,101_n}});
+	CHECK(102_n[103_n].query() == 49_n);
+	100_n[101_n] = 56_n;
+	CHECK(102_n[103_n].query() == 56_n);
 	DONE;
 }
 
