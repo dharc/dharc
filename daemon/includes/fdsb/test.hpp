@@ -35,7 +35,7 @@ either expressed or implied, of the FreeBSD Project.
 #define DONE fdsb::test_done(__func__);
 
 #define BEGIN_PERF auto tstart = high_resolution_clock::now();
-#define END_PERF(A,B) auto tend = high_resolution_clock::now(); \
+#define END_PERF(A, B) auto tend = high_resolution_clock::now(); \
 	auto time_span = duration_cast<duration<double>>(tend - tstart); \
 	std::cout << __func__ << ": " << ((A) / time_span.count()) << B << "\n";
 

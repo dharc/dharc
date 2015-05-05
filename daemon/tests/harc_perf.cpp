@@ -23,16 +23,14 @@ void read_performance() {
 
 void parallel_paths() {
 	// Set up base chain
-	1_n[2_n] = Nid::unique();
-	1_n[2_n][3_n] = Nid::unique();
-	1_n[2_n][3_n][4_n] = 5_n;
+	1_n[1_n] = 1_n;
 	
 	// Dummy result chain
 	5_n[5_n] = 5_n;
 	
 	std::vector<std::vector<Nid>> def;
 	for (int i = 0; i < 10000; ++i) {
-		def.push_back({1_n, 2_n, 3_n, 4_n});
+		def.push_back({1_n, 1_n, 1_n, 1_n, 1_n, 1_n, 1_n});
 	}
 	
 	BEGIN_PERF

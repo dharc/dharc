@@ -119,20 +119,35 @@ Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 	}
 }
 
+std::atomic<int> pool_count(0);
+
 Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 	int ix = 0;
-	auto fut = new std::future<Nid>[p.size()];
+	std::vector<std::future<Nid>> futures;
 	std::vector<Nid> res(p.size());
 
 	// These can all be done in different threads!
 	for (auto i : p) {
-		fut[ix++] = std::async(std::launch::async, Harc::path_s, i, dep);
-	}
-	// Final recombination
-	for (unsigned int i = 0; i < p.size(); ++i) {
-		res[i] = fut[i].get();
+		if (pool_count < 10) {
+			++pool_count;
+
+			futures.push_back(std::async(
+				// std::launch::async,
+				[](const std::vector<Nid> &p, Nid *res, Harc *dep) -> Nid {
+					*res = Harc::path_s(p, dep);
+					--pool_count;
+					return *res;
+				},
+				i, &(res.data()[ix++]), dep));
+		} else {
+			res[ix++] = path_s(i, dep);
+		}
 	}
 
-	delete [] fut;
+	// Final recombination
+	for (auto &i : futures) {
+		i.get();
+	}
+
 	return Harc::path_s(res, dep);
 }
