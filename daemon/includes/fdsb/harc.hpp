@@ -2,7 +2,7 @@
 #define _FDSB_HARC_H_
 
 #include "fdsb/nid.hpp"
-#include <set>
+#include <list>
 #include <vector>
 #include <unordered_map>
 
@@ -19,7 +19,11 @@ class Definition;
 class Harc
 {
 public:
-	const Nid &query() const { return m_head; }
+	/**
+	 * Get the head of this hyper-arc. Evaluate the definition if it is
+	 * out-of-date.
+	 */
+	const Nid &query();
 	
 	/**
 	 * Define the Harc as having a fixed head node.
@@ -28,12 +32,15 @@ public:
 	
 	void define(const std::vector<std::vector<Nid>> &);
 	
+	bool is_out_of_date() const { return m_outofdate; }
+	
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
 	 */
-	bool equal_tail(const Nid &a, const Nid &b)
+	bool equal_tail(const Nid &a, const Nid &b) const
 	{
-		return (m_tail[0] == a && m_tail[1] == b) || (m_tail[0] == b && m_tail[1] == a);
+		return 	(m_tail[0] == a && m_tail[1] == b) ||
+				(m_tail[0] == b && m_tail[1] == a);
 	}
 	
 	/**
@@ -41,7 +48,7 @@ public:
 	 * used in the template parameter.
 	 */
 	template <int I>
-	const Nid &tail()
+	const Nid &tail() const
 	{
 		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
 		return m_tail[I];
@@ -51,25 +58,29 @@ public:
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 	
+	/**
+	 * Find or create a hyper-arc with the given tail nodes.
+	 */
 	static Harc &get(const Nid &, const Nid &);
-	static Nid path(const std::vector<Nid> &, Harc *dep=nullptr);
-	static Nid path(const std::vector<std::vector<Nid>> &, Harc *dep=nullptr);
 	
 	/**
-	 * Perform a single coalescence step. Each step obtains new values for
-	 * out-of-date Harcs and then, together, writes those changes to Harcs.
-	 * If there are cyclical dependencies then each call to coalesce() will
-	 * cause changes even if no external changes have been made. Therefore,
-	 * in dynamic scenarios coalesce() should be called repeatedly. It returns
-	 * the number of changes that have been made, or 0 if no changes.
+	 * Navigate a simple path and return resulting node.
 	 */
-	static int coalesce();
+	static Nid path(const std::vector<Nid> &, Harc *dep=nullptr);
+	
+	/**
+	 * Navigate a path of paths and return combined result. Each sub path
+	 * is explored in parallel before the results are then combined as a path
+	 * and the final result returned.
+	 */
+	static Nid path(const std::vector<std::vector<Nid>> &, Harc *dep=nullptr);
 	
 private:
 	Nid m_tail[2];
 	Nid m_head;
+	bool m_outofdate;
 	std::vector<std::vector<Nid>> m_def;
-	std::set<Harc*> m_dependants;
+	std::list<Harc*> m_dependants;
 	
 	/* Prevent empty harc */
 	Harc() {}
@@ -78,11 +89,6 @@ private:
 	void add_dependant(Harc &);
 	
 	static std::unordered_multimap<unsigned long long,Harc*> s_fabric;
-	static std::set<Harc*> s_dirty;
-	static std::unordered_map<Harc*,Nid> s_changes;
-	
-	static void process_dirty();
-	static void write_changes();
 };
 
 };

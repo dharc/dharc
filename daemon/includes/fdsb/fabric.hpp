@@ -2,7 +2,7 @@
 #define _FDSB_FABRIC_H_
 
 #include "fdsb/nid.hpp"
-#include "fdsp/harc.hpp"
+#include "fdsb/harc.hpp"
 
 namespace fdsb
 {

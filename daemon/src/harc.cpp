@@ -4,11 +4,14 @@
 
 using namespace fdsb;
 
+std::unordered_multimap<unsigned long long,Harc*> Harc::s_fabric;
+
 Harc::Harc(const Nid &a, const Nid &b)
 {
 	m_tail[0] = a;
 	m_tail[1] = b;
 	m_head = null_n;
+	m_outofdate = false;
 }
 
 void Harc::add_dependant(Harc &h)
@@ -16,14 +19,19 @@ void Harc::add_dependant(Harc &h)
 	m_dependants.push_back(&h);
 }
 
-void Harc::update()
+const Nid &Harc::query()
 {
-	m_head = path(m_def,this);
+	if (m_outofdate)
+	{
+		m_outofdate = false;
+		m_head = path(m_def,this);
+	}
+	return m_head;
 }
 
 void Harc::dirty()
 {
-	mark_as_dirty(this);
+	m_outofdate = true;
 	for (auto i : m_dependants)
 	{
 		i->dirty();
@@ -74,6 +82,7 @@ Harc &Harc::get(const Nid &a, const Nid &b)
 	
 	h = new Harc(a,b);
 	s_fabric.insert({{Nid::dual_hash(a,b), h}});
+	return *h;
 }
 
 Nid Harc::path(const std::vector<Nid> &p, Harc *dep)
