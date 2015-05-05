@@ -5,6 +5,10 @@
 
 using namespace fdsb;
 
+/* Symetric Tail Test:
+ * The order of tail nodes should be irrelevant, so lookup a Harc using both
+ * orders and check the result is the same.
+ */
 void test_harc_symetric()
 {
 	get(10_n,11_n) = 55_n;
@@ -16,6 +20,9 @@ void test_harc_symetric()
 	DONE;
 }
 
+/* Automatic new Harc creation upon get:
+ * Request a Harc that does not exist. It should be created and returned.
+ */
 void test_harc_autocreate()
 {
 	get(15_n,16_n) = 67_n;
@@ -23,6 +30,9 @@ void test_harc_autocreate()
 	DONE;
 }
 
+/* Subscript operator overload test:
+ * Does the subscript operator for Nid and Harc work as expected.
+ */
 void test_harc_subscript()
 {
 	19_n[20_n] = 21_n;
@@ -31,6 +41,10 @@ void test_harc_subscript()
 	DONE;
 }
 
+/* Basic Harc creation, definition and query:
+ * Make sure Harcs are created correctly and the a constant define and
+ * associated query match.
+ */
 void test_harc_defquery()
 {
 	Harc *h1 = &Harc::get(123_n,999_n);
@@ -40,6 +54,9 @@ void test_harc_defquery()
 	DONE;
 }
 
+/* Check Nid assignment operator:
+ * Does assigning a Nid to a Harc perform a constant define.
+ */
 void test_harc_assign()
 {
 	Harc *h1 = &Harc::get(44_n,55_n);
@@ -48,6 +65,10 @@ void test_harc_assign()
 	DONE;
 }
 
+/* Nid Harc equality operator:
+ * If a Harc is compared with a Nid for equality, it should compare the head
+ * with the Nid.
+ */
 void test_harc_eqnid()
 {
 	Harc *h1 = &Harc::get(33_n, 22_n);
