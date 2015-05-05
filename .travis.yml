@@ -21,4 +21,4 @@ script:
  - make
  - "./nid-test"
  - "./harc-test"
- - cppcheck -I../daemon/includes --error-exitcode=2 --enable=warning ../daemon/src
+ - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
