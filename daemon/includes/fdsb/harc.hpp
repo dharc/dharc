@@ -107,6 +107,9 @@ class Harc {
 	void add_dependant(Harc &);
 
 	static std::unordered_multimap<unsigned long long, Harc*> s_fabric;
+
+	static bool path_r(const std::vector<std::vector<Nid>> &p, Nid *res,
+							int s, int e, Harc *dep);
 };
 
 };  // namespace fdsb

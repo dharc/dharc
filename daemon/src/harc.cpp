@@ -120,60 +120,44 @@ Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 	}
 }
 
-std::atomic<int> pool_count(4);
+std::atomic<int> pool_count(std::thread::hardware_concurrency());
+
+bool Harc::path_r(const std::vector<std::vector<Nid>> &p, Nid *res,
+		int s, int e, Harc *dep) {
+	int size = e-s;
+
+	// Should we divide the paths?
+	if (size > 2 && pool_count > 0) {
+		--pool_count;
+
+		// Divide paths into 2 parts.
+		auto middle = size / 2;
+
+		// Asynchronously perform first half
+		std::future<bool> fa = std::async(
+			std::launch::async,
+			path_r, p, res, middle, e, dep);
+
+		// Perform second half
+		path_r(p, res, s, middle, dep);
+
+		// Sync results
+		fa.get();
+		++pool_count;
+	} else {
+		for (auto i = s; i < e; ++i) {
+			res[i] = path_s(p[i], dep);
+		}
+	}
+	return true;
+}
 
 Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 	std::vector<Nid> res(p.size());
 
-	// Should we attempt to split the load?
-	if (p.size() > 2 && pool_count > 0) {
-		--pool_count;
+	// Recursive divide
+	path_r(p, res.data(), 0, p.size(), dep);
 
-		// Divide paths into 2 parts.
-		auto middle = p.size() / 2;
-
-		// Asynchronously perform second half
-		std::future<bool> fa = std::async(
-			std::launch::async,
-			[](const std::vector<std::vector<Nid>> &p, Nid *res,
-					int s, int e, Harc *dep) {
-				for (auto i = s; i < e; ++i) {
-					res[i] = Harc::path_s(p[i], dep);
-				}
-				return true;
-			}, p, res.data(), middle, p.size(), dep);
-
-		// Calculate first half
-		Nid cur = Harc::path_s(p[0], dep);
-		for (unsigned int i = 1; i < middle; ++i) {
-			Harc &h = Harc::get(cur, Harc::path_s(p[i], dep));
-			if (dep) {
-				h.add_dependant(*dep);
-			}
-			cur = h.query();
-		}
-
-		// Sync with other thread.
-		fa.get();
-		++pool_count;
-
-		// Combine async results with first half
-		for (unsigned int i = middle; i < p.size(); ++i) {
-			Harc &h = Harc::get(cur, res[i]);
-			if (dep) {
-				h.add_dependant(*dep);
-			}
-			cur = h.query();
-		}
-		return cur;
-	} else {
-		int ix = 0;
-
-		for (auto i : p) {
-			res[ix++] = path_s(i, dep);
-		}
-
-		// Final recombination
-		return Harc::path_s(res, dep);
-	}
+	// Final recombination
+	return Harc::path_s(res, dep);
 }
