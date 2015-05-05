@@ -29,8 +29,8 @@ either expressed or implied, of the FreeBSD Project.
 #ifndef FDSB_TEST_H_
 #define FDSB_TEST_H_
 
-#define CHECK(A) if (!(A)) { \\
-	fdsb::test_checkfailed(__LINE__, __func__, "__FILE__"); \\
+#define CHECK(A) if (!(A)) { \
+	fdsb::test_checkfailed(__LINE__, __func__, "__FILE__"); \
 	} else { fdsb::test_checkpassed(); }
 #define DONE fdsb::test_done(__func__);
 
