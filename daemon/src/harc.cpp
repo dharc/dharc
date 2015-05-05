@@ -1,12 +1,14 @@
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
 #include "fdsb/query.hpp"
+#include <thread>
 
 using namespace fdsb;
 
 std::unordered_multimap<unsigned long long,Harc*> Harc::s_fabric;
 
 Harc::Harc(const Nid &a, const Nid &b)
+ : m_lock(ATOMIC_FLAG_INIT)
 {
 	m_tail[0] = a;
 	m_tail[1] = b;
@@ -21,10 +23,19 @@ void Harc::add_dependant(Harc &h)
 
 const Nid &Harc::query()
 {
-	if (m_outofdate)
+	while (m_outofdate)
 	{
-		m_outofdate = false;
-		m_head = path(m_def,this);
+		if (!m_lock.test_and_set())
+		{
+			m_head = path(m_def,this);
+			m_outofdate = false;
+			m_lock.clear();
+		}
+		else
+		{
+			//Do something else or yield
+			std::this_thread::yield();
+		}
 	}
 	return m_head;
 }
@@ -42,6 +53,7 @@ void Harc::dirty()
 void Harc::define(const Nid &n)
 {
 	m_head = n;
+	m_outofdate = false;
 	for (auto i : m_dependants)
 	{
 		i->dirty();

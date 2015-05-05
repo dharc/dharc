@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <unordered_map>
+#include <atomic>
 
 namespace fdsb
 {
@@ -79,6 +80,7 @@ private:
 	Nid m_tail[2];
 	Nid m_head;
 	bool m_outofdate;
+	std::atomic_flag m_lock;
 	std::vector<std::vector<Nid>> m_def;
 	std::list<Harc*> m_dependants;
 	

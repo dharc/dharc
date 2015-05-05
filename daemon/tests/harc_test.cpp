@@ -6,26 +6,26 @@ using namespace fdsb;
 
 void test_harc_defquery()
 {
-	Harc h1 = Harc::get(123_n,999_n);
-	h1.define(55_n);
-	CHECK(h1.equal_tail(123_n,999_n));
-	CHECK(h1.query() == 55_n);
+	Harc *h1 = &Harc::get(123_n,999_n);
+	h1->define(55_n);
+	CHECK(h1->equal_tail(123_n,999_n));
+	CHECK(h1->query() == 55_n);
 	DONE;
 }
 
 void test_harc_assign()
 {
-	Harc h1 = Harc::get(44_n,55_n);
-	h1 = 66_n;
-	CHECK(h1.query() == 66_n);
+	Harc *h1 = &Harc::get(44_n,55_n);
+	*h1 = 66_n;
+	CHECK(h1->query() == 66_n);
 	DONE;
 }
 
 void test_harc_eqnid()
 {
-	Harc h1 = Harc::get(33_n, 22_n);
-	h1 = 78_n;
-	CHECK(h1 == 78_n);
+	Harc *h1 = &Harc::get(33_n, 22_n);
+	*h1 = 78_n;
+	CHECK(*h1 == 78_n);
 	DONE;
 }
 
