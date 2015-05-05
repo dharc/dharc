@@ -126,14 +126,13 @@ Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 
 	// These can all be done in different threads!
 	for (auto i : p) {
-		//res[ix++] = Harc::path(i, dep);
 		fut[ix++] = std::async(std::launch::async, Harc::path_s, i, dep);
 	}
 	// Final recombination
 	for (unsigned int i = 0; i < p.size(); ++i) {
 		res[i] = fut[i].get();
 	}
-	
+
 	delete [] fut;
 	return Harc::path_s(res, dep);
 }
