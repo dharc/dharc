@@ -26,19 +26,20 @@ The views and conclusions contained in the software and documentation are those
 of the authors and should not be interpreted as representing official policies, 
 either expressed or implied, of the FreeBSD Project.
  */
-#ifndef _FDSB_TEST_H_
-#define _FDSB_TEST_H_
+#ifndef FDSB_TEST_H_
+#define FDSB_TEST_H_
 
-#define CHECK(A) if (!(A)) { fdsb::test_checkfailed(__LINE__,__func__,"__FILE__"); } else { fdsb::test_checkpassed(); }
+#define CHECK(A) if (!(A)) { \\
+	fdsb::test_checkfailed(__LINE__, __func__, "__FILE__"); \\
+	} else { fdsb::test_checkpassed(); }
 #define DONE fdsb::test_done(__func__);
 
-namespace fdsb
-{
+namespace fdsb {
 int test_fail_count();
 void test_done(const char *function);
 void test_checkfailed(int line, const char *function, const char *file);
 void test_checkpassed();
 void test(void (*t)(void));
-};
+};  // namespace fdsb
 
-#endif //_FDSB_TEST_H_
+#endif  // FDSB_TEST_H_
