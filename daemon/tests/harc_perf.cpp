@@ -21,7 +21,27 @@ void read_performance() {
 	END_PERF(10,"Mps")
 }
 
+void parallel_paths() {
+	// Set up base chain
+	1_n[2_n] = Nid::unique();
+	1_n[2_n][3_n] = Nid::unique();
+	1_n[2_n][3_n][4_n] = 5_n;
+	
+	// Dummy result chain
+	5_n[5_n] = 5_n;
+	
+	std::vector<std::vector<Nid>> def;
+	for (int i = 0; i < 10000; ++i) {
+		def.push_back({1_n, 2_n, 3_n, 4_n});
+	}
+	
+	BEGIN_PERF
+	Harc::path(def);
+	END_PERF(10000,"ps")
+}
+
 int main(int argc, char *argv[]) {
 	read_performance();
+	parallel_paths();
 	return 0;
 }
