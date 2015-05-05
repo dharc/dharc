@@ -117,6 +117,57 @@ void test_harc_paths()
 	DONE;
 }
 
+void test_harc_concurrentdef()
+{
+	//First chain
+	1000_n[2_n] = Nid::unique();
+	1000_n[2_n][3_n] = Nid::unique();
+	1000_n[2_n][3_n][4_n] = 600_n;
+	
+	//Second chain
+	1001_n[2_n] = Nid::unique();
+	1001_n[2_n][3_n] = Nid::unique();
+	1001_n[2_n][3_n][4_n] = 500_n;
+	
+	//Third chain
+	1002_n[2_n] = Nid::unique();
+	1002_n[2_n][3_n] = Nid::unique();
+	1002_n[2_n][3_n][4_n] = 400_n;
+	
+	//Forth chain
+	1003_n[2_n] = Nid::unique();
+	1003_n[2_n][3_n] = Nid::unique();
+	1003_n[2_n][3_n][4_n] = 300_n;
+	
+	//Fith chain
+	1004_n[2_n] = Nid::unique();
+	1004_n[2_n][3_n] = Nid::unique();
+	1004_n[2_n][3_n][4_n] = 200_n;
+	
+	//First dependency chain
+	1005_n[2_n] = Nid::unique();
+	1005_n[2_n][3_n] = Nid::unique();
+	1005_n[2_n][3_n][4_n].define({{1004_n, 2_n, 3_n, 4_n}});
+	
+	//Final chain
+	600_n[500_n] = Nid::unique();
+	600_n[500_n][400_n] = Nid::unique();
+	600_n[500_n][400_n][300_n] = Nid::unique();
+	600_n[500_n][400_n][300_n][200_n] = 555_n;
+	
+	//Test definition
+	500_n[1_n].define({
+		{1000_n, 2_n, 3_n, 4_n},
+		{1001_n, 2_n, 3_n, 4_n},
+		{1002_n, 2_n, 3_n, 4_n},
+		{1003_n, 2_n, 3_n, 4_n},
+		{1005_n, 2_n, 3_n, 4_n}
+	});
+	
+	CHECK(500_n[1_n] == 555_n);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_harc_defquery);
@@ -129,5 +180,6 @@ int main(int argc, char *argv[])
 	test(test_harc_paths);
 	test(test_harc_definition);
 	test(test_harc_dependency);
+	test(test_harc_concurrentdef);
 	return test_fail_count();
 }
