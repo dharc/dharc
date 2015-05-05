@@ -156,8 +156,8 @@ void Harc::paths(const fdsb::Path &p, Nid *res, Harc *dep) {
 		path_r(p, res, 0, middle, dep);
 
 		// Sync results
+		++pool_count;	// Add myself to the pool.
 		fa.get();
-		++pool_count;
 	} else {
 		for (auto i = 0; i < size; ++i) {
 			res[i] = path_s(p[i], dep);
@@ -170,7 +170,6 @@ Nid Harc::path(const fdsb::Path &p, Harc *dep) {
 
 	// Process all the sub paths
 	paths(p, res.data(), dep);
-
 	// Final recombination
 	return Harc::path_s(res, dep);
 }
