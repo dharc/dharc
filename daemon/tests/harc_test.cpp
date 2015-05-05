@@ -117,45 +117,44 @@ void test_harc_paths()
 	DONE;
 }
 
-void test_harc_concurrentdef()
-{
-	//First chain
+void test_harc_concurrentdef() {
+	// First chain
 	1000_n[2_n] = Nid::unique();
 	1000_n[2_n][3_n] = Nid::unique();
 	1000_n[2_n][3_n][4_n] = 600_n;
 	
-	//Second chain
+	// Second chain
 	1001_n[2_n] = Nid::unique();
 	1001_n[2_n][3_n] = Nid::unique();
 	1001_n[2_n][3_n][4_n] = 500_n;
 	
-	//Third chain
+	// Third chain
 	1002_n[2_n] = Nid::unique();
 	1002_n[2_n][3_n] = Nid::unique();
 	1002_n[2_n][3_n][4_n] = 400_n;
 	
-	//Forth chain
+	// Forth chain
 	1003_n[2_n] = Nid::unique();
 	1003_n[2_n][3_n] = Nid::unique();
 	1003_n[2_n][3_n][4_n] = 300_n;
 	
-	//Fith chain
+	// Fith chain
 	1004_n[2_n] = Nid::unique();
 	1004_n[2_n][3_n] = Nid::unique();
 	1004_n[2_n][3_n][4_n] = 200_n;
 	
-	//First dependency chain
+	// First dependency chain
 	1005_n[2_n] = Nid::unique();
 	1005_n[2_n][3_n] = Nid::unique();
 	1005_n[2_n][3_n][4_n].define({{1004_n, 2_n, 3_n, 4_n}});
 	
-	//Final chain
+	// Final chain
 	600_n[500_n] = Nid::unique();
 	600_n[500_n][400_n] = Nid::unique();
 	600_n[500_n][400_n][300_n] = Nid::unique();
 	600_n[500_n][400_n][300_n][200_n] = 555_n;
 	
-	//Test definition
+	// Test definition
 	500_n[1_n].define({
 		{1000_n, 2_n, 3_n, 4_n},
 		{1001_n, 2_n, 3_n, 4_n},
@@ -168,8 +167,36 @@ void test_harc_concurrentdef()
 	DONE;
 }
 
-int main(int argc, char *argv[])
-{
+void test_harc_duplicateeval() {
+	//Main chain
+	2000_n[2_n] = Nid::unique();
+	2000_n[2_n][3_n] = Nid::unique();
+	2000_n[2_n][3_n][4_n] = Nid::unique();
+	2000_n[2_n][3_n][4_n][5_n] = Nid::unique();
+	2000_n[2_n][3_n][4_n][5_n][6_n] = Nid::unique();
+	2000_n[2_n][3_n][4_n][5_n][6_n][7_n] = Nid::unique();
+	2000_n[2_n][3_n][4_n][5_n][6_n][7_n][8_n] = 10_n;
+	
+	//Result chain
+	10_n[10_n] = Nid::unique();
+	10_n[10_n][10_n] = Nid::unique();
+	10_n[10_n][10_n][10_n] = Nid::unique();
+	10_n[10_n][10_n][10_n][10_n] = 99_n;
+	
+	// Test definition
+	2001_n[1_n].define({
+		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
+		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
+		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
+		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
+		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n}
+	});
+	
+	CHECK(2001_n[1_n] == 99_n);
+	DONE;
+}
+
+int main(int argc, char *argv[]) {
 	test(test_harc_defquery);
 	test(test_harc_assign);
 	test(test_harc_eqnid);
@@ -181,5 +208,6 @@ int main(int argc, char *argv[])
 	test(test_harc_definition);
 	test(test_harc_dependency);
 	test(test_harc_concurrentdef);
+	test(test_harc_duplicateeval);
 	return test_fail_count();
 }
