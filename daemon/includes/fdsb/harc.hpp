@@ -1,5 +1,5 @@
-#ifndef _FDSB_HARC_H_
-#define _FDSB_HARC_H_
+#ifndef FDSB_HARC_H_
+#define FDSB_HARC_H_
 
 #include "fdsb/nid.hpp"
 #include <list>
@@ -7,8 +7,7 @@
 #include <unordered_map>
 #include <atomic>
 
-namespace fdsb
-{
+namespace fdsb {
 	
 class Definition;
 
@@ -17,10 +16,8 @@ class Definition;
  * Each Harc can be given a definition and can be made dependant upon other
  * Harc's so that they update when others are changed.
  */
-class Harc
-{
-	struct Definition
-	{
+class Harc {
+	struct Definition {
 		Definition(const std::vector<std::vector<Nid>> &d) :
 			outofdate(true),
 			lock(ATOMIC_FLAG_INIT),
@@ -45,8 +42,7 @@ public:
 	
 	void define(const std::vector<std::vector<Nid>> &);
 	
-	bool is_out_of_date() const
-	{
+	bool is_out_of_date() const {
 		if (m_def) return m_def->outofdate;
 		else return false;
 	}
@@ -54,8 +50,7 @@ public:
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
 	 */
-	bool equal_tail(const Nid &a, const Nid &b) const
-	{
+	bool equal_tail(const Nid &a, const Nid &b) const {
 		return 	(m_tail[0] == a && m_tail[1] == b) ||
 				(m_tail[0] == b && m_tail[1] == a);
 	}
@@ -65,8 +60,7 @@ public:
 	 * used in the template parameter.
 	 */
 	template <int I>
-	const Nid &tail() const
-	{
+	const Nid &tail() const {
 		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
 		return m_tail[I];
 	}
@@ -109,4 +103,4 @@ private:
 
 };
 
-#endif /* _FDSB_HARC_H_ */
+#endif /* FDSB_HARC_H_ */
