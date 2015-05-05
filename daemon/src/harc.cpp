@@ -125,13 +125,14 @@ std::atomic<int> pool_count(4);
 Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 	std::vector<Nid> res(p.size());
 
-	if (p.size() > 1 && pool_count > 0) {
+	// Should we attempt to split the load?
+	if (p.size() > 2 && pool_count > 0) {
 		--pool_count;
 
 		// Divide paths into 2 parts.
 		auto middle = p.size() / 2;
 
-		// Asynchronously perform first half
+		// Asynchronously perform second half
 		std::future<bool> fa = std::async(
 			std::launch::async,
 			[](const std::vector<std::vector<Nid>> &p, Nid *res,
@@ -140,21 +141,39 @@ Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 					res[i] = Harc::path_s(p[i], dep);
 				}
 				return true;
-			}, p, res.data(), 0, middle, dep);
+			}, p, res.data(), middle, p.size(), dep);
 
-		for (auto i = middle; i < p.size(); ++i) {
-			res[i] = Harc::path_s(p[i], dep);
+		// Calculate first half
+		Nid cur = Harc::path_s(p[0], dep);
+		for (unsigned int i = 1; i < middle; ++i) {
+			Harc &h = Harc::get(cur, Harc::path_s(p[i], dep));
+			if (dep) {
+				h.add_dependant(*dep);
+			}
+			cur = h.query();
 		}
+
+		// Sync with other thread.
 		fa.get();
 		++pool_count;
+
+		// Combine async results with first half
+		for (unsigned int i = middle; i < p.size(); ++i) {
+			Harc &h = Harc::get(cur, res[i]);
+			if (dep) {
+				h.add_dependant(*dep);
+			}
+			cur = h.query();
+		}
+		return cur;
 	} else {
 		int ix = 0;
 
 		for (auto i : p) {
 			res[ix++] = path_s(i, dep);
 		}
-	}
 
-	// Final recombination
-	return Harc::path_s(res, dep);
+		// Final recombination
+		return Harc::path_s(res, dep);
+	}
 }
