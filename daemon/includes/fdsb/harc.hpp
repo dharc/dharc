@@ -19,6 +19,18 @@ class Definition;
  */
 class Harc
 {
+	struct Definition
+	{
+		Definition(const std::vector<std::vector<Nid>> &d) :
+			outofdate(true),
+			lock(ATOMIC_FLAG_INIT),
+			def(d) {};
+			
+		bool outofdate;
+		std::atomic_flag lock;
+		std::vector<std::vector<Nid>> def;
+	};
+
 public:
 	/**
 	 * Get the head of this hyper-arc. Evaluate the definition if it is
@@ -33,7 +45,11 @@ public:
 	
 	void define(const std::vector<std::vector<Nid>> &);
 	
-	bool is_out_of_date() const { return m_outofdate; }
+	bool is_out_of_date() const
+	{
+		if (m_def) return m_def->outofdate;
+		else return false;
+	}
 	
 	/**
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
@@ -79,9 +95,7 @@ public:
 private:
 	Nid m_tail[2];
 	Nid m_head;
-	bool m_outofdate;
-	std::atomic_flag m_lock;
-	std::vector<std::vector<Nid>> m_def;
+	Definition *m_def;
 	std::list<Harc*> m_dependants;
 	
 	/* Prevent empty harc */

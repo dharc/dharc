@@ -7,13 +7,12 @@ using namespace fdsb;
 
 std::unordered_multimap<unsigned long long,Harc*> Harc::s_fabric;
 
-Harc::Harc(const Nid &a, const Nid &b)
- : m_lock(ATOMIC_FLAG_INIT)
+Harc::Harc(const Nid &a, const Nid &b) :
+	m_head(null_n),
+	m_def(nullptr)
 {
 	m_tail[0] = a;
 	m_tail[1] = b;
-	m_head = null_n;
-	m_outofdate = false;
 }
 
 void Harc::add_dependant(Harc &h)
@@ -23,13 +22,13 @@ void Harc::add_dependant(Harc &h)
 
 const Nid &Harc::query()
 {
-	while (m_outofdate)
+	while (m_def && m_def->outofdate)
 	{
-		if (!m_lock.test_and_set())
+		if (!m_def->lock.test_and_set())
 		{
-			m_head = path(m_def,this);
-			m_outofdate = false;
-			m_lock.clear();
+			m_head = path(m_def->def,this);
+			m_def->outofdate = false;
+			m_def->lock.clear();
 		}
 		else
 		{
@@ -42,7 +41,7 @@ const Nid &Harc::query()
 
 void Harc::dirty()
 {
-	m_outofdate = true;
+	if (m_def) m_def->outofdate = true;
 	for (auto i : m_dependants)
 	{
 		i->dirty();
@@ -53,7 +52,7 @@ void Harc::dirty()
 void Harc::define(const Nid &n)
 {
 	m_head = n;
-	m_outofdate = false;
+	if (m_def) { delete m_def; m_def = nullptr; }
 	for (auto i : m_dependants)
 	{
 		i->dirty();
@@ -63,7 +62,8 @@ void Harc::define(const Nid &n)
 	
 void Harc::define(const std::vector<std::vector<Nid>> &p)
 {
-	m_def = p;
+	if (m_def) delete m_def;
+	m_def = new Definition(p);
 	dirty();
 }
 
@@ -76,6 +76,16 @@ Harc &Harc::operator=(const Nid &n)
 bool Harc::operator==(const Nid &n)
 {
 	return query() == n;
+}
+
+Harc &Nid::operator[](const Nid &n)
+{
+	return Harc::get(*this,n);
+}
+
+Harc &Harc::operator[](const Nid &n)
+{
+	return get(query(),n);
 }
 
 Harc &Harc::get(const Nid &a, const Nid &b)

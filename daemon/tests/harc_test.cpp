@@ -1,8 +1,35 @@
 #include "fdsb/test.hpp"
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
+#include "fdsb/fabric.hpp"
 
 using namespace fdsb;
+
+void test_harc_symetric()
+{
+	get(10_n,11_n) = 55_n;
+	CHECK(get(10_n,11_n) == 55_n);
+	CHECK(get(11_n,10_n) == 55_n);
+	get(11_n,10_n) = 66_n;
+	CHECK(get(10_n,11_n) == 66_n);
+	CHECK(get(11_n,10_n) == 66_n);
+	DONE;
+}
+
+void test_harc_autocreate()
+{
+	get(15_n,16_n) = 67_n;
+	CHECK(get(15_n,16_n) == 67_n);
+	DONE;
+}
+
+void test_harc_subscript()
+{
+	19_n[20_n] = 21_n;
+	CHECK(19_n[20_n] == 21_n);
+	CHECK(20_n[19_n] == 21_n);
+	DONE;
+}
 
 void test_harc_defquery()
 {
@@ -29,24 +56,6 @@ void test_harc_eqnid()
 	DONE;
 }
 
-/*void test_harc_dependants()
-{
-	Harc h1 = Harc::get(22_n,23_n);
-	Harc h2 = Harc::get(24_n,25_n);
-	Harc h3 = Harc::get(26_n,27_n);
-	h2.add_dependant(h1);
-	h3.add_dependant(h2);
-	
-	CHECK(h1.is_out_of_date() == false);
-	CHECK(h2.is_out_of_date() == false);
-	CHECK(h3.is_out_of_date() == false);
-	h3 = 44_n;
-	CHECK(h3.is_out_of_date() == false);
-	CHECK(h2.is_out_of_date() == true);
-	CHECK(h1.is_out_of_date() == true);
-	DONE;
-}*/
-
 void test_harc_definition()
 {
 	100_n[101_n] = 49_n;
@@ -65,12 +74,38 @@ void test_harc_dependency()
 	DONE;
 }
 
+void test_harc_path()
+{
+	1_n[2_n] = Nid::unique();
+	1_n[2_n][3_n] = Nid::unique();
+	1_n[2_n][3_n][4_n] = 55_n;
+	
+	CHECK(Harc::path({1_n,2_n,3_n,4_n}) == 55_n);
+	DONE;
+}
+
+void test_harc_paths()
+{
+	10_n[2_n] = Nid::unique();
+	10_n[2_n][3_n] = Nid::unique();
+	10_n[2_n][3_n][4_n] = 66_n;
+	11_n[2_n] = Nid::unique();
+	11_n[2_n][66_n] = 77_n;
+	
+	CHECK(Harc::path({{11_n,2_n},{10_n,2_n,3_n,4_n}}) == 77_n);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_harc_defquery);
 	test(test_harc_assign);
 	test(test_harc_eqnid);
-	//test(test_harc_dependants);
+	test(test_harc_autocreate);
+	test(test_harc_subscript);
+	test(test_harc_symetric);
+	test(test_harc_path);
+	test(test_harc_paths);
 	test(test_harc_definition);
 	test(test_harc_dependency);
 	return test_fail_count();
