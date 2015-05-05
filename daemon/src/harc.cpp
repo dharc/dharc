@@ -14,7 +14,7 @@
 using fdsb::Harc;
 using fdsb::Nid;
 
-std::unordered_multimap<unsigned long long, Harc*> Harc::s_fabric;
+std::unordered_multimap<unsigned long long, Harc*> Harc::s_fabric(100000);
 
 Harc::Harc(const Nid &a, const Nid &b) :
 	m_head(null_n),
@@ -63,7 +63,7 @@ void Harc::define(const Nid &n) {
 	m_dependants.clear();
 }
 
-void Harc::define(const std::vector<std::vector<Nid>> &p) {
+void Harc::define(const fdsb::Path &p) {
 	if (m_def) delete m_def;
 	m_def = new Definition(p);
 	dirty();
@@ -90,13 +90,15 @@ Harc &Harc::get(const Nid &a, const Nid &b) {
 	Harc *h;
 	auto range = s_fabric.equal_range(Nid::dual_hash(a, b));
 
-	for (auto i = range.first; i != range.second; i++) {
+	// Find the exact Harc in the bucket.
+	for (auto i = range.first; i != range.second; ++i) {
 		h = i->second;
 		if (h->equal_tail(a, b)) {
 			return *h;
 		}
 	}
 
+	// Does not exist, so make it.
 	h = new Harc(a, b);
 	s_fabric.insert({{Nid::dual_hash(a, b), h}});
 	return *h;
@@ -104,15 +106,20 @@ Harc &Harc::get(const Nid &a, const Nid &b) {
 
 Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 	if (p.size() > 1) {
-		Nid temp = p[0];
-		for (auto i = ++p.begin(); i != p.end(); ++i) {
-			Harc &h = Harc::get(temp, *i);
-			if (dep) {
+		Nid cur = p[0];
+
+		if (dep) {
+			for (auto i = ++p.begin(); i != p.end(); ++i) {
+				Harc &h = Harc::get(cur, *i);
 				h.add_dependant(*dep);
+				cur = h.query();
 			}
-			temp = h.query();
+		} else {
+			for (auto i = ++p.begin(); i != p.end(); ++i) {
+				cur = get(cur, *i).query();
+			}
 		}
-		return temp;
+		return cur;
 	} else if (p.size() == 1) {
 		return p[0];
 	} else {
@@ -122,9 +129,16 @@ Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 
 std::atomic<int> pool_count(std::thread::hardware_concurrency());
 
-bool Harc::path_r(const std::vector<std::vector<Nid>> &p, Nid *res,
-		int s, int e, Harc *dep) {
-	int size = e-s;
+bool Harc::path_r(const fdsb::Path &p, Nid *res,
+	int s, int e, Harc *dep) {
+	for (auto i = s; i < e; ++i) {
+		res[i] = path_s(p[i], dep);
+	}
+	return true;
+}
+
+void Harc::paths(const fdsb::Path &p, Nid *res, Harc *dep) {
+	int size = p.size();
 
 	// Should we divide the paths?
 	if (size > 2 && pool_count > 0) {
@@ -136,27 +150,26 @@ bool Harc::path_r(const std::vector<std::vector<Nid>> &p, Nid *res,
 		// Asynchronously perform first half
 		std::future<bool> fa = std::async(
 			std::launch::async,
-			path_r, p, res, middle, e, dep);
+			path_r, p, res, middle, size, dep);
 
 		// Perform second half
-		path_r(p, res, s, middle, dep);
+		path_r(p, res, 0, middle, dep);
 
 		// Sync results
 		fa.get();
 		++pool_count;
 	} else {
-		for (auto i = s; i < e; ++i) {
+		for (auto i = 0; i < size; ++i) {
 			res[i] = path_s(p[i], dep);
 		}
 	}
-	return true;
 }
 
-Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
+Nid Harc::path(const fdsb::Path &p, Harc *dep) {
 	std::vector<Nid> res(p.size());
 
-	// Recursive divide
-	path_r(p, res.data(), 0, p.size(), dep);
+	// Process all the sub paths
+	paths(p, res.data(), dep);
 
 	// Final recombination
 	return Harc::path_s(res, dep);

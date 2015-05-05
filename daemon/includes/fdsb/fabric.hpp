@@ -13,8 +13,7 @@
 namespace fdsb {
 
 inline Harc &get(const Nid &a, const Nid &b) { return Harc::get(a, b); }
-inline Nid path(const std::vector<Nid> &p) { return Harc::path_s(p, nullptr); }
-inline Nid path(const std::vector<std::vector<Nid>> &p) {
+inline Nid path(const fdsb::Path &p) {
 	return Harc::path(p, nullptr);
 }
 

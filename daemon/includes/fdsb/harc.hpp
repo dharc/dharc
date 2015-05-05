@@ -16,6 +16,8 @@ namespace fdsb {
 
 class Definition;
 
+typedef std::vector<std::vector<Nid>> Path;
+
 /**
  * Hyper-arc class to represent relations between 3 nodes.
  * Each Harc can be given a definition and can be made dependant upon other
@@ -23,14 +25,14 @@ class Definition;
  */
 class Harc {
 	struct Definition {
-		explicit Definition(const std::vector<std::vector<Nid>> &d) :
+		explicit Definition(const fdsb::Path &d) :
 			outofdate(true),
 			lock(ATOMIC_FLAG_INIT),
 			def(d) {}
 
 		bool outofdate;
 		std::atomic_flag lock;
-		std::vector<std::vector<Nid>> def;
+		fdsb::Path def;
 	};
 
 	public:
@@ -45,7 +47,7 @@ class Harc {
 	 */
 	void define(const Nid &);
 
-	void define(const std::vector<std::vector<Nid>> &);
+	void define(const fdsb::Path &);
 
 	bool is_out_of_date() const {
 		if (m_def) {
@@ -83,16 +85,13 @@ class Harc {
 	static Harc &get(const Nid &, const Nid &);
 
 	/**
-	 * Navigate a simple path and return resulting node.
-	 */
-	static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
-
-	/**
 	 * Navigate a path of paths and return combined result. Each sub path
 	 * is explored in parallel before the results are then combined as a path
 	 * and the final result returned.
 	 */
-	static Nid path(const std::vector<std::vector<Nid>> &, Harc *dep = nullptr);
+	static Nid path(const fdsb::Path &, Harc *dep = nullptr);
+
+	static void paths(const fdsb::Path &p, Nid *res, Harc *dep);
 
 	private:
 	Nid m_tail[2];
@@ -108,7 +107,8 @@ class Harc {
 
 	static std::unordered_multimap<unsigned long long, Harc*> s_fabric;
 
-	static bool path_r(const std::vector<std::vector<Nid>> &p, Nid *res,
+	static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
+	static bool path_r(const fdsb::Path &p, Nid *res,
 							int s, int e, Harc *dep);
 };
 
