@@ -7,6 +7,7 @@
 #include <thread>
 #include <vector>
 #include <future>
+#include <iostream>
 
 #include "fdsb/nid.hpp"
 
@@ -119,35 +120,41 @@ Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 	}
 }
 
-std::atomic<int> pool_count(0);
+std::atomic<int> pool_count(4);
 
 Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
-	int ix = 0;
-	std::vector<std::future<Nid>> futures;
 	std::vector<Nid> res(p.size());
 
-	// These can all be done in different threads!
-	for (auto i : p) {
-		if (pool_count < 10) {
-			++pool_count;
+	if (p.size() > 1 && pool_count > 0) {
+		--pool_count;
 
-			futures.push_back(std::async(
-				// std::launch::async,
-				[](const std::vector<Nid> &p, Nid *res, Harc *dep) -> Nid {
-					*res = Harc::path_s(p, dep);
-					--pool_count;
-					return *res;
-				},
-				i, &(res.data()[ix++]), dep));
-		} else {
+		// Divide paths into 2 parts.
+		auto middle = p.size() / 2;
+
+		// Asynchronously perform first half
+		std::future<bool> fa = std::async(
+			std::launch::async,
+			[](const std::vector<std::vector<Nid>> &p, Nid *res,
+					int s, int e, Harc *dep) {
+				for (auto i = s; i < e; ++i) {
+					res[i] = Harc::path_s(p[i], dep);
+				}
+				return true;
+			}, p, res.data(), 0, middle, dep);
+
+		for (auto i = middle; i < p.size(); ++i) {
+			res[i] = Harc::path_s(p[i], dep);
+		}
+		fa.get();
+		++pool_count;
+	} else {
+		int ix = 0;
+
+		for (auto i : p) {
 			res[ix++] = path_s(i, dep);
 		}
 	}
 
 	// Final recombination
-	for (auto &i : futures) {
-		i.get();
-	}
-
 	return Harc::path_s(res, dep);
 }
