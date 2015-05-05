@@ -101,7 +101,7 @@ void test_harc_path()
 	1_n[2_n][3_n] = Nid::unique();
 	1_n[2_n][3_n][4_n] = 55_n;
 	
-	CHECK(Harc::path({1_n,2_n,3_n,4_n}) == 55_n);
+	CHECK(Harc::path_s({1_n,2_n,3_n,4_n}) == 55_n);
 	DONE;
 }
 

@@ -9,7 +9,7 @@ set(fdsb_VERSION_MAJOR "0")
 set(fdsb_VERSION_MINOR "1")
 set(fdsb_VERSION_PATCH "1")
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Werror -Wno-psabi")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++11 -Wall -Werror -Wno-psabi")
 set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
@@ -17,3 +17,4 @@ set(FDSBDSOURCE daemon/src/nid.cpp daemon/src/harc.cpp)
 
 add_executable(nid-test daemon/tests/nid_test.cpp daemon/src/test.cpp daemon/src/nid.cpp)
 add_executable(harc-test daemon/tests/harc_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp)
+target_link_libraries(harc-test pthread)

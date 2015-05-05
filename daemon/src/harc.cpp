@@ -6,9 +6,9 @@
 
 #include <thread>
 #include <vector>
+#include <future>
 
 #include "fdsb/nid.hpp"
-#include "fdsb/query.hpp"
 
 using fdsb::Harc;
 using fdsb::Nid;
@@ -28,10 +28,12 @@ void Harc::add_dependant(Harc &h) {
 
 const Nid &Harc::query() {
 	while (m_def && m_def->outofdate) {
+		// Can we update the definition
 		if (!m_def->lock.test_and_set()) {
 			m_head = path(m_def->def, this);
 			m_def->outofdate = false;
 			m_def->lock.clear();
+		// Or must we wait on some other thread
 		} else {
 			// Do something else or yield
 			std::this_thread::yield();
@@ -99,7 +101,7 @@ Harc &Harc::get(const Nid &a, const Nid &b) {
 	return *h;
 }
 
-Nid Harc::path(const std::vector<Nid> &p, Harc *dep) {
+Nid Harc::path_s(const std::vector<Nid> &p, Harc *dep) {
 	if (p.size() > 1) {
 		Nid temp = p[0];
 		for (auto i = ++p.begin(); i != p.end(); ++i) {
@@ -119,12 +121,19 @@ Nid Harc::path(const std::vector<Nid> &p, Harc *dep) {
 
 Nid Harc::path(const std::vector<std::vector<Nid>> &p, Harc *dep) {
 	int ix = 0;
+	auto fut = new std::future<Nid>[p.size()];
 	std::vector<Nid> res(p.size());
 
 	// These can all be done in different threads!
 	for (auto i : p) {
-		res[ix++] = Harc::path(i, dep);
+		//res[ix++] = Harc::path(i, dep);
+		fut[ix++] = std::async(std::launch::async, Harc::path_s, i, dep);
 	}
 	// Final recombination
-	return Harc::path(res, dep);
+	for (unsigned int i = 0; i < p.size(); ++i) {
+		res[i] = fut[i].get();
+	}
+	
+	delete [] fut;
+	return Harc::path_s(res, dep);
 }

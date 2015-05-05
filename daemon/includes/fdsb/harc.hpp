@@ -85,7 +85,7 @@ class Harc {
 	/**
 	 * Navigate a simple path and return resulting node.
 	 */
-	static Nid path(const std::vector<Nid> &, Harc *dep = nullptr);
+	static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
 
 	/**
 	 * Navigate a path of paths and return combined result. Each sub path
