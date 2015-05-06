@@ -156,7 +156,7 @@ void Harc::paths(const fdsb::Path &p, Nid *res, Harc *dep) {
 		path_r(p, res, 0, middle, dep);
 
 		// Sync results
-		++pool_count;	// Add myself to the pool.
+		++pool_count;  // Add myself to the pool.
 		fa.get();
 	} else {
 		for (auto i = 0; i < size; ++i) {

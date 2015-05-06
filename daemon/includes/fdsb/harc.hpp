@@ -91,7 +91,7 @@ class Harc {
 	 */
 	static Nid path(const fdsb::Path &, Harc *dep = nullptr);
 
-	static void paths(const fdsb::Path &p, Nid *res, Harc *dep);
+	static void paths(const fdsb::Path &p, Nid *res, Harc *dep = nullptr);
 
 	private:
 	Nid m_tail[2];

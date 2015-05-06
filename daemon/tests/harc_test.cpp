@@ -17,6 +17,11 @@ void test_harc_symetric()
 	get(11_n,10_n) = 66_n;
 	CHECK(get(10_n,11_n) == 66_n);
 	CHECK(get(11_n,10_n) == 66_n);
+	
+	// Check with different Nid types
+	get('a'_n, 33_n).define('b'_n);
+	CHECK(get('a'_n, 33_n) == 'b'_n);
+	CHECK(get(33_n, 'a'_n) == 'b'_n);
 	DONE;
 }
 
@@ -47,9 +52,9 @@ void test_harc_subscript()
  */
 void test_harc_defquery()
 {
-	Harc *h1 = &Harc::get(123_n,999_n);
+	Harc *h1 = &Harc::get(123_n,'g'_n);
 	h1->define(55_n);
-	CHECK(h1->equal_tail(123_n,999_n));
+	CHECK(h1->equal_tail('g'_n,123_n));
 	CHECK(h1->query() == 55_n);
 	DONE;
 }
@@ -74,14 +79,19 @@ void test_harc_eqnid()
 	Harc *h1 = &Harc::get(33_n, 22_n);
 	*h1 = 78_n;
 	CHECK(*h1 == 78_n);
+	CHECK(!(*h1 == 'a'_n));
 	DONE;
 }
 
+/* Check a basic definition
+ */
 void test_harc_definition()
 {
 	100_n[101_n] = 49_n;
 	102_n[103_n].define({{100_n,101_n}});
+	CHECK(102_n[103_n].is_out_of_date());
 	CHECK(102_n[103_n].query() == 49_n);
+	CHECK(102_n[103_n].is_out_of_date() == false);
 	DONE;
 }
 
@@ -95,17 +105,67 @@ void test_harc_dependency()
 	DONE;
 }
 
+/* Test that single non-nested paths evaluate correctly */
 void test_harc_path()
 {
 	1_n[2_n] = Nid::unique();
 	1_n[2_n][3_n] = Nid::unique();
 	1_n[2_n][3_n][4_n] = 55_n;
 	
+	// Normal case
 	CHECK(Harc::path({{1_n,2_n,3_n,4_n}}) == 55_n);
+	// Degenerate case 1
+	CHECK(Harc::path({{}}) == null_n);
+	// Degenerate case 2
+	CHECK(Harc::path({}) == null_n)
+	// Base case
+	CHECK(Harc::path({{5_n}}) == 5_n);
 	DONE;
 }
 
+/* Check the parallel evaluation of more than one path */
 void test_harc_paths()
+{
+	220_n[2_n] = Nid::unique();
+	220_n[2_n][3_n] = Nid::unique();
+	220_n[2_n][3_n][4_n] = 66_n;
+	221_n[2_n] = Nid::unique();
+	221_n[2_n][66_n] = 77_n;
+	
+	std::vector<Nid> res(10);
+	
+	// Normal case, 2 paths
+	Harc::paths({
+		{221_n, 2_n, 66_n},
+		{220_n, 2_n, 3_n, 4_n}
+	}, res.data());
+	CHECK(res[0] == 77_n);
+	CHECK(res[1] == 66_n);
+	
+	// Normal case, 3 paths
+	Harc::paths({
+		{221_n, 2_n, 66_n},
+		{221_n, 2_n, 66_n},
+		{220_n, 2_n, 3_n, 4_n}
+	}, res.data());
+	CHECK(res[0] == 77_n);
+	CHECK(res[1] == 77_n);
+	CHECK(res[2] == 66_n);
+	
+	// Degen case, 3 paths
+	Harc::paths({
+		{221_n, 2_n, 66_n},
+		{},
+		{220_n, 2_n, 3_n, 4_n}
+	}, res.data());
+	CHECK(res[0] == 77_n);
+	CHECK(res[1] == null_n);
+	CHECK(res[2] == 66_n);
+	DONE;
+}
+
+/* Check that nested (but normalised) paths evaluate correctly */
+void test_harc_agregatepaths()
 {
 	10_n[2_n] = Nid::unique();
 	10_n[2_n][3_n] = Nid::unique();
@@ -205,6 +265,7 @@ int main(int argc, char *argv[]) {
 	test(test_harc_symetric);
 	test(test_harc_path);
 	test(test_harc_paths);
+	test(test_harc_agregatepaths);
 	test(test_harc_definition);
 	test(test_harc_dependency);
 	test(test_harc_concurrentdef);
