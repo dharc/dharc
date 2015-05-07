@@ -5,6 +5,9 @@
 #ifndef FDSB_NID_H_
 #define FDSB_NID_H_
 
+#include <ostream>
+#include <istream>
+
 namespace fdsb {
 
 class Harc;
@@ -35,6 +38,15 @@ struct Nid {
 	char c;
 	};
 
+	void serialise(std::ostream &);
+	void deserialise(std::istream &);
+
+	/**
+	 * Combine with a second NID to retrieve a Harc.
+	 * NOTE: Implemented as part of fabric(.cpp).
+	 */
+	Harc &operator[](const Nid &);
+
 	/**
 	 * Generate a new unique node id.
 	 */
@@ -47,12 +59,6 @@ struct Nid {
 	constexpr static unsigned long long dual_hash(const Nid &a, const Nid &b) {
 		return a.i ^ b.i;
 	}
-
-	/**
-	 * Combine with a second NID to retrieve a Harc.
-	 * NOTE: Implemented as part of fabric(.cpp).
-	 */
-	Harc &operator[](const Nid &);
 };
 
 /**
@@ -95,6 +101,22 @@ constexpr bool operator==(const Nid &a, const Nid &b) {
  */
 constexpr bool operator!=(const Nid &a, const Nid &b) {
 	return a.t != b.t || a.i != b.i;
+}
+
+constexpr bool operator<(const Nid &a, const Nid &b) {
+	return a.t < b.t || (a.t == b.t && a.i < b.i);
+}
+
+constexpr bool operator>(const Nid &a, const Nid &b) {
+	return a.t > b.t || (a.t == b.t && a.i > b.i);
+}
+
+constexpr bool operator<=(const Nid &a, const Nid &b) {
+	return a.t <= b.t || (a.t == b.t && a.i <= b.i);
+}
+
+constexpr bool operator>=(const Nid &a, const Nid &b) {
+	return a.t >= b.t || (a.t == b.t && a.i >= b.i);
 }
 
 };  // namespace fdsb

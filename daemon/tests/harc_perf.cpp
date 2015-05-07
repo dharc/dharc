@@ -1,6 +1,7 @@
 #include "fdsb/harc.hpp"
 #include "fdsb/nid.hpp"
 #include "fdsb/test.hpp"
+#include "fdsb/fabric.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -15,7 +16,7 @@ void read_performance() {
 	BEGIN_PERF
 	
 	for (int i = 0; i < 10000000; ++i) {
-		Harc::get(1_n,2_n).query();
+		fabric.get(1_n,2_n).query();
 	}
 	
 	END_PERF(10,"Mps")
@@ -34,7 +35,7 @@ void parallel_paths() {
 	}
 	
 	BEGIN_PERF
-	Harc::path(def);
+	fabric.path(def);
 	END_PERF(10000,"ps")
 }
 

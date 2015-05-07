@@ -14,8 +14,7 @@
 
 namespace fdsb {
 
-class Definition;
-
+class Fabric;
 typedef std::vector<std::vector<Nid>> Path;
 
 /**
@@ -24,6 +23,7 @@ typedef std::vector<std::vector<Nid>> Path;
  * Harc's so that they update when others are changed.
  */
 class Harc {
+	friend class Fabric;
 	struct Definition {
 		explicit Definition(const fdsb::Path &d) :
 			outofdate(true),
@@ -82,16 +82,16 @@ class Harc {
 	/**
 	 * Find or create a hyper-arc with the given tail nodes.
 	 */
-	static Harc &get(const Nid &, const Nid &);
+	// static Harc &get(const Nid &, const Nid &);
 
 	/**
 	 * Navigate a path of paths and return combined result. Each sub path
 	 * is explored in parallel before the results are then combined as a path
 	 * and the final result returned.
 	 */
-	static Nid path(const fdsb::Path &, Harc *dep = nullptr);
+	// static Nid path(const fdsb::Path &, Harc *dep = nullptr);
 
-	static void paths(const fdsb::Path &p, Nid *res, Harc *dep = nullptr);
+	// static void paths(const fdsb::Path &p, Nid *res, Harc *dep = nullptr);
 
 	private:
 	Nid m_tail[2];
@@ -105,11 +105,11 @@ class Harc {
 	void dirty();
 	void add_dependant(Harc &);
 
-	static std::unordered_multimap<unsigned long long, Harc*> s_fabric;
+	// static std::unordered_multimap<unsigned long long, Harc*> s_fabric;
 
-	static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
-	static bool path_r(const fdsb::Path &p, Nid *res,
-							int s, int e, Harc *dep);
+	// static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
+	// static bool path_r(const fdsb::Path &p, Nid *res,
+	//  						int s, int e, Harc *dep);
 };
 
 };  // namespace fdsb

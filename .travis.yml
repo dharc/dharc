@@ -21,5 +21,6 @@ script:
  - make
  - "./nid-test"
  - "./harc-test"
+ - "./fabric-test"
  - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
  - ../tools/cpplint.py --filter=-whitespace/tab,-build/c++11,-runtime/int --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/fdsb/*

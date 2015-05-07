@@ -50,6 +50,19 @@ void test_nid_eqne()
 	DONE;
 }
 
+void test_nid_less() {
+	Nid n1 = 100_n;
+	Nid n2 = 102_n;
+	
+	CHECK(n1 < n2);
+	CHECK(!(n2 < n1));
+	n1 = true_n;
+	CHECK(n1 < n2);
+	n1 = 102_n;
+	CHECK(!(n1 <n2));
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_nid_ilit);
@@ -57,5 +70,6 @@ int main(int argc, char *argv[])
 	test(test_nid_clit);
 	test(test_nid_unique);
 	test(test_nid_eqne);
+	test(test_nid_less);
 	return test_fail_count();
 }
