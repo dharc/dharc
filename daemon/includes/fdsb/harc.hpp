@@ -65,6 +65,9 @@ class Harc {
 				(m_tail[0] == b && m_tail[1] == a);
 	}
 
+	void dirty();
+	void add_dependant(Harc &);
+
 	/**
 	 * Get the tail nodes. There are only 2 so only integers 0 and 1 can be
 	 * used in the template parameter.
@@ -79,20 +82,6 @@ class Harc {
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 
-	/**
-	 * Find or create a hyper-arc with the given tail nodes.
-	 */
-	// static Harc &get(const Nid &, const Nid &);
-
-	/**
-	 * Navigate a path of paths and return combined result. Each sub path
-	 * is explored in parallel before the results are then combined as a path
-	 * and the final result returned.
-	 */
-	// static Nid path(const fdsb::Path &, Harc *dep = nullptr);
-
-	// static void paths(const fdsb::Path &p, Nid *res, Harc *dep = nullptr);
-
 	private:
 	Nid m_tail[2];
 	Nid m_head;
@@ -102,14 +91,6 @@ class Harc {
 	/* Prevent empty harc */
 	Harc() {}
 	Harc(const Nid &, const Nid &);
-	void dirty();
-	void add_dependant(Harc &);
-
-	// static std::unordered_multimap<unsigned long long, Harc*> s_fabric;
-
-	// static Nid path_s(const std::vector<Nid> &, Harc *dep = nullptr);
-	// static bool path_r(const fdsb::Path &p, Nid *res,
-	//  						int s, int e, Harc *dep);
 };
 
 };  // namespace fdsb
