@@ -23,4 +23,4 @@ script:
  - "./harc-test"
  - "./fabric-test"
  - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
- - ../tools/cpplint.py --filter=-whitespace/tab,-build/c++11,-runtime/int --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/fdsb/*
+ - ../tools/cpplint.py --filter=-whitespace/tab,-build/c++11,-runtime/int,-runtime/references --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/fdsb/*

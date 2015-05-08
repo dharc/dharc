@@ -16,7 +16,8 @@ using fdsb::Nid;
 
 Harc::Harc(const Nid &a, const Nid &b) :
 	m_head(null_n),
-	m_def(nullptr) {
+	m_def(nullptr),
+	m_flags(Flag::none) {
 	m_tail[0] = a;
 	m_tail[1] = b;
 }
@@ -51,7 +52,9 @@ void Harc::dirty() {
 
 void Harc::define(const Nid &n) {
 	m_head = n;
-	fabric.log_change(this);
+
+	if (check_flag(Flag::log)) fabric.log_change(this);
+
 	if (m_def) {
 		delete m_def;
 		m_def = nullptr;
@@ -65,7 +68,9 @@ void Harc::define(const Nid &n) {
 void Harc::define(const fdsb::Path &p) {
 	if (m_def) delete m_def;
 	m_def = new Definition(p);
-	fabric.log_change(this);
+
+	if (check_flag(Flag::log)) fabric.log_change(this);
+
 	dirty();
 }
 

@@ -29,8 +29,10 @@ Nid Fabric::path(const Path &p, Harc *dep) {
 	return dummy_result;
 }
 
-void Fabric::log_change(Harc *) {
-	
+Harc *last_log = nullptr;
+
+void Fabric::log_change(Harc *h) {
+	last_log = h;
 }
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {
@@ -136,6 +138,51 @@ void test_harc_definition()
 	DONE;
 }
 
+/*
+ * Make sure flags set, check and clear correctly.
+ */
+void test_harc_flags() {
+	Harc &h1 = 99_n[88_n];
+	
+	CHECK(h1.check_flag(Harc::Flag::none));
+	
+	h1.set_flag(Harc::Flag::log);
+	CHECK(h1.check_flag(Harc::Flag::log));
+	CHECK(h1.check_flag(Harc::Flag::meta) == false);
+	
+	h1.set_flag(Harc::Flag::meta);
+	CHECK(h1.check_flag(Harc::Flag::log));
+	CHECK(h1.check_flag(Harc::Flag::meta));
+	
+	h1.clear_flag(Harc::Flag::log);
+	CHECK(h1.check_flag(Harc::Flag::log) == false);
+	CHECK(h1.check_flag(Harc::Flag::meta));
+	DONE;
+}
+
+void test_harc_log() {
+	Harc &h = 2_n[3_n];
+	
+	CHECK(h.check_flag(Harc::Flag::log) == false);
+	last_log = nullptr;
+	h.define(7_n);
+	CHECK(last_log == nullptr);
+	
+	h.set_flag(Harc::Flag::log);
+	h.define(8_n);
+	CHECK(last_log == &h);
+	
+	last_log = nullptr;
+	h.define({{109_n,110_n}});
+	CHECK(last_log == &h);
+	
+	h.clear_flag(Harc::Flag::log);
+	last_log = nullptr;
+	h.define({{111_n,112_n}});
+	CHECK(last_log == nullptr);
+	DONE;
+}
+
 int main(int argc, char *argv[]) {
 	test(test_harc_eqtail);
 	test(test_harc_defquery);
@@ -143,5 +190,7 @@ int main(int argc, char *argv[]) {
 	test(test_harc_eqnid);
 	test(test_harc_subscript);
 	test(test_harc_definition);
+	test(test_harc_flags);
+	test(test_harc_log);
 	return test_fail_count();
 }

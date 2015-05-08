@@ -24,6 +24,7 @@ typedef std::vector<std::vector<Nid>> Path;
  */
 class Harc {
 	friend class Fabric;
+
 	struct Definition {
 		explicit Definition(const fdsb::Path &d) :
 			outofdate(true),
@@ -36,6 +37,12 @@ class Harc {
 	};
 
 	public:
+	enum struct Flag : unsigned int {
+		none = 0x00,
+		log = 0x01,
+		meta = 0x02,
+	};
+
 	/**
 	 * Get the head of this hyper-arc. Evaluate the definition if it is
 	 * out-of-date.
@@ -48,6 +55,10 @@ class Harc {
 	void define(const Nid &);
 
 	void define(const fdsb::Path &);
+
+	void set_flag(Flag f);
+	bool check_flag(Flag f) const;
+	void clear_flag(Flag f);
 
 	bool is_out_of_date() const {
 		if (m_def) {
@@ -83,6 +94,7 @@ class Harc {
 	Nid m_tail[2];
 	Nid m_head;
 	Definition *m_def;
+	Flag m_flags;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
 	Harc() {}  							/* Prevent empty harc */
@@ -90,6 +102,34 @@ class Harc {
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
 };
+
+constexpr Harc::Flag operator | (Harc::Flag lhs, Harc::Flag rhs) {
+	return (Harc::Flag)(static_cast<unsigned int>(lhs)
+			| static_cast<unsigned int>(rhs));
+}
+
+inline Harc::Flag &operator |= (Harc::Flag &lhs, Harc::Flag rhs) {
+	lhs = lhs | rhs;
+	return lhs;
+}
+
+constexpr Harc::Flag operator & (Harc::Flag lhs, Harc::Flag rhs) {
+	return (Harc::Flag)(static_cast<unsigned int>(lhs)
+			& static_cast<unsigned int>(rhs));
+}
+
+inline Harc::Flag &operator &= (Harc::Flag &lhs, Harc::Flag rhs) {
+	lhs = lhs & rhs;
+	return lhs;
+}
+
+constexpr Harc::Flag operator ~(Harc::Flag f) {
+	return (Harc::Flag)(~static_cast<unsigned int>(f));
+}
+
+inline void Harc::set_flag(Flag f) { m_flags |= f; }
+inline bool Harc::check_flag(Flag f) const { return (m_flags & f) == f; }
+inline void Harc::clear_flag(Flag f) { m_flags &= ~f; }
 
 };  // namespace fdsb
 
