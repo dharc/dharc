@@ -193,6 +193,8 @@ void test_fabric_duplicateeval() {
 
 void test_fabric_changes() {
 	auto chg = fabric.changes();
+	fabric.get(40_n,41_n).set_flag(Harc::Flag::log);
+	fabric.get(40_n,42_n).set_flag(Harc::Flag::log);
 	fabric.get(40_n,41_n).define(23_n);
 	fabric.get(40_n,42_n).define(24_n);
 	chg = fabric.changes();
