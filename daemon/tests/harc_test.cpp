@@ -22,6 +22,10 @@ Fabric &Fabric::singleton() {
 Nid dummy_result;
 
 Nid Fabric::path(const Path &p, Harc *dep) {
+	if (dep) {
+		Harc &h = get(p[0][0],p[0][1]);
+		h.add_dependant(*dep);
+	}
 	return dummy_result;
 }
 
@@ -122,25 +126,9 @@ void test_harc_definition()
 	dummy_result = 50_n;
 	CHECK(h1.query() == 49_n);
 	
-	h1.dirty();
+	100_n[101_n].define(10_n);
 	CHECK(h1.is_out_of_date());
 	CHECK(h1.query() == 50_n);
-	DONE;
-}
-
-void test_harc_dependency()
-{
-	Harc &h1 = 100_n[101_n];
-	Harc &h2 = 102_n[103_n];
-	
-	dummy_result = 43_n;
-	h1.define({{43_n}});
-	CHECK(h1.query() == 43_n);
-	CHECK(h1.is_out_of_date() == false);
-	
-	h2.add_dependant(h1);
-	h2.define(65_n);
-	CHECK(h1.is_out_of_date());
 	DONE;
 }
 
@@ -151,6 +139,5 @@ int main(int argc, char *argv[]) {
 	test(test_harc_eqnid);
 	test(test_harc_subscript);
 	test(test_harc_definition);
-	test(test_harc_dependency);
 	return test_fail_count();
 }

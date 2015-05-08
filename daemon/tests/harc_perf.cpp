@@ -34,6 +34,8 @@ void parallel_paths() {
 		def.push_back({1_n, 1_n, 1_n, 1_n, 1_n, 1_n, 1_n});
 	}
 	
+	// Initial run to remove thread creation overheads.
+	fabric.path(def);
 	BEGIN_PERF
 	fabric.path(def);
 	END_PERF(10000,"ps")

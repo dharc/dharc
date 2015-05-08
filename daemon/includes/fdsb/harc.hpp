@@ -65,9 +65,6 @@ class Harc {
 				(m_tail[0] == b && m_tail[1] == a);
 	}
 
-	void dirty();
-	void add_dependant(Harc &);
-
 	/**
 	 * Get the tail nodes. There are only 2 so only integers 0 and 1 can be
 	 * used in the template parameter.
@@ -86,11 +83,12 @@ class Harc {
 	Nid m_tail[2];
 	Nid m_head;
 	Definition *m_def;
-	std::list<Harc*> m_dependants;
+	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
-	/* Prevent empty harc */
-	Harc() {}
-	Harc(const Nid &, const Nid &);
+	Harc() {}  							/* Prevent empty harc */
+	Harc(const Nid &, const Nid &);  	/* Only Fabric should call this */
+	void dirty();  						/* Mark as out-of-date and propagate */
+	void add_dependant(Harc &);  		/* Notify given Harc on change. */
 };
 
 };  // namespace fdsb
