@@ -16,10 +16,21 @@ using fdsb::Path;
 
 Fabric &fdsb::fabric = Fabric::singleton();
 
-Fabric::Fabric() {
+Fabric::Fabric()
+	: m_changes(new forward_list<Harc*>()) {
 }
 
 Fabric::~Fabric() {
+}
+
+unique_ptr<forward_list<Harc*>> Fabric::changes() {
+	unique_ptr<forward_list<Harc*>> newptr(new forward_list<Harc*>());
+	m_changes.swap(newptr);
+	return newptr;
+}
+
+void Fabric::log_change(Harc *h) {
+	m_changes->push_front(h);
 }
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {

@@ -191,6 +191,31 @@ void test_fabric_duplicateeval() {
 	DONE;
 }
 
+void test_fabric_changes() {
+	auto chg = fabric.changes();
+	fabric.get(40_n,41_n).define(23_n);
+	fabric.get(40_n,42_n).define(24_n);
+	chg = fabric.changes();
+	
+	CHECK(chg.get() != nullptr);
+	if (chg.get()) {
+		CHECK(!chg->empty());
+		if (!chg->empty()) {
+			CHECK(chg->front()->query() == 24_n);
+			chg->pop_front();
+		}
+		CHECK(!chg->empty());
+		if (!chg->empty()) {
+			CHECK(chg->front()->query() == 23_n);
+		}
+	}
+	
+	chg = fabric.changes();
+	CHECK(chg->empty());
+	
+	DONE;
+}
+
 int main(int argc, char *argv[]) {
 	test(test_fabric_symetric);
 	test(test_fabric_path);
@@ -198,6 +223,7 @@ int main(int argc, char *argv[]) {
 	test(test_fabric_agregatepaths);
 	test(test_fabric_concurrentdef);
 	test(test_fabric_duplicateeval);
+	test(test_fabric_changes);
 	return test_fail_count();
 }
 

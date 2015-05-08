@@ -51,6 +51,7 @@ void Harc::dirty() {
 
 void Harc::define(const Nid &n) {
 	m_head = n;
+	fabric.log_change(this);
 	if (m_def) {
 		delete m_def;
 		m_def = nullptr;
@@ -64,6 +65,7 @@ void Harc::define(const Nid &n) {
 void Harc::define(const fdsb::Path &p) {
 	if (m_def) delete m_def;
 	m_def = new Definition(p);
+	fabric.log_change(this);
 	dirty();
 }
 

@@ -29,6 +29,10 @@ Nid Fabric::path(const Path &p, Harc *dep) {
 	return dummy_result;
 }
 
+void Fabric::log_change(Harc *) {
+	
+}
+
 Harc &Fabric::get(const Nid &a, const Nid &b) {
 	Harc *h;
 	auto range = m_harcs.equal_range(Nid::dual_hash(a, b));
