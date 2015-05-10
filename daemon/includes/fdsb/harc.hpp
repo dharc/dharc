@@ -9,8 +9,11 @@
 #include <vector>
 #include <unordered_map>
 #include <atomic>
+#include <utility>
 
 #include "fdsb/nid.hpp"
+
+using std::pair;
 
 namespace fdsb {
 
@@ -72,26 +75,21 @@ class Harc {
 	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
 	 */
 	bool equal_tail(const Nid &a, const Nid &b) const {
-		return 	(m_tail[0] == a && m_tail[1] == b) ||
-				(m_tail[0] == b && m_tail[1] == a);
+		return 	(m_tail.first == a && m_tail.second == b) ||
+				(m_tail.first == b && m_tail.second == a);
 	}
 
 	/**
-	 * Get the tail nodes. There are only 2 so only integers 0 and 1 can be
-	 * used in the template parameter.
+	 * Get the tail nodes.
 	 */
-	template <int I>
-	const Nid &tail() const {
-		static_assert(I < 2 && I >= 0, "Tail only has 2 nodes.");
-		return m_tail[I];
-	}
+	const pair<Nid, Nid> &tail() { return m_tail; }
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 
 	private:
-	Nid m_tail[2];
+	pair<Nid, Nid> m_tail;
 	Nid m_head;
 	Definition *m_def;
 	Flag m_flags;

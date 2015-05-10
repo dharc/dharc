@@ -7,6 +7,7 @@
 #include <future>
 #include <thread>
 #include <vector>
+#include <utility>
 
 using fdsb::Fabric;
 using fdsb::Harc;
@@ -35,20 +36,17 @@ void Fabric::log_change(Harc *h) {
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {
 	Harc *h;
-	auto range = m_harcs.equal_range(Nid::dual_hash(a, b));
+	auto key = (a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a);
 
-	// Find the exact Harc in the bucket.
-	for (auto i = range.first; i != range.second; ++i) {
-		h = i->second;
-		if (h->equal_tail(a, b)) {
-			return *h;
-		}
+	if (m_harcs.count(key) == 1) {
+		h = m_harcs[key];
+		return *h;
+	} else {
+		// Does not exist, so make it.
+		h = new Harc(a, b);
+		m_harcs.insert({key, h});
+		return *h;
 	}
-
-	// Does not exist, so make it.
-	h = new Harc(a, b);
-	m_harcs.insert({{Nid::dual_hash(a, b), h}});
-	return *h;
 }
 
 Nid Fabric::path_s(const vector<Nid> &p, Harc *dep) {

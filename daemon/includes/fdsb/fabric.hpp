@@ -8,6 +8,8 @@
 #include <memory>
 #include <forward_list>
 #include <vector>
+#include <chrono>
+#include <utility>
 
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
@@ -15,9 +17,19 @@
 using std::forward_list;
 using std::unique_ptr;
 using std::vector;
-using std::unordered_multimap;
+using std::unordered_map;
+using std::chrono::time_point;
+using std::pair;
+using std::size_t;
 
 namespace fdsb {
+
+struct TailHash {
+	public:
+	size_t operator()(const pair<Nid, Nid> &x) const {
+		return x.first.i*3 + x.second.i;
+	}
+};
 
 class Fabric {
 	friend Harc;
@@ -61,7 +73,7 @@ class Fabric {
 	static bool path_r(const Path &p, Nid *res, int s, int e, Harc *dep);
 	void log_change(Harc *h);
 
-	unordered_multimap<unsigned long long, Harc*> m_harcs;
+	unordered_map<pair<Nid, Nid>, Harc*, TailHash> m_harcs;
 	unique_ptr<forward_list<Harc*>> m_changes;
 };
 

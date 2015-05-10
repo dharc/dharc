@@ -18,8 +18,8 @@ Harc::Harc(const Nid &a, const Nid &b) :
 	m_head(null_n),
 	m_def(nullptr),
 	m_flags(Flag::none) {
-	m_tail[0] = a;
-	m_tail[1] = b;
+	m_tail.first = a;
+	m_tail.second = b;
 }
 
 void Harc::add_dependant(Harc &h) {

@@ -37,20 +37,17 @@ void Fabric::log_change(Harc *h) {
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {
 	Harc *h;
-	auto range = m_harcs.equal_range(Nid::dual_hash(a, b));
-
-	// Find the exact Harc in the bucket.
-	for (auto i = range.first; i != range.second; ++i) {
-		h = i->second;
-		if (h->equal_tail(a, b)) {
-			return *h;
-		}
+	auto key = (a < b) ? std::pair<Nid,Nid>(a,b) : std::pair<Nid,Nid>(b,a);
+	
+	if (m_harcs.count(key) == 1) {
+		h = m_harcs[key];
+		return *h;
+	} else {
+		// Does not exist, so make it.
+		h = new Harc(a, b);
+		m_harcs.insert({key, h});
+		return *h;
 	}
-
-	// Does not exist, so make it.
-	h = new Harc(a, b);
-	m_harcs.insert({{Nid::dual_hash(a, b), h}});
-	return *h;
 }
 
 /* ==== END MOCKS ==== */
@@ -71,7 +68,7 @@ void test_harc_subscript()
 	Harc &h1 = 19_n[20_n];
 	Harc &h2 = 20_n[19_n];
 	
-	CHECK(h1.equal_tail(h2.tail<0>(),h2.tail<1>()));
+	CHECK(h1.equal_tail(h2.tail().first,h2.tail().second));
 	DONE;
 }
 
