@@ -14,13 +14,10 @@
 using fdsb::Harc;
 using fdsb::Nid;
 
-Harc::Harc(const Nid &a, const Nid &b) :
+Harc::Harc() :
 	m_head(null_n),
 	m_def(nullptr),
-	m_flags(Flag::none) {
-	m_tail.first = a;
-	m_tail.second = b;
-}
+	m_flags(Flag::none) {}
 
 void Harc::add_dependant(Harc &h) {
 	m_dependants.push_back(&h);

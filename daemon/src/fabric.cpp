@@ -35,15 +35,13 @@ void Fabric::log_change(Harc *h) {
 }
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {
-	Harc *h;
 	auto key = (a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a);
+	auto it = m_harcs.find(key);
 
-	if (m_harcs.count(key) == 1) {
-		h = m_harcs[key];
-		return *h;
+	if (it != m_harcs.end()) {
+		return *(it->second);
 	} else {
-		// Does not exist, so make it.
-		h = new Harc(a, b);
+		auto h = new Harc();
 		m_harcs.insert({key, h});
 		return *h;
 	}

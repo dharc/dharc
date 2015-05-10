@@ -36,29 +36,19 @@ void Fabric::log_change(Harc *h) {
 }
 
 Harc &Fabric::get(const Nid &a, const Nid &b) {
-	Harc *h;
-	auto key = (a < b) ? std::pair<Nid,Nid>(a,b) : std::pair<Nid,Nid>(b,a);
-	
-	if (m_harcs.count(key) == 1) {
-		h = m_harcs[key];
-		return *h;
+	auto key = (a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a);
+	auto it = m_harcs.find(key);
+
+	if (it != m_harcs.end()) {
+		return *(it->second);
 	} else {
-		// Does not exist, so make it.
-		h = new Harc(a, b);
+		auto h = new Harc();
 		m_harcs.insert({key, h});
 		return *h;
 	}
 }
 
 /* ==== END MOCKS ==== */
-
-void test_harc_eqtail() {
-	Harc &h1 = fabric.get(125_n, 'j'_n);
-	CHECK(h1.equal_tail('j'_n, 125_n));
-	CHECK(h1.equal_tail(125_n, 'j'_n));
-	CHECK(!(h1.equal_tail(126_n, 'j'_n)));
-	DONE;
-}
 
 /* Subscript operator overload test:
  * Does the subscript operator for Nid and Harc work as expected.
@@ -68,7 +58,7 @@ void test_harc_subscript()
 	Harc &h1 = 19_n[20_n];
 	Harc &h2 = 20_n[19_n];
 	
-	CHECK(h1.equal_tail(h2.tail().first,h2.tail().second));
+	CHECK(&h1 == &h2);
 	DONE;
 }
 
@@ -181,7 +171,6 @@ void test_harc_log() {
 }
 
 int main(int argc, char *argv[]) {
-	test(test_harc_eqtail);
 	test(test_harc_defquery);
 	test(test_harc_assign);
 	test(test_harc_eqnid);

@@ -71,32 +71,17 @@ class Harc {
 		}
 	}
 
-	/**
-	 * Compare this Harcs tail with a pair of Nids. Order does not matter.
-	 */
-	bool equal_tail(const Nid &a, const Nid &b) const {
-		return 	(m_tail.first == a && m_tail.second == b) ||
-				(m_tail.first == b && m_tail.second == a);
-	}
-
-	/**
-	 * Get the tail nodes.
-	 */
-	const pair<Nid, Nid> &tail() { return m_tail; }
-
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 
 	private:
-	pair<Nid, Nid> m_tail;
 	Nid m_head;
 	Definition *m_def;
 	Flag m_flags;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
-	Harc() {}  							/* Prevent empty harc */
-	Harc(const Nid &, const Nid &);  	/* Only Fabric should call this */
+	Harc();  							/* Only Fabric should call */
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
 };
