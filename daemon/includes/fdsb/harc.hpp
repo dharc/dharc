@@ -37,6 +37,7 @@ class Harc {
 		bool outofdate;
 		std::atomic_flag lock;
 		fdsb::Path def;
+		Nid cache;
 	};
 
 	public:
@@ -44,6 +45,7 @@ class Harc {
 		none = 0x00,
 		log = 0x01,
 		meta = 0x02,
+		defined = 0x04,
 	};
 
 	/**
@@ -64,7 +66,7 @@ class Harc {
 	void clear_flag(Flag f);
 
 	bool is_out_of_date() const {
-		if (m_def) {
+		if (check_flag(Flag::defined)) {
 			return m_def->outofdate;
 		} else {
 			return false;
@@ -76,8 +78,10 @@ class Harc {
 	bool operator==(const Nid &);
 
 	private:
+	union {
 	Nid m_head;
 	Definition *m_def;
+	};
 	Flag m_flags;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 

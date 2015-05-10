@@ -16,7 +16,6 @@ using fdsb::Nid;
 
 Harc::Harc() :
 	m_head(null_n),
-	m_def(nullptr),
 	m_flags(Flag::none) {}
 
 void Harc::add_dependant(Harc &h) {
@@ -24,23 +23,28 @@ void Harc::add_dependant(Harc &h) {
 }
 
 const Nid &Harc::query() {
-	while (m_def && m_def->outofdate) {
-		// Can we update the definition
-		if (!m_def->lock.test_and_set()) {
-			m_head = fabric.path(m_def->def, this);
-			m_def->outofdate = false;
-			m_def->lock.clear();
-		// Or must we wait on some other thread
-		} else {
-			// Do something else or yield
-			std::this_thread::yield();
+	if (check_flag(Flag::defined)) {
+		// Potentially unsafe if redefined before queried.
+		while (m_def->outofdate) {
+			// Can we update the definition
+			if (!m_def->lock.test_and_set()) {
+				m_def->cache = fabric.path(m_def->def, this);
+				m_def->outofdate = false;
+				m_def->lock.clear();
+			// Or must we wait on some other thread
+			} else {
+				// Do something else or yield
+				std::this_thread::yield();
+			}
 		}
+		return m_def->cache;
+	} else {
+		return m_head;
 	}
-	return m_head;
 }
 
 void Harc::dirty() {
-	if (m_def) m_def->outofdate = true;
+	if (check_flag(Flag::defined)) m_def->outofdate = true;
 	for (auto i : m_dependants) {
 		i->dirty();
 	}
@@ -48,14 +52,15 @@ void Harc::dirty() {
 }
 
 void Harc::define(const Nid &n) {
-	m_head = n;
-
 	if (check_flag(Flag::log)) fabric.log_change(this);
 
-	if (m_def) {
+	if (check_flag(Flag::defined)) {
 		delete m_def;
-		m_def = nullptr;
+		clear_flag(Flag::defined);
 	}
+
+	m_head = n;
+
 	for (auto i : m_dependants) {
 		i->dirty();
 	}
@@ -63,7 +68,11 @@ void Harc::define(const Nid &n) {
 }
 
 void Harc::define(const fdsb::Path &p) {
-	if (m_def) delete m_def;
+	if (check_flag(Flag::defined)) {
+		delete m_def;
+	} else {
+		set_flag(Flag::defined);
+	}
 	m_def = new Definition(p);
 
 	if (check_flag(Flag::log)) fabric.log_change(this);
