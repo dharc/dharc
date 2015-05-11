@@ -40,21 +40,19 @@ const list<Harc*> &Fabric::partners(const Nid &n) {
 	return m_partners[n];
 }
 
-Harc &Fabric::get(const Nid &a, const Nid &b) {
-	auto key = (a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a);
+Harc &Fabric::get(const pair<Nid, Nid> &key) {
 	auto it = m_harcs.find(key);
 
 	if (it != m_harcs.end()) {
-		// TODO(knicos): Update harc significance and update node partners.
 		return *(it->second);
 	} else {
-		auto h = new Harc(a, b);
+		auto h = new Harc(key);
 		m_harcs.insert({key, h});
 
 		// Update node partners to include this harc
 		// TODO(knicos): This should be insertion sorted.
-		m_partners[a].push_front(h);
-		m_partners[b].push_front(h);
+		m_partners[key.first].push_front(h);
+		m_partners[key.second].push_front(h);
 
 		return *h;
 	}

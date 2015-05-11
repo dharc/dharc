@@ -12,10 +12,11 @@
 #include "fdsb/fabric.hpp"
 
 using fdsb::Harc;
+using fdsb::Fabric;
 using fdsb::Nid;
 
-Harc::Harc(const Nid &a, const Nid &b) :
-	m_tail(a, b),
+Harc::Harc(const pair<Nid, Nid> &t) :
+	m_tail(t),
 	m_head(null_n),
 	m_flags(Flag::none) {}
 
@@ -23,7 +24,38 @@ void Harc::add_dependant(Harc &h) {
 	m_dependants.push_back(&h);
 }
 
+/* void Harc::reposition_harc(const list<Harc*> &p) {
+	auto npos = p.begin();
+	for (auto i : p) {}
+}*/
+
+void Harc::update_partners(const Nid &n) {
+	int max = Fabric::sig_prop_max();
+	auto partners = fabric.m_partners[n];
+	
+	// TODO(knicos): Find and reposition.
+	partners.push_front(this);
+	partners.unique();
+	
+	for (auto i : partners) {
+		if (--max == 0) break;
+		// TODO(knicos): Boost ch significance.
+		auto p1 = fabric.m_partners[i->tail_other(n)];
+		// TODO(knicos): Find and reposition.
+		p1.push_front(i);
+		p1.unique();
+		auto p2 = fabric.m_partners[i->tail_other(n)];
+		// TODO(knicos): Find and reposition.
+		p2.push_front(i);
+		p2.unique();
+	}
+}
+
 const Nid &Harc::query() {
+	// Boost significance
+	update_partners(m_tail.first);
+	update_partners(m_tail.second);
+	
 	if (check_flag(Flag::defined)) {
 		// Potentially unsafe if redefined before queried.
 		while (m_def->outofdate) {

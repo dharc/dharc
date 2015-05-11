@@ -35,15 +35,20 @@ void Fabric::log_change(Harc *h) {
 	last_log = h;
 }
 
-Harc &Fabric::get(const Nid &a, const Nid &b) {
-	auto key = (a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a);
+Harc &Fabric::get(const pair<Nid, Nid> &key) {
 	auto it = m_harcs.find(key);
 
 	if (it != m_harcs.end()) {
 		return *(it->second);
 	} else {
-		auto h = new Harc();
+		auto h = new Harc(key);
 		m_harcs.insert({key, h});
+
+		// Update node partners to include this harc
+		// TODO(knicos): This should be insertion sorted.
+		m_partners[key.first].push_front(h);
+		m_partners[key.second].push_front(h);
+
 		return *h;
 	}
 }

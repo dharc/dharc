@@ -60,7 +60,10 @@ class Fabric {
 	/**
 	 * Lookup a Harc using a pair of tail nodes.
 	 */
-	Harc &get(const Nid &, const Nid &);
+	Harc &get(const Nid &a, const Nid &b) {
+		return get((a < b) ? pair<Nid, Nid>(a, b) : pair<Nid, Nid>(b, a));
+	}
+	Harc &get(const pair<Nid, Nid> &key);
 
 	/**
 	 * Evaluate a normalised path through the fabric.
@@ -76,6 +79,8 @@ class Fabric {
 	 * Get the fabric singleton.
 	 */
 	static Fabric &singleton();
+	
+	constexpr static int sig_prop_max() { return 30; }
 
 	private:
 	Fabric();

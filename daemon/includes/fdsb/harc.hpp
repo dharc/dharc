@@ -59,6 +59,10 @@ class Harc {
 	bool tail_has(const Nid &n) {
 		return (m_tail.first == n) || (m_tail.second == n);
 	}
+	
+	const Nid &tail_other(const Nid &n) {
+		return (m_tail.first == n) ? m_tail.second : m_tail.first;
+	}
 
 	/**
 	 * Define the Harc as having a fixed head node.
@@ -78,6 +82,8 @@ class Harc {
 			return false;
 		}
 	}
+	
+	float significance() const { return m_sig; };
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -90,12 +96,14 @@ class Harc {
 	Definition *m_def;
 	};
 	Flag m_flags;
+	float m_sig;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
 	Harc() {}  							/* Only Fabric should call */
-	Harc(const Nid &a, const Nid &b);
+	Harc(const pair<Nid, Nid> &t);
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
+	void update_partners(const Nid &n);
 };
 
 constexpr Harc::Flag operator | (Harc::Flag lhs, Harc::Flag rhs) {
