@@ -80,7 +80,7 @@ class Fabric {
 	 */
 	static Fabric &singleton();
 
-	constexpr static int sig_prop_max() { return 30; }
+	constexpr static int sig_prop_max() { return 20; }
 
 	private:
 	Fabric();

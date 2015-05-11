@@ -10,11 +10,14 @@
 #include <unordered_map>
 #include <atomic>
 #include <utility>
+#include <chrono>
 
 #include "fdsb/nid.hpp"
 
 using std::pair;
 using std::list;
+using std::chrono::time_point;
+using std::chrono::system_clock;
 
 namespace fdsb {
 
@@ -84,7 +87,11 @@ class Harc {
 		}
 	}
 
-	float significance() const { return m_sig; }
+	/**
+	 * Each time this is called the significance is reduced before being
+	 * returned. It is boosted by querying the Harc.
+	 */
+	float significance() { m_sig = m_sig * 0.9; return m_sig; }
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -108,7 +115,7 @@ class Harc {
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
 	void update_partners(const Nid &n, std::list<Harc*>::iterator &it);
-	void reposition_harc(list<Harc*> &p, std::list<Harc*>::iterator &it);
+	void reposition_harc(const list<Harc*> &p, std::list<Harc*>::iterator &it);
 };
 
 constexpr Harc::Flag operator | (Harc::Flag lhs, Harc::Flag rhs) {

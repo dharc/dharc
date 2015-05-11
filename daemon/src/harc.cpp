@@ -10,6 +10,7 @@
 #include <list>
 #include <utility>
 #include <algorithm>
+#include <future>
 
 #include "fdsb/nid.hpp"
 #include "fdsb/fabric.hpp"
@@ -21,13 +22,14 @@ using fdsb::Nid;
 Harc::Harc(const pair<Nid, Nid> &t) :
 	m_tail(t),
 	m_head(null_n),
-	m_flags(Flag::none) {}
+	m_flags(Flag::none),
+	m_sig(0.0) {}
 
 void Harc::add_dependant(Harc &h) {
 	m_dependants.push_back(&h);
 }
 
-void Harc::reposition_harc(list<Harc*> &p, list<Harc*>::iterator &it) {
+void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	if (p.begin() == it) return;
 	auto it2 = it--;
 	std::swap(*it, *it2);
@@ -53,6 +55,7 @@ void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 
 	for (auto i : partners) {
 		if (--max == 0) break;
+		i->significance();
 		if (i->tail().first == n) {
 			auto &p1 = fabric.m_partners[i->tail().second];
 			reposition_harc(p1, i->m_partix[1]);
@@ -65,8 +68,13 @@ void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 
 const Nid &Harc::query() {
 	// Boost significance
-	update_partners(m_tail.first, m_partix[0]);
-	update_partners(m_tail.second, m_partix[1]);
+	float oldsig = significance();
+	float newsig = oldsig + ((1.0 - oldsig) / 3);
+	m_sig = newsig;
+	if (newsig - oldsig > 0.2) {
+		update_partners(m_tail.first, m_partix[0]);
+		update_partners(m_tail.second, m_partix[1]);
+	}
 
 	if (check_flag(Flag::defined)) {
 		// Potentially unsafe if redefined before queried.
