@@ -47,7 +47,7 @@ void Harc::reposition_harc(list<Harc*> &p, list<Harc*>::iterator &it) {
 
 void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 	int max = Fabric::sig_prop_max();
-	auto partners = fabric.m_partners[n];
+	auto &partners = fabric.m_partners[n];
 
 	reposition_harc(partners, it);
 
