@@ -54,6 +54,12 @@ class Harc {
 	 */
 	const Nid &query();
 
+	const pair<Nid, Nid> &tail() { return m_tail; }
+
+	bool tail_has(const Nid &n) {
+		return (m_tail.first == n) || (m_tail.second == n);
+	}
+
 	/**
 	 * Define the Harc as having a fixed head node.
 	 */
@@ -61,9 +67,9 @@ class Harc {
 
 	void define(const fdsb::Path &);
 
-	void set_flag(Flag f);
-	bool check_flag(Flag f) const;
-	void clear_flag(Flag f);
+	inline void set_flag(Flag f);
+	inline bool check_flag(Flag f) const;
+	inline void clear_flag(Flag f);
 
 	bool is_out_of_date() const {
 		if (check_flag(Flag::defined)) {
@@ -78,6 +84,7 @@ class Harc {
 	bool operator==(const Nid &);
 
 	private:
+	pair<Nid, Nid> m_tail;
 	union {
 	Nid m_head;
 	Definition *m_def;
@@ -85,7 +92,8 @@ class Harc {
 	Flag m_flags;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
-	Harc();  							/* Only Fabric should call */
+	Harc() {}  							/* Only Fabric should call */
+	Harc(const Nid &a, const Nid &b);
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
 };

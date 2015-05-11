@@ -14,7 +14,8 @@
 using fdsb::Harc;
 using fdsb::Nid;
 
-Harc::Harc() :
+Harc::Harc(const Nid &a, const Nid &b) :
+	m_tail(a, b),
 	m_head(null_n),
 	m_flags(Flag::none) {}
 

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <forward_list>
+#include <list>
 #include <vector>
 #include <chrono>
 #include <utility>
@@ -20,6 +21,7 @@ using std::vector;
 using std::unordered_map;
 using std::chrono::time_point;
 using std::pair;
+using std::list;
 using std::size_t;
 
 namespace fdsb {
@@ -28,6 +30,13 @@ struct TailHash {
 	public:
 	size_t operator()(const pair<Nid, Nid> &x) const {
 		return x.first.i*3 + x.second.i;
+	}
+};
+
+struct NidHash {
+	public:
+	size_t operator()(const Nid &x) const {
+		return x.i;
 	}
 };
 
@@ -42,9 +51,11 @@ class Fabric {
 	unique_ptr<forward_list<Harc*>> changes();
 
 	/**
-	 * Array of all Nids that the given Nid is paired with in Harc tails.
+	 * Array of all Harcs that the given Nid is involved in.
+	 * This array is intended to be sorted by significance, but since
+	 * significance always changes there is no guarentee that it is up-to-date.
 	 */
-	const vector<Nid> &partners(const Nid &);
+	const list<Harc*> &partners(const Nid &);
 
 	/**
 	 * Lookup a Harc using a pair of tail nodes.
@@ -75,6 +86,7 @@ class Fabric {
 
 	unordered_map<pair<Nid, Nid>, Harc*, TailHash> m_harcs;
 	unique_ptr<forward_list<Harc*>> m_changes;
+	unordered_map<Nid, list<Harc*>, NidHash> m_partners;
 };
 
 extern Fabric &fabric;

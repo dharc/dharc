@@ -218,6 +218,21 @@ void test_fabric_changes() {
 	DONE;
 }
 
+void test_fabric_partnersexist() {
+	Nid n1 = 333_n;
+	n1[34_n] = 78_n;
+	n1[35_n] = 79_n;
+	n1[36_n] = 80_n;
+	auto partners = fabric.partners(n1);
+	CHECK(partners.size() == 3);
+	
+	for (auto i : partners) {
+		CHECK(i->tail_has(34_n) || i->tail_has(35_n) || i->tail_has(36_n));
+	}
+	
+	DONE;
+}
+
 int main(int argc, char *argv[]) {
 	test(test_fabric_symetric);
 	test(test_fabric_path);
@@ -226,6 +241,7 @@ int main(int argc, char *argv[]) {
 	test(test_fabric_concurrentdef);
 	test(test_fabric_duplicateeval);
 	test(test_fabric_changes);
+	test(test_fabric_partnersexist);
 	return test_fail_count();
 }
 
