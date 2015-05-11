@@ -233,6 +233,10 @@ void test_fabric_partnersexist() {
 	DONE;
 }
 
+void test_fabric_partnersort() {
+	DONE;
+}
+
 int main(int argc, char *argv[]) {
 	test(test_fabric_symetric);
 	test(test_fabric_path);

@@ -7,6 +7,9 @@
 #include <vector>
 #include <iostream>
 #include <thread>
+#include <list>
+#include <utility>
+#include <algorithm>
 
 #include "fdsb/nid.hpp"
 #include "fdsb/fabric.hpp"
@@ -24,38 +27,47 @@ void Harc::add_dependant(Harc &h) {
 	m_dependants.push_back(&h);
 }
 
-/* void Harc::reposition_harc(const list<Harc*> &p) {
-	auto npos = p.begin();
-	for (auto i : p) {}
-}*/
+void Harc::reposition_harc(list<Harc*> &p, list<Harc*>::iterator &it) {
+	if (p.begin() == it) return;
+	auto it2 = it--;
+	std::swap(*it, *it2);
 
-void Harc::update_partners(const Nid &n) {
+	// Brute force if IX not in meta data for harc.
+	/* if (p.front() == this) return;
+	for (auto i = ++p.begin(); i != p.end(); ++i) {
+		if (*i == this) {
+			// Move one place
+			//auto i2 = i--;
+			//std::swap(*i, *i2);
+			//p.insert(--(p.erase(i)), this);
+			return;
+		}
+	} */
+}
+
+void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 	int max = Fabric::sig_prop_max();
 	auto partners = fabric.m_partners[n];
-	
-	// TODO(knicos): Find and reposition.
-	partners.push_front(this);
-	partners.unique();
-	
+
+	reposition_harc(partners, it);
+
 	for (auto i : partners) {
 		if (--max == 0) break;
-		// TODO(knicos): Boost ch significance.
-		auto p1 = fabric.m_partners[i->tail_other(n)];
-		// TODO(knicos): Find and reposition.
-		p1.push_front(i);
-		p1.unique();
-		auto p2 = fabric.m_partners[i->tail_other(n)];
-		// TODO(knicos): Find and reposition.
-		p2.push_front(i);
-		p2.unique();
+		if (i->tail().first == n) {
+			auto &p1 = fabric.m_partners[i->tail().second];
+			reposition_harc(p1, i->m_partix[1]);
+		} else {
+			auto &p1 = fabric.m_partners[i->tail().first];
+			reposition_harc(p1, i->m_partix[0]);
+		}
 	}
 }
 
 const Nid &Harc::query() {
 	// Boost significance
-	update_partners(m_tail.first);
-	update_partners(m_tail.second);
-	
+	update_partners(m_tail.first, m_partix[0]);
+	update_partners(m_tail.second, m_partix[1]);
+
 	if (check_flag(Flag::defined)) {
 		// Potentially unsafe if redefined before queried.
 		while (m_def->outofdate) {

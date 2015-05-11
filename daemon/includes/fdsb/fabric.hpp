@@ -79,7 +79,7 @@ class Fabric {
 	 * Get the fabric singleton.
 	 */
 	static Fabric &singleton();
-	
+
 	constexpr static int sig_prop_max() { return 30; }
 
 	private:

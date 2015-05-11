@@ -51,8 +51,12 @@ Harc &Fabric::get(const pair<Nid, Nid> &key) {
 
 		// Update node partners to include this harc
 		// TODO(knicos): This should be insertion sorted.
-		m_partners[key.first].push_front(h);
-		m_partners[key.second].push_front(h);
+		auto &p1 = m_partners[key.first];
+		p1.push_front(h);
+		h->m_partix[0] = p1.begin();
+		auto &p2 = m_partners[key.second];
+		p2.push_front(h);
+		h->m_partix[1] = p2.begin();
 
 		return *h;
 	}

@@ -14,6 +14,7 @@
 #include "fdsb/nid.hpp"
 
 using std::pair;
+using std::list;
 
 namespace fdsb {
 
@@ -59,7 +60,7 @@ class Harc {
 	bool tail_has(const Nid &n) {
 		return (m_tail.first == n) || (m_tail.second == n);
 	}
-	
+
 	const Nid &tail_other(const Nid &n) {
 		return (m_tail.first == n) ? m_tail.second : m_tail.first;
 	}
@@ -82,8 +83,8 @@ class Harc {
 			return false;
 		}
 	}
-	
-	float significance() const { return m_sig; };
+
+	float significance() const { return m_sig; }
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -99,11 +100,15 @@ class Harc {
 	float m_sig;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
+	// Might be moved to meta structure
+	std::list<Harc*>::iterator m_partix[2];
+
 	Harc() {}  							/* Only Fabric should call */
-	Harc(const pair<Nid, Nid> &t);
+	explicit Harc(const pair<Nid, Nid> &t);
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
-	void update_partners(const Nid &n);
+	void update_partners(const Nid &n, std::list<Harc*>::iterator &it);
+	void reposition_harc(list<Harc*> &p, std::list<Harc*>::iterator &it);
 };
 
 constexpr Harc::Flag operator | (Harc::Flag lhs, Harc::Flag rhs) {
