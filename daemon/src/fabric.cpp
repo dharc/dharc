@@ -9,6 +9,8 @@
 #include <vector>
 #include <utility>
 #include <list>
+#include <atomic>
+#include <chrono>
 
 using fdsb::Fabric;
 using fdsb::Harc;
@@ -16,11 +18,23 @@ using fdsb::Nid;
 using std::vector;
 using std::list;
 using fdsb::Path;
+using std::atomic;
+
+atomic<unsigned long long> Fabric::s_counter(0);
+
+void Fabric::counter_thread() {
+	while (true) {
+		++s_counter;
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+}
 
 Fabric &fdsb::fabric = Fabric::singleton();
 
 Fabric::Fabric()
 	: m_changes(new forward_list<Harc*>()) {
+	std::thread t(counter_thread);
+	t.detach();
 }
 
 Fabric::~Fabric() {

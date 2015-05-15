@@ -119,6 +119,8 @@ constexpr bool operator>=(const Nid &a, const Nid &b) {
 	return a.t >= b.t || (a.t == b.t && a.i >= b.i);
 }
 
+std::ostream &operator<<(std::ostream &os, const Nid &n);
+
 };  // namespace fdsb
 
 #endif

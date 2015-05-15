@@ -23,7 +23,8 @@ Harc::Harc(const pair<Nid, Nid> &t) :
 	m_tail(t),
 	m_head(null_n),
 	m_flags(Flag::none),
-	m_sig(0.0) {}
+	m_lastquery(Fabric::counter()),
+	m_strength(0.0) {}
 
 void Harc::add_dependant(Harc &h) {
 	m_dependants.push_back(&h);
@@ -33,6 +34,8 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	if (p.begin() == it) return;
 	auto it2 = it--;
 	std::swap(*it, *it2);
+	
+	std::cout << *this << std::endl;
 
 	// Brute force if IX not in meta data for harc.
 	/* if (p.front() == this) return;
@@ -47,6 +50,10 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	} */
 }
 
+float Harc::significance() {
+	return 1.0;
+}
+
 void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 	int max = Fabric::sig_prop_max();
 	auto &partners = fabric.m_partners[n];
@@ -55,7 +62,7 @@ void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 
 	for (auto i : partners) {
 		if (--max == 0) break;
-		i->significance();
+		i->m_lastquery = Fabric::counter();
 		if (i->tail().first == n) {
 			auto &p1 = fabric.m_partners[i->tail().second];
 			reposition_harc(p1, i->m_partix[1]);
@@ -68,10 +75,8 @@ void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
 
 const Nid &Harc::query() {
 	// Boost significance
-	float oldsig = significance();
-	float newsig = oldsig + ((1.0 - oldsig) / 3);
-	m_sig = newsig;
-	if (newsig - oldsig > 0.2) {
+	if (m_lastquery < Fabric::counter()) {
+		m_lastquery = Fabric::counter();
 		update_partners(m_tail.first, m_partix[0]);
 		update_partners(m_tail.second, m_partix[1]);
 	}
@@ -148,4 +153,10 @@ Harc &Nid::operator[](const Nid &n) {
 
 Harc &Harc::operator[](const Nid &n) {
 	return fabric.get(query(), n);
+}
+
+std::ostream &fdsb::operator<<(std::ostream &os, Harc &h) {
+	os << '[' << h.tail().first << ',' << h.tail().second
+		<< "->" << h.query() << ']';
+	return os;
 }

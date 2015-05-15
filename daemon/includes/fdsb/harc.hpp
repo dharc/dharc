@@ -11,6 +11,7 @@
 #include <atomic>
 #include <utility>
 #include <chrono>
+#include <ostream>
 
 #include "fdsb/nid.hpp"
 
@@ -47,23 +48,39 @@ class Harc {
 	public:
 	enum struct Flag : unsigned int {
 		none = 0x00,
-		log = 0x01,
-		meta = 0x02,
-		defined = 0x04,
+		log = 0x01,			/** Record changes to this Harc */
+		meta = 0x02,		/** This Harc has meta-data */
+		defined = 0x04,		/** This Harc has a non-constant definition */
 	};
 
 	/**
 	 * Get the head of this hyper-arc. Evaluate the definition if it is
-	 * out-of-date.
+	 * out-of-date. Also causes activation to change and a possible update of
+	 * all partner Harcs, possibly involving a resort of partners.
+	 * @return Head node of Harc
 	 */
 	const Nid &query();
 
+	/**
+	 * Get the pair of tail nodes that uniquely identify this Harc.
+	 * @return Tail node pair.
+	 */
 	const pair<Nid, Nid> &tail() { return m_tail; }
 
+	/**
+	 * Does the tail of this Harc contain the given node?
+	 * @param n The node id to check for.
+	 * @return True if the node is part of the tail.
+	 */
 	bool tail_has(const Nid &n) {
 		return (m_tail.first == n) || (m_tail.second == n);
 	}
 
+	/**
+	 * What is the other node in this Harcs tail?
+	 * @param n The unwanted tail node.
+	 * @return The other tail node, not n.
+	 */
 	const Nid &tail_other(const Nid &n) {
 		return (m_tail.first == n) ? m_tail.second : m_tail.first;
 	}
@@ -91,7 +108,7 @@ class Harc {
 	 * Each time this is called the significance is reduced before being
 	 * returned. It is boosted by querying the Harc.
 	 */
-	float significance() { m_sig = m_sig * 0.9; return m_sig; }
+	float significance();
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -104,7 +121,8 @@ class Harc {
 	Definition *m_def;
 	};
 	Flag m_flags;
-	float m_sig;
+	unsigned long long m_lastquery;
+	float m_strength;
 	std::list<Harc*> m_dependants;  	/* Who depends upon me */
 
 	// Might be moved to meta structure
@@ -145,6 +163,8 @@ constexpr Harc::Flag operator ~(Harc::Flag f) {
 inline void Harc::set_flag(Flag f) { m_flags |= f; }
 inline bool Harc::check_flag(Flag f) const { return (m_flags & f) == f; }
 inline void Harc::clear_flag(Flag f) { m_flags &= ~f; }
+
+std::ostream &operator<<(std::ostream &os, Harc &h);
 
 };  // namespace fdsb
 

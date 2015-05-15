@@ -2,10 +2,22 @@
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
 #include "fdsb/fabric.hpp"
+#include <thread>
+#include <chrono>
+#include <atomic>
 
 using namespace fdsb;
 
 /* ==== MOCKS ==== */
+
+std::atomic<unsigned long long> Fabric::s_counter(0);
+
+void Fabric::counter_thread() {
+	while (true) {
+		++s_counter;
+		std::this_thread::sleep_for(std::chrono::seconds(2));
+	}
+}
 
 Fabric &fdsb::fabric = Fabric::singleton();
 
