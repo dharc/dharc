@@ -1,6 +1,8 @@
 #include "fdsb/test.hpp"
 #include "fdsb/nid.hpp"
 
+#include <sstream>
+
 using namespace fdsb;
 
 void test_nid_ilit()
@@ -63,6 +65,26 @@ void test_nid_less() {
 	DONE;
 }
 
+void test_nid_ostream() {
+	std::stringstream str;
+	str << 100_n;
+	CHECK(str.str() == "[100]");
+	str.str("");
+	str << true_n;
+	CHECK(str.str() == "[true]");
+	DONE;
+}
+
+void test_nid_fromstr() {
+	CHECK(Nid::from_string("100") == 100_n);
+	CHECK(Nid::from_string("[100]") == 100_n);
+	CHECK(Nid::from_string("'a'") == 'a'_n);
+	CHECK(Nid::from_string("true") == true_n);
+	CHECK(Nid::from_string("null") == null_n);
+	CHECK(Nid::from_string("[false]") == false_n);
+	DONE;
+}
+
 int main(int argc, char *argv[])
 {
 	test(test_nid_ilit);
@@ -71,5 +93,7 @@ int main(int argc, char *argv[])
 	test(test_nid_unique);
 	test(test_nid_eqne);
 	test(test_nid_less);
+	test(test_nid_ostream);
+	test(test_nid_fromstr);
 	return test_fail_count();
 }

@@ -7,6 +7,7 @@
 
 #include <ostream>
 #include <istream>
+#include <string>
 
 namespace fdsb {
 
@@ -51,6 +52,8 @@ struct Nid {
 	 * Generate a new unique node id.
 	 */
 	static Nid unique();
+
+	static Nid from_string(const std::string &str);
 
 	/**
 	 * Generate a combined hash value from two NIDs.
