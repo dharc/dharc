@@ -79,7 +79,7 @@ class Fabric {
 	 * Get the fabric singleton.
 	 */
 	static Fabric &singleton();
-	
+
 	static unsigned long long counter() { return s_counter; }
 
 	constexpr static int sig_prop_max() { return 20; }
@@ -95,7 +95,7 @@ class Fabric {
 	unordered_map<pair<Nid, Nid>, Harc*, TailHash> m_harcs;
 	unique_ptr<forward_list<Harc*>> m_changes;
 	unordered_map<Nid, list<Harc*>, NidHash> m_partners;
-	
+
 	static std::atomic<unsigned long long> s_counter;
 };
 

@@ -26,7 +26,7 @@ Nid Nid::from_string(const std::string &str) {
 	if (str.size() > 0) {
 		if (str.at(0) >= '0' && str.at(0) <= '9') {
 			if (str.find('.') == 1) {
-				//Its a double
+				// Its a double
 			} else {
 				r.t = Nid::Type::integer;
 				r.i = stoll(str);
@@ -35,7 +35,7 @@ Nid Nid::from_string(const std::string &str) {
 			r.t = Nid::Type::character;
 			r.c = str.at(1);
 		} else if (str.at(0) == '[') {
-			string str2 = str.substr(1,str.size()-2);
+			string str2 = str.substr(1, str.size() - 2);
 			return from_string(str2);
 		} else if (str == "true") {
 			r = true_n;

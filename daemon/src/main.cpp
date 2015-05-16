@@ -1,3 +1,7 @@
+/*
+ * Copyright 2015 Nicolas Pope
+ */
+
 #include <string>
 #include <iostream>
 #include <map>
@@ -6,7 +10,7 @@
 #include "fdsb/nid.hpp"
 #include "fdsb/fabric.hpp"
 
-using namespace fdsb;
+using fdsb::Nid;
 
 using std::map;
 using std::string;
@@ -29,25 +33,49 @@ vector<string> split(const string &s, char delim) {
     return elems;
 }
 
+fdsb::Path build_path(const vector<string> &e, int ix) {
+	fdsb::Path p;
+
+	for (auto i = ix; i < static_cast<int>(e.size()); ++i) {
+		p.push_back({Nid::from_string(e[i])});
+	}
+
+	return p;
+}
+
+/* ======== Command Functions =============================================== */
+
+/*
+ * Query a hyperarc for its head node. Two node id's are given as arguments
+ * which identify the tail of the hyperarc.
+ */
 void command_query(const vector<string> &e) {
 	if (e.size() != 3) {
 		std::cout << "  Query command expects 2 arguments." << std::endl;
 	} else {
 		Nid t1 = Nid::from_string(e[1]);
 		Nid t2 = Nid::from_string(e[2]);
-		Nid r = fabric.get(t1,t2).query();
+		Nid r = fdsb::fabric.get(t1, t2).query();
 		std::cout << "  " << r << std::endl;
 	}
 }
 
 void command_define(const vector<string> &e) {
+	// Just a constant definition
 	if (e.size() == 4) {
 		Nid t1 = Nid::from_string(e[1]);
 		Nid t2 = Nid::from_string(e[2]);
 		Nid h = Nid::from_string(e[3]);
-		fabric.get(t1,t2).define(h);
+		fdsb::fabric.get(t1, t2).define(h);
+
+	// Path based definition
+	} else if (e.size() > 4) {
+		Nid t1 = Nid::from_string(e[1]);
+		Nid t2 = Nid::from_string(e[2]);
+		fdsb::fabric.get(t1, t2).define(build_path(e, 3));
+
 	} else {
-		std::cout << "  Define command expects 3 arguments." << std::endl;
+		std::cout << "  Define command expects 3 or more arguments." << std::endl;
 	}
 }
 
@@ -56,19 +84,37 @@ void command_partners(const vector<string> &e) {
 		std::cout << "  Partners command expects 1 argument." << std::endl;
 	} else {
 		Nid n1 = Nid::from_string(e[1]);
-		auto part = fabric.partners(n1);
+		auto part = fdsb::fabric.partners(n1);
 		for (auto i : part) {
 			std::cout << "  - " << *i << std::endl;
 		}
 	}
 }
 
+void command_path(const vector<string> &e) {
+	if (e.size() >= 3) {
+		std::cout << "  " << fdsb::fabric.path(build_path(e, 1)) << std::endl;
+	} else {
+		std::cout << "  Path command expects 3 or more arguments." << std::endl;
+	}
+}
+
+/* ========================================================================== */
+
+/*
+ * Map command words to associated command function for processing.
+ */
 map<string, void (*)(const vector<string>&)> commands = {
 		{ "query", command_query },
 		{ "define", command_define },
-		{ "partners", command_partners }
+		{ "partners", command_partners },
+		{ "path", command_path }
 };
 
+/*
+ * Read command line entries when in interactive mode and pass to relevant
+ * command function for processing.
+ */
 void interactive() {
 	std::cout << "F-DSB Interactive Mode:" << std::endl;
 
@@ -76,9 +122,12 @@ void interactive() {
 		string line;
 		std::cout << "> ";
 		std::cout.flush();
-		std::getline(std::cin,line);
+		std::getline(std::cin, line);
 
 		vector<string> elems = split(line, ' ');
+
+		if (elems[0] == "exit") return;
+
 		auto it = commands.find(elems[0]);
 		if (it != commands.end()) {
 			it->second(elems);

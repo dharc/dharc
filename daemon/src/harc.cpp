@@ -34,7 +34,7 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	if (p.begin() == it) return;
 	auto it2 = it--;
 	std::swap(*it, *it2);
-	
+
 	std::cout << *this << std::endl;
 
 	// Brute force if IX not in meta data for harc.

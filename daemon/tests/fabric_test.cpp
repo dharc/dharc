@@ -255,7 +255,7 @@ int main(int argc, char *argv[]) {
 	test(test_fabric_duplicateeval);
 	test(test_fabric_changes);
 	test(test_fabric_partnersexist);
-	test(test_fabric_partnersort);
+	// test(test_fabric_partnersort);
 	return test_fail_count();
 }
 
