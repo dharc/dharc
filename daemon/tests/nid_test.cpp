@@ -82,6 +82,8 @@ void test_nid_fromstr() {
 	CHECK(Nid::from_string("true") == true_n);
 	CHECK(Nid::from_string("null") == null_n);
 	CHECK(Nid::from_string("[false]") == false_n);
+	CHECK(Nid::from_string("[true") == null_n);
+	CHECK(Nid::from_string("11.2") == 11.2_n);
 	DONE;
 }
 

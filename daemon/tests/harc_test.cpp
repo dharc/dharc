@@ -5,8 +5,10 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <vector>
 
 using namespace fdsb;
+using std::vector;
 
 /* ==== MOCKS ==== */
 
@@ -33,7 +35,7 @@ Fabric &Fabric::singleton() {
 
 Nid dummy_result;
 
-Nid Fabric::path(const Path &p, Harc *dep) {
+Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
 	if (dep) {
 		Harc &h = get(p[0][0],p[0][1]);
 		h.add_dependant(*dep);

@@ -14,16 +14,17 @@
 #include <ostream>
 
 #include "fdsb/nid.hpp"
+#include "fdsb/definition.hpp"
 
 using std::pair;
 using std::list;
+using std::vector;
 using std::chrono::time_point;
 using std::chrono::system_clock;
 
 namespace fdsb {
 
 class Fabric;
-typedef std::vector<std::vector<Nid>> Path;
 
 /**
  * Hyper-arc class to represent relations between 3 nodes.
@@ -32,18 +33,6 @@ typedef std::vector<std::vector<Nid>> Path;
  */
 class Harc {
 	friend class Fabric;
-
-	struct Definition {
-		explicit Definition(const fdsb::Path &d) :
-			outofdate(true),
-			lock(ATOMIC_FLAG_INIT),
-			def(d) {}
-
-		bool outofdate;
-		std::atomic_flag lock;
-		fdsb::Path def;
-		Nid cache;
-	};
 
 	public:
 	enum struct Flag : unsigned int {
@@ -65,44 +54,42 @@ class Harc {
 	 * Get the pair of tail nodes that uniquely identify this Harc.
 	 * @return Tail node pair.
 	 */
-	const pair<Nid, Nid> &tail() { return m_tail; }
+	inline const pair<Nid, Nid> &tail() const;
 
 	/**
 	 * Does the tail of this Harc contain the given node?
 	 * @param n The node id to check for.
 	 * @return True if the node is part of the tail.
 	 */
-	bool tail_has(const Nid &n) {
-		return (m_tail.first == n) || (m_tail.second == n);
-	}
+	inline bool tail_has(const Nid &n) const;
 
 	/**
 	 * What is the other node in this Harcs tail?
 	 * @param n The unwanted tail node.
 	 * @return The other tail node, not n.
 	 */
-	const Nid &tail_other(const Nid &n) {
-		return (m_tail.first == n) ? m_tail.second : m_tail.first;
-	}
+	inline const Nid &tail_other(const Nid &n) const;
 
 	/**
 	 * Define the Harc as having a fixed head node.
 	 */
 	void define(const Nid &);
 
-	void define(const fdsb::Path &);
+	/**
+	 * Define the Harc as having a normalised path definition to work out
+	 * its head node.
+	 */
+	void define(const vector<vector<Nid>> &);
+
+	void define(Definition *def);
 
 	inline void set_flag(Flag f);
 	inline bool check_flag(Flag f) const;
 	inline void clear_flag(Flag f);
 
-	bool is_out_of_date() const {
-		if (check_flag(Flag::defined)) {
-			return m_def->outofdate;
-		} else {
-			return false;
-		}
-	}
+	bool is_out_of_date() const;
+
+	inline const list<Harc*> &dependants() const;
 
 	/**
 	 * Each time this is called the significance is reduced before being
@@ -110,31 +97,40 @@ class Harc {
 	 */
 	float significance();
 
+	/**
+	 * Time in seconds since this Harc was last queried.
+	 * @return Seconds since last query.
+	 */
+	float last_query();
+
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
 	bool operator==(const Nid &);
 
 	private:
-	pair<Nid, Nid> m_tail;
+	pair<Nid, Nid> m_tail;				/* Pair of tail nodes, unique */
 	union {
-	Nid m_head;
-	Definition *m_def;
+	Nid m_head;							/* Constant head node or ... */
+	Definition *m_def;					/* Definition if defined flag is set */
 	};
-	Flag m_flags;
-	unsigned long long m_lastquery;
-	float m_strength;
-	std::list<Harc*> m_dependants;  	/* Who depends upon me */
+	Flag m_flags;						/* Flags for type of Harc etc */
+	unsigned long long m_lastquery;		/* Ticks since last query */
+	float m_strength;					/* Strength of the Harc relation */
+	list<Harc*> m_dependants;  	/* Who depends upon me */
 
 	// Might be moved to meta structure
-	std::list<Harc*>::iterator m_partix[2];
+	list<Harc*>::iterator m_partix[2];
 
 	Harc() {}  							/* Only Fabric should call */
 	explicit Harc(const pair<Nid, Nid> &t);
+
 	void dirty();  						/* Mark as out-of-date and propagate */
 	void add_dependant(Harc &);  		/* Notify given Harc on change. */
-	void update_partners(const Nid &n, std::list<Harc*>::iterator &it);
-	void reposition_harc(const list<Harc*> &p, std::list<Harc*>::iterator &it);
+	void update_partners(const Nid &n, list<Harc*>::iterator &it);
+	void reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it);
 };
+
+/* ==== Relational Operators ================================================ */
 
 constexpr Harc::Flag operator | (Harc::Flag lhs, Harc::Flag rhs) {
 	return (Harc::Flag)(static_cast<unsigned int>(lhs)
@@ -160,11 +156,36 @@ constexpr Harc::Flag operator ~(Harc::Flag f) {
 	return (Harc::Flag)(~static_cast<unsigned int>(f));
 }
 
+
+/* ==== Inline Implementations ============================================== */
+
 inline void Harc::set_flag(Flag f) { m_flags |= f; }
 inline bool Harc::check_flag(Flag f) const { return (m_flags & f) == f; }
 inline void Harc::clear_flag(Flag f) { m_flags &= ~f; }
 
 std::ostream &operator<<(std::ostream &os, Harc &h);
+
+inline bool Harc::is_out_of_date() const {
+	if (check_flag(Flag::defined)) {
+		return m_def->is_out_of_date();
+	} else {
+		return false;
+	}
+}
+
+inline const pair<Nid, Nid> &Harc::tail() const { return m_tail; }
+
+inline bool Harc::tail_has(const Nid &n) const {
+	return (m_tail.first == n) || (m_tail.second == n);
+}
+
+inline const Nid &Harc::tail_other(const Nid &n) const {
+	return (m_tail.first == n) ? m_tail.second : m_tail.first;
+}
+
+inline const list<Harc*> &Harc::dependants() const {
+	return m_dependants;
+}
 
 };  // namespace fdsb
 

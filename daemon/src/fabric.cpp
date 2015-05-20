@@ -17,7 +17,6 @@ using fdsb::Harc;
 using fdsb::Nid;
 using std::vector;
 using std::list;
-using fdsb::Path;
 using std::atomic;
 
 atomic<unsigned long long> Fabric::s_counter(0);
@@ -25,7 +24,8 @@ atomic<unsigned long long> Fabric::s_counter(0);
 void Fabric::counter_thread() {
 	while (true) {
 		++s_counter;
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(
+				std::chrono::milliseconds(counter_resolution()));
 	}
 }
 
@@ -101,7 +101,7 @@ Nid Fabric::path_s(const vector<Nid> &p, Harc *dep) {
 
 std::atomic<int> pool_count(std::thread::hardware_concurrency());
 
-bool Fabric::path_r(const Path &p, Nid *res,
+bool Fabric::path_r(const vector<vector<Nid>> &p, Nid *res,
 	int s, int e, Harc *dep) {
 	for (auto i = s; i < e; ++i) {
 		res[i] = fabric.path_s(p[i], dep);
@@ -109,7 +109,7 @@ bool Fabric::path_r(const Path &p, Nid *res,
 	return true;
 }
 
-void Fabric::paths(const Path &p, Nid *res, Harc *dep) {
+void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, Harc *dep) {
 	int size = p.size();
 
 	// Should we divide the paths?
@@ -137,7 +137,7 @@ void Fabric::paths(const Path &p, Nid *res, Harc *dep) {
 	}
 }
 
-Nid Fabric::path(const Path &p, Harc *dep) {
+Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
 	vector<Nid> res(p.size());
 
 	// Process all the sub paths

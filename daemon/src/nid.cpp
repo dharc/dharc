@@ -25,8 +25,15 @@ Nid Nid::from_string(const std::string &str) {
 
 	if (str.size() > 0) {
 		if (str.at(0) >= '0' && str.at(0) <= '9') {
-			if (str.find('.') == 1) {
-				// Its a double
+			if (str.find(':') != string::npos) {
+				size_t colon = str.find(':');
+				string first = str.substr(0, colon);
+				string second = str.substr(colon+1, str.size() - colon);
+				r.t = static_cast<Nid::Type>(stoi(first));
+				r.i = stoll(second);
+			} else if (str.find('.') != string::npos) {
+				r.t = Nid::Type::real;
+				r.d = stold(str);
 			} else {
 				r.t = Nid::Type::integer;
 				r.i = stoll(str);
@@ -70,7 +77,11 @@ std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
 	case Nid::Type::real:
 		os << '[' << n.d << ']';
 		break;
+	case Nid::Type::character:
+		os << "['" << n.c << "']";
+		break;
 	default:
+		os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';
 		break;
 	}
 	return os;

@@ -14,10 +14,12 @@
 
 #include "fdsb/nid.hpp"
 #include "fdsb/fabric.hpp"
+#include "fdsb/definition.hpp"
 
 using fdsb::Harc;
 using fdsb::Fabric;
 using fdsb::Nid;
+using fdsb::Definition;
 
 Harc::Harc(const pair<Nid, Nid> &t) :
 	m_tail(t),
@@ -35,8 +37,6 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	auto it2 = it--;
 	std::swap(*it, *it2);
 
-	std::cout << *this << std::endl;
-
 	// Brute force if IX not in meta data for harc.
 	/* if (p.front() == this) return;
 	for (auto i = ++p.begin(); i != p.end(); ++i) {
@@ -51,24 +51,51 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 }
 
 float Harc::significance() {
-	return 1.0;
+	float delta = static_cast<float>(Fabric::counter()) -
+						static_cast<float>(m_lastquery);
+	if (delta == 0) delta = 1.0;
+	return 1.0 / delta;
+}
+
+float Harc::last_query() {
+	float delta = static_cast<float>(Fabric::counter()) -
+						static_cast<float>(m_lastquery);
+	return (delta * Fabric::counter_resolution()) / 1000.0f;
 }
 
 void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
-	int max = Fabric::sig_prop_max();
 	auto &partners = fabric.m_partners[n];
 
-	reposition_harc(partners, it);
+	Harc *h = *it;
+	partners.erase(it);
 
+	// Insertion sort this harc by significance value
+	// Most likely very near the front of the list
+	auto j = partners.begin();
+	while (j != partners.end()) {
+		if ((*j)->significance() <= h->significance()) {
+			it = partners.insert(j, h);
+			break;
+		}
+		++j;
+	}
+
+	if (j == partners.end()) {
+		partners.push_back(h);
+		it = --partners.end();
+	}
+
+	// Shift all other partners up one place
+	// TODO(knicos): In another thread.
 	for (auto i : partners) {
-		if (--max == 0) break;
-		i->m_lastquery = Fabric::counter();
+		if (i == h) continue;  // Ignore self.
+
 		if (i->tail().first == n) {
-			auto &p1 = fabric.m_partners[i->tail().second];
-			reposition_harc(p1, i->m_partix[1]);
+			auto &p = fabric.m_partners[i->tail().second];
+			reposition_harc(p, i->m_partix[1]);
 		} else {
-			auto &p1 = fabric.m_partners[i->tail().first];
-			reposition_harc(p1, i->m_partix[0]);
+			auto &p = fabric.m_partners[i->tail().first];
+			reposition_harc(p, i->m_partix[0]);
 		}
 	}
 }
@@ -82,27 +109,14 @@ const Nid &Harc::query() {
 	}
 
 	if (check_flag(Flag::defined)) {
-		// Potentially unsafe if redefined before queried.
-		while (m_def->outofdate) {
-			// Can we update the definition
-			if (!m_def->lock.test_and_set()) {
-				m_def->cache = fabric.path(m_def->def, this);
-				m_def->outofdate = false;
-				m_def->lock.clear();
-			// Or must we wait on some other thread
-			} else {
-				// Do something else or yield
-				std::this_thread::yield();
-			}
-		}
-		return m_def->cache;
+		return m_def->evaluate(this);
 	} else {
 		return m_head;
 	}
 }
 
 void Harc::dirty() {
-	if (check_flag(Flag::defined)) m_def->outofdate = true;
+	if (check_flag(Flag::defined)) m_def->mark();
 	for (auto i : m_dependants) {
 		i->dirty();
 	}
@@ -125,13 +139,13 @@ void Harc::define(const Nid &n) {
 	m_dependants.clear();
 }
 
-void Harc::define(const fdsb::Path &p) {
+void Harc::define(const vector<vector<Nid>> &p) {
 	if (check_flag(Flag::defined)) {
 		delete m_def;
 	} else {
 		set_flag(Flag::defined);
 	}
-	m_def = new Definition(p);
+	m_def = Definition::from_path(p);
 
 	if (check_flag(Flag::log)) fabric.log_change(this);
 

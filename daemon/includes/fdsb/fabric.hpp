@@ -68,19 +68,28 @@ class Fabric {
 	/**
 	 * Evaluate a normalised path through the fabric.
 	 */
-	Nid path(const Path &, Harc *dep = nullptr);
+	Nid path(const vector<vector<Nid>> &, Harc *dep = nullptr);
 
 	/**
 	 * Evaluate several simple paths in parallel.
 	 */
-	void paths(const Path &, Nid *res, Harc *dep = nullptr);
+	void paths(const vector<vector<Nid>> &, Nid *res, Harc *dep = nullptr);
 
 	/**
 	 * Get the fabric singleton.
 	 */
 	static Fabric &singleton();
 
+	/**
+	 * Number of ticks since program start. Used to record when a relation
+	 * was last accessed or changed.
+	 */
 	static unsigned long long counter() { return s_counter; }
+
+	/**
+	 * Number of milliseconds per tick.
+	 */
+	constexpr static unsigned long long counter_resolution() { return 100; }
 
 	constexpr static int sig_prop_max() { return 20; }
 
@@ -88,7 +97,11 @@ class Fabric {
 	Fabric();
 	~Fabric();
 	Nid path_s(const vector<Nid> &, Harc *dep = nullptr);
-	static bool path_r(const Path &p, Nid *res, int s, int e, Harc *dep);
+	static bool path_r(
+			const vector<vector<Nid>> &p,
+			Nid *res,
+			int s, int e,
+			Harc *dep);
 	void log_change(Harc *h);
 	static void counter_thread();
 

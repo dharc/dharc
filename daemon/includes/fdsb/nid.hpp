@@ -55,12 +55,12 @@ struct Nid {
 
 	static Nid from_string(const std::string &str);
 
-	/**
-	 * Generate a combined hash value from two NIDs.
-	 * Order is not important.
-	 */
-	constexpr static unsigned long long dual_hash(const Nid &a, const Nid &b) {
-		return a.i ^ b.i;
+	constexpr static Nid from_int(unsigned long long v) {
+		return {Nid::Type::integer, {.i = v}};
+	}
+
+	constexpr static Nid from_double(long double v) {
+		return Nid{Nid::Type::real, { .d = v }};
 	}
 };
 
@@ -69,7 +69,7 @@ struct Nid {
  * e.g. Nid x = 1234_nid;
  */
 constexpr Nid operator"" _n(unsigned long long v) {
-	return Nid{Nid::Type::integer, { .i = v }};
+	return Nid::from_int(v);
 }
 
 /**
@@ -77,7 +77,7 @@ constexpr Nid operator"" _n(unsigned long long v) {
  * e.g. Nid x = 12.34_nid;
  */
 constexpr Nid operator"" _n(long double v) {
-	return Nid{Nid::Type::real, { .d = v }};
+	return Nid::from_double(v);
 }
 
 /**

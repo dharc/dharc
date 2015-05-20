@@ -5,8 +5,17 @@
 #ifndef FDSB_FRAMER_H_
 #define FDSB_FRAMER_H_
 
+#include <list>
+#include <vector>
+
+#include "fdsb/harc.hpp"
+
 namespace fdsb {
 class Framer {
+	public:
+	static std::list<Harc*> select_partners(
+				const std::vector<Nid> &p, int max = 10);
+
 	private:
 	/*
 	 * Re-generate the harc list from the existing list plus recent changes
