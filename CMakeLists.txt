@@ -20,7 +20,7 @@ target_link_libraries(fdsbd pthread)
 
 add_executable(nid-test daemon/tests/nid_test.cpp daemon/src/test.cpp daemon/src/nid.cpp)
 add_executable(def-test daemon/tests/definition_test.cpp daemon/src/test.cpp daemon/src/definition.cpp)
-add_executable(harc-test daemon/tests/harc_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/definition.cpp)
+add_executable(harc-test daemon/tests/harc_test.cpp daemon/src/test.cpp daemon/src/harc.cpp)
 add_executable(fabric-test daemon/tests/fabric_test.cpp daemon/src/test.cpp daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/definition.cpp)
 target_link_libraries(harc-test pthread)
 

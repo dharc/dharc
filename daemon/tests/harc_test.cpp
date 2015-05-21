@@ -2,6 +2,7 @@
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
 #include "fdsb/fabric.hpp"
+#include "fdsb/definition.hpp"
 #include <thread>
 #include <chrono>
 #include <atomic>
@@ -57,18 +58,50 @@ Harc &Fabric::get(const pair<Nid, Nid> &key) {
 	} else {
 		auto h = new Harc(key);
 		m_harcs.insert({key, h});
-
-		// Update node partners to include this harc
-		// TODO(knicos): This should be insertion sorted.
-		auto &p1 = m_partners[key.first];
-		p1.push_front(h);
-		h->m_partix[0] = p1.begin();
-		auto &p2 = m_partners[key.second];
-		p2.push_front(h);
-		h->m_partix[1] = p2.begin();
-
 		return *h;
 	}
+}
+
+const Nid &Definition::evaluate(Harc *harc) const {
+	m_cache = fabric.path(m_path, harc);
+	return m_cache;
+}
+
+Definition *Definition::from_path(const vector<vector<Nid>> &path) {
+	Definition *res = new Definition();
+	res->m_path = path;
+	return res;
+}
+
+std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
+	switch(n.t) {
+	case Nid::Type::special:
+		switch(n.s) {
+		case Nid::Special::null:
+			os << "[null]";
+			break;
+		case Nid::Special::bool_true:
+			os << "[true]";
+			break;
+		case Nid::Special::bool_false:
+			os << "[false]";
+			break;
+		}
+		break;
+	case Nid::Type::integer:
+		os << '[' << n.i << ']';
+		break;
+	case Nid::Type::real:
+		os << '[' << n.d << ']';
+		break;
+	case Nid::Type::character:
+		os << "['" << n.c << "']";
+		break;
+	default:
+		os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';
+		break;
+	}
+	return os;
 }
 
 /* ==== END MOCKS ==== */
@@ -93,10 +126,8 @@ void test_harc_defquery()
 {
 	Harc &h1 = fabric.get(123_n,'g'_n);
 	h1.define(55_n);
-	// CHECK(h1.is_out_of_date() == false);
 	CHECK(h1.query() == 55_n);
 	h1.define(77_n);
-	// CHECK(h1.is_out_of_date() == false);
 	CHECK(h1.query() == 77_n);
 	DONE;
 }
@@ -134,16 +165,11 @@ void test_harc_definition()
 	Harc &h1 = 102_n[103_n];
 	
 	h1.define({{100_n,101_n}});
-	// CHECK(h1.is_out_of_date());
 	dummy_result = 49_n;
 	CHECK(h1.query() == 49_n);
-	// CHECK(102_n[103_n].is_out_of_date() == false);
 	
 	dummy_result = 50_n;
-	CHECK(h1.query() == 49_n);
-	
 	100_n[101_n].define(10_n);
-	// CHECK(h1.is_out_of_date());
 	CHECK(h1.query() == 50_n);
 	DONE;
 }
