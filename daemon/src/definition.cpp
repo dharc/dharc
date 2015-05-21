@@ -84,7 +84,7 @@ static vector<Nid> parse_path(stringstream &s) {
 	char c;
 	vector<Nid> res;
 
-	while ((c = s.peek()) != EOF && c != ')') {
+	while ((c = s.peek()) != EOF && c != ')' && c != '}') {
 		res.push_back(parse_nid(s));
 		remove_ws(s);
 	}
@@ -103,7 +103,10 @@ Definition *Definition::from_string(const string &str) {
 
 	do {
 		remove_ws(s);
-		if (s.peek() == '(') {
+		c = s.peek();
+		if (c == ')') {
+			return nullptr;
+		} else if (c == '(') {
 			s.ignore();
 			remove_ws(s);
 			path.push_back(parse_path(s));

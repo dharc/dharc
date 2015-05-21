@@ -93,6 +93,10 @@ void test_definition_strings() {
 	CHECK(def == nullptr);
 	def = Definition::from_string("{([100])");
 	CHECK(def == nullptr);
+	def = Definition::from_string("{[100])}");
+	CHECK(def == nullptr);
+	def = Definition::from_string("{([100]}");
+	CHECK(def == nullptr);
 
 	DONE;
 }
