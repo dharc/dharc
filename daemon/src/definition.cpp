@@ -48,7 +48,7 @@ std::ostream &fdsb::operator<<(std::ostream &os, const Definition &d) {
 		for (auto j : i) {
 			os << j << ' ';
 		}
-		os.seekp(-1,std::ios_base::end);
+		os.seekp(-1, std::ios_base::end);
 		os << ')';
 	}
 	os << '}';
@@ -68,7 +68,11 @@ static Nid parse_nid(stringstream &s) {
 	string tmp = "";
 	char c;
 
-	while ((c = s.peek()) != EOF && c != ' ' && c != '\t' && c != ')' && c != '}') {
+	while ((c = s.peek()) != EOF
+			&& c != ' '
+			&& c != '\t'
+			&& c != ')'
+			&& c != '}') {
 		tmp += c;
 		s.ignore();
 	}
