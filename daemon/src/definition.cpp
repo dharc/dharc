@@ -16,7 +16,7 @@ using fdsb::Definition;
 using std::string;
 using std::vector;
 
-const Nid &Definition::evaluate(Harc *harc) {
+const Nid &Definition::evaluate(Harc *harc) const {
 	// Potentially unsafe if redefined before queried.
 	while (m_outofdate) {
 		// Can we update the definition
@@ -38,7 +38,7 @@ string Definition::to_string() const {
 }
 
 vector<vector<Nid>> Definition::to_path() const {
-	return {{}};
+	return m_path;
 }
 
 Definition *Definition::from_string(const string &str) {

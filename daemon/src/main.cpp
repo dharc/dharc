@@ -168,11 +168,6 @@ void command_details(const vector<string> &e) {
 		} else {
 			cout << "    variable: No" << std::endl;
 		}
-		if (h.is_out_of_date()) {
-			cout << "    out-of-date: Yes" << std::endl;
-		} else {
-			cout << "    out-of-date: No" << std::endl;
-		}
 		cout << "    last query: " << h.last_query() << "s" << std::endl;
 	} else {
 		cout << "  Details command expects 2 arguments." << std::endl;

@@ -31,18 +31,13 @@ class Definition {
 	 * @param h The hyperarc that this definition is evaluated for.
 	 * @return Result of following definition path.
 	 */
-	const Nid &evaluate(Harc *h);
-	
+	const Nid &evaluate(Harc *h) const;
+
 	/**
 	 * [internal] Mark this definition as out-of-date and therefore in need of
 	 * re-evaluation when evaluate() is next called.
 	 */
-	inline void mark();
-	
-	/**
-	 * @return True if the definition is out-of-date.
-	 */
-	inline bool is_out_of_date() const;
+	inline void mark() const;
 
 	/**
 	 * Convert this definition to a standard string representation. Passing the
@@ -51,7 +46,7 @@ class Definition {
 	 * @return A string representing this definition.
 	 */
 	string to_string() const;
-	
+
 	/**
 	 * Dump the definition as a raw normalised path.
 	 * @return An array of arrays of Nids.
@@ -62,7 +57,7 @@ class Definition {
 	static Definition *from_path(const vector<vector<Nid>> &path);
 
 	private:
-	bool m_outofdate;				/* Is this definition out-of-date. */
+	mutable bool m_outofdate;		/* Is this definition out-of-date. */
 	mutable atomic_flag m_lock;		/* Threading lock for cache etc... */
 	vector<vector<Nid>> m_path;		/* Actual path for definition */
 	mutable Nid m_cache;			/* Last calculated value of definition */
@@ -75,12 +70,8 @@ class Definition {
 
 /* ==== Inline Implementations ============================================== */
 
-inline void Definition::mark() {
+inline void Definition::mark() const {
 	m_outofdate = true;
-}
-
-inline bool Definition::is_out_of_date() const {
-	return m_outofdate;
 }
 
 };  // namespace fdsb

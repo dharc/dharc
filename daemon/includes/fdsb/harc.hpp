@@ -87,8 +87,6 @@ class Harc {
 	inline bool check_flag(Flag f) const;
 	inline void clear_flag(Flag f);
 
-	bool is_out_of_date() const;
-
 	inline const list<Harc*> &dependants() const;
 
 	/**
@@ -164,14 +162,6 @@ inline bool Harc::check_flag(Flag f) const { return (m_flags & f) == f; }
 inline void Harc::clear_flag(Flag f) { m_flags &= ~f; }
 
 std::ostream &operator<<(std::ostream &os, Harc &h);
-
-inline bool Harc::is_out_of_date() const {
-	if (check_flag(Flag::defined)) {
-		return m_def->is_out_of_date();
-	} else {
-		return false;
-	}
-}
 
 inline const pair<Nid, Nid> &Harc::tail() const { return m_tail; }
 
