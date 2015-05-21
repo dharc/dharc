@@ -6,6 +6,7 @@
 
 #include <string>
 #include <vector>
+#include <thread>
 
 #include "fdsb/fabric.hpp"
 
@@ -26,7 +27,7 @@ const Nid &Definition::evaluate(Harc *harc) {
 		// Or must we wait on some other thread
 		} else {
 			// Do something else or yield
-			// std::this_thread::yield();
+			std::this_thread::yield();
 		}
 	}
 	return m_cache;
