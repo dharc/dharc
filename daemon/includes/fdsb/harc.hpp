@@ -37,9 +37,9 @@ class Harc {
 	public:
 	enum struct Flag : unsigned int {
 		none = 0x00,
-		log = 0x01,			/** Record changes to this Harc */
-		meta = 0x02,		/** This Harc has meta-data */
-		defined = 0x04,		/** This Harc has a non-constant definition */
+		log = 0x01,			/**< Record changes to this Harc */
+		meta = 0x02,		/**< This Harc has meta-data */
+		defined = 0x04,		/**< This Harc has a non-constant definition */
 	};
 
 	/**
@@ -61,17 +61,19 @@ class Harc {
 	 * @param n The node id to check for.
 	 * @return True if the node is part of the tail.
 	 */
-	inline bool tail_has(const Nid &n) const;
+	inline bool tail_contains(const Nid &n) const;
 
 	/**
 	 * What is the other node in this Harcs tail?
 	 * @param n The unwanted tail node.
 	 * @return The other tail node, not n.
 	 */
-	inline const Nid &tail_other(const Nid &n) const;
+	inline const Nid &tail_partner(const Nid &n) const;
 
 	/**
-	 * Define the Harc as having a fixed head node.
+	 * Define the Harc as having a constant head node. If there is an
+	 * existing non-constant definition, it is removed.
+	 * @param d Node the Harc points to.
 	 */
 	void define(const Nid &);
 
@@ -79,9 +81,11 @@ class Harc {
 	 * Define the Harc as having a normalised path definition to work out
 	 * its head node.
 	 */
-	void define(const vector<vector<Nid>> &);
+	void define(const vector<vector<Nid>> &d);
 
 	void define(Definition *def);
+
+	inline const Definition *definition() const;
 
 	inline void set_flag(Flag f);
 	inline bool check_flag(Flag f) const;
@@ -90,16 +94,16 @@ class Harc {
 	inline const list<Harc*> &dependants() const;
 
 	/**
-	 * Each time this is called the significance is reduced before being
-	 * returned. It is boosted by querying the Harc.
+	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.
+	 * @return Signficance of Harc between 0.0 and 1.0.
 	 */
-	float significance();
+	float significance() const;
 
 	/**
 	 * Time in seconds since this Harc was last queried.
 	 * @return Seconds since last query.
 	 */
-	float last_query();
+	float last_query() const;
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
@@ -165,16 +169,20 @@ std::ostream &operator<<(std::ostream &os, Harc &h);
 
 inline const pair<Nid, Nid> &Harc::tail() const { return m_tail; }
 
-inline bool Harc::tail_has(const Nid &n) const {
+inline bool Harc::tail_contains(const Nid &n) const {
 	return (m_tail.first == n) || (m_tail.second == n);
 }
 
-inline const Nid &Harc::tail_other(const Nid &n) const {
+inline const Nid &Harc::tail_partner(const Nid &n) const {
 	return (m_tail.first == n) ? m_tail.second : m_tail.first;
 }
 
 inline const list<Harc*> &Harc::dependants() const {
 	return m_dependants;
+}
+
+inline const Definition *Harc::definition() const {
+	return (check_flag(Flag::defined)) ? m_def : nullptr;
 }
 
 };  // namespace fdsb

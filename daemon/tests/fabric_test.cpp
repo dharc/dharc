@@ -227,7 +227,7 @@ void test_fabric_partnersexist() {
 	CHECK(partners.size() == 3);
 	
 	for (auto i : partners) {
-		CHECK(i->tail_has(34_n) || i->tail_has(35_n) || i->tail_has(36_n));
+		CHECK(i->tail_contains(34_n) || i->tail_contains(35_n) || i->tail_contains(36_n));
 	}
 	
 	DONE;
@@ -238,11 +238,11 @@ void test_fabric_partnersort() {
 	n1[1_n] = 6_n;
 	n1[2_n] = 7_n;
 	n1[3_n] = 8_n;
-	CHECK(fabric.partners(n1).front()->tail_other(n1) == 3_n);
+	CHECK(fabric.partners(n1).front()->tail_partner(n1) == 3_n);
 	CHECK(n1[1_n] == 6_n);
 	CHECK(n1[1_n] == 6_n);
 	CHECK(fabric.partners(n1).size() == 3);
-	CHECK(fabric.partners(n1).front()->tail_other(n1) == 1_n);
+	CHECK(fabric.partners(n1).front()->tail_partner(n1) == 1_n);
 	DONE;
 }
 

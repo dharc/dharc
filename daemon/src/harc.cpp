@@ -50,14 +50,14 @@ void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
 	} */
 }
 
-float Harc::significance() {
+float Harc::significance() const {
 	float delta = static_cast<float>(Fabric::counter()) -
 						static_cast<float>(m_lastquery);
 	if (delta == 0) delta = 1.0;
 	return 1.0 / delta;
 }
 
-float Harc::last_query() {
+float Harc::last_query() const {
 	float delta = static_cast<float>(Fabric::counter()) -
 						static_cast<float>(m_lastquery);
 	return (delta * Fabric::counter_resolution()) / 1000.0f;

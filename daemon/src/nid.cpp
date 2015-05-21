@@ -7,12 +7,14 @@
 #include <atomic>
 #include <ostream>
 #include <string>
+#include <sstream>
 
 #include "fdsb/harc.hpp"
 #include "fdsb/fabric.hpp"
 
 using fdsb::Nid;
 using std::string;
+using std::stringstream;
 
 std::atomic<unsigned long long> last_nid(0);
 
@@ -54,6 +56,12 @@ Nid Nid::from_string(const std::string &str) {
 	}
 
 	return r;
+}
+
+string Nid::to_string() const {
+	stringstream ss;
+	ss << *this;
+	return ss.str();
 }
 
 std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {

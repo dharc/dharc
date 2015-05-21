@@ -66,6 +66,8 @@ class Definition {
 		m_outofdate(true),
 		m_lock(ATOMIC_FLAG_INIT),
 		m_cache(null_n) {}
+
+	friend std::ostream &operator<<(std::ostream &os, const Definition &d);
 };
 
 /* ==== Inline Implementations ============================================== */
@@ -73,6 +75,8 @@ class Definition {
 inline void Definition::mark() const {
 	m_outofdate = true;
 }
+
+std::ostream &operator<<(std::ostream &os, const Definition &d);
 
 };  // namespace fdsb
 

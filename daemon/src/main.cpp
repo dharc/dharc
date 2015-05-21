@@ -164,9 +164,10 @@ void command_details(const vector<string> &e) {
 		cout << "    tail: " << t1 << ", " << t2 << std::endl;
 		cout << "    significance: " << h.significance() << std::endl;
 		if (h.check_flag(Harc::Flag::defined)) {
-			cout << "    variable: Yes" << std::endl;
+			cout << "    definition: ";
+			cout << h.definition()->to_string() << std::endl;
 		} else {
-			cout << "    variable: No" << std::endl;
+			cout << "    value: " << h.query() << std::endl;
 		}
 		cout << "    last query: " << h.last_query() << "s" << std::endl;
 	} else {

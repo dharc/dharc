@@ -9,6 +9,8 @@
 #include <istream>
 #include <string>
 
+using std::string;
+
 namespace fdsb {
 
 class Harc;
@@ -48,12 +50,14 @@ struct Nid {
 	 */
 	Harc &operator[](const Nid &);
 
+	string to_string() const;
+
 	/**
 	 * Generate a new unique node id.
 	 */
 	static Nid unique();
 
-	static Nid from_string(const std::string &str);
+	static Nid from_string(const string &str);
 
 	constexpr static Nid from_int(unsigned long long v) {
 		return {Nid::Type::integer, {.i = v}};

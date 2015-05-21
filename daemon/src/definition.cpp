@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <sstream>
 
 #include "fdsb/fabric.hpp"
 
@@ -15,6 +16,7 @@ using fdsb::Harc;
 using fdsb::Definition;
 using std::string;
 using std::vector;
+using std::stringstream;
 
 const Nid &Definition::evaluate(Harc *harc) const {
 	// Potentially unsafe if redefined before queried.
@@ -34,15 +36,84 @@ const Nid &Definition::evaluate(Harc *harc) const {
 }
 
 string Definition::to_string() const {
-	return "";
+	stringstream res;
+	res << *this;
+	return res.str();
+}
+
+std::ostream &fdsb::operator<<(std::ostream &os, const Definition &d) {
+	os << '{';
+	for (auto i : d.m_path) {
+		os << '(';
+		for (auto j : i) {
+			os << j << ' ';
+		}
+		os.seekp(-1,std::ios_base::end);
+		os << ')';
+	}
+	os << '}';
+	return os;
 }
 
 vector<vector<Nid>> Definition::to_path() const {
 	return m_path;
 }
 
+static void remove_ws(stringstream &s) {
+	char c;
+	while ((c = s.peek()) != EOF && (c == ' ' || c == '\t')) s.ignore();
+}
+
+static Nid parse_nid(stringstream &s) {
+	string tmp = "";
+	char c;
+
+	while ((c = s.peek()) != EOF && c != ' ' && c != '\t' && c != ')' && c != '}') {
+		tmp += c;
+		s.ignore();
+	}
+
+	return Nid::from_string(tmp);
+}
+
+static vector<Nid> parse_path(stringstream &s) {
+	char c;
+	vector<Nid> res;
+
+	while ((c = s.peek()) != EOF && c != ')') {
+		res.push_back(parse_nid(s));
+		remove_ws(s);
+	}
+
+	return res;
+}
+
 Definition *Definition::from_string(const string &str) {
-	return nullptr;
+	stringstream s(str);
+	char c;
+
+	remove_ws(s);
+	if (s.get() != '{') return nullptr;
+
+	vector<vector<Nid>> path;
+
+	do {
+		remove_ws(s);
+		if (s.peek() == '(') {
+			s.ignore();
+			remove_ws(s);
+			path.push_back(parse_path(s));
+			if (s.get() != ')') return nullptr;
+		} else {
+			path.push_back({parse_nid(s)});
+		}
+		remove_ws(s);
+	} while ((c = s.peek()) != EOF && c != '}');
+
+	if (c == EOF) return nullptr;
+
+
+	return from_path(path);
 }
 
 Definition *Definition::from_path(const vector<vector<Nid>> &path) {
