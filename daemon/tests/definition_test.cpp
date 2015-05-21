@@ -19,8 +19,10 @@ Fabric &Fabric::singleton() {
 	return *(new Fabric());
 }
 
+Nid dummy_path;
+
 Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
-	return null_n;
+	return dummy_path;
 }
 
 Nid Nid::from_string(const std::string &str) {
@@ -41,8 +43,6 @@ Nid Nid::from_string(const std::string &str) {
 
 std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
 	switch(n.t) {
-	case Nid::Type::special:
-		break;
 	case Nid::Type::integer:
 		os << '[' << n.i << ']';
 		break;
@@ -55,8 +55,18 @@ std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
 
 /* ==== END MOCKS ==== */
 
-void test_definition_strings()
-{
+void test_definition_eval() {
+	Definition *def = Definition::from_path({{}});
+	dummy_path = 978_n;
+	CHECK(def->evaluate(nullptr) == 978_n);
+	dummy_path = 956_n;
+	CHECK(def->evaluate(nullptr) == 978_n);
+	def->mark();
+	CHECK(def->evaluate(nullptr) == 956_n);
+	DONE;
+}
+
+void test_definition_strings() {
 	Definition *def;
 
 	def = Definition::from_string("{([100] [200])}");
@@ -87,8 +97,8 @@ void test_definition_strings()
 	DONE;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
+	test(test_definition_eval);
 	test(test_definition_strings);
 	return test_fail_count();
 }
