@@ -22,7 +22,7 @@ target_link_libraries(fdsbd pthread)
 add_executable(nid-test daemon/tests/nid_test.cpp ${FDSBTEST} daemon/src/nid.cpp)
 add_executable(def-test daemon/tests/definition_test.cpp ${FDSBTEST} daemon/src/definition.cpp)
 add_executable(harc-test daemon/tests/harc_test.cpp ${FDSBTEST} daemon/src/harc.cpp)
-add_executable(fabric-test daemon/tests/fabric_test.cpp ${FDSBTEST} daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/definition.cpp)
+add_executable(fabric-test daemon/tests/fabric_test.cpp ${FDSBTEST} daemon/src/fabric.cpp)
 target_link_libraries(harc-test pthread)
 
 add_executable(harc-perf daemon/tests/harc_perf.cpp ${FDSBTEST} daemon/src/nid.cpp daemon/src/harc.cpp daemon/src/fabric.cpp daemon/src/definition.cpp)

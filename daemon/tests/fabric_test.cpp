@@ -10,6 +10,41 @@
 
 using namespace fdsb;
 
+/* ==== MOCKS =============================================================== */
+
+Harc::Harc(const pair<Nid, Nid> &t) :
+	m_tail(t),
+	m_head(null_n),
+	m_flags(Flag::none),
+	m_lastquery(Fabric::counter()),
+	m_strength(0.0) {}
+
+void Harc::add_dependant(Harc &h) {
+	m_dependants.push_back(&h);
+}
+
+const Nid &Harc::query() {
+	return m_head;
+}
+
+void Harc::define(const Nid &n) {
+	if (check_flag(Flag::log)) fabric.log_change(this);
+
+	m_head = n;
+}
+
+Harc &Harc::operator=(const Nid &n) {
+	define(n);
+	return *this;
+}
+
+bool Harc::operator==(const Nid &n) {
+	return query() == n;
+}
+
+/* ==== END MOCKS =========================================================== */
+
+
 /* Symetric Tail Test:
  * The order of tail nodes should be irrelevant, so lookup a Harc using both
  * orders and check the result is the same.
@@ -43,9 +78,9 @@ void test_fabric_autocreate()
 /* Test that single non-nested paths evaluate correctly */
 void test_fabric_path()
 {
-	1_n[2_n] = Nid::unique();
-	1_n[2_n][3_n] = Nid::unique();
-	1_n[2_n][3_n][4_n] = 55_n;
+	fabric.get(1_n, 2_n).define(1000_n);
+	fabric.get(1000_n, 3_n).define(1001_n);
+	fabric.get(1001_n, 4_n).define(55_n);
 	
 	// Normal case
 	CHECK(fabric.path({{1_n,2_n,3_n,4_n}}) == 55_n);
@@ -61,11 +96,11 @@ void test_fabric_path()
 /* Check the parallel evaluation of more than one path */
 void test_fabric_paths()
 {
-	220_n[2_n] = Nid::unique();
-	220_n[2_n][3_n] = Nid::unique();
-	220_n[2_n][3_n][4_n] = 66_n;
-	221_n[2_n] = Nid::unique();
-	221_n[2_n][66_n] = 77_n;
+	fabric.get(220_n, 2_n).define(2000_n);
+	fabric.get(2000_n, 3_n).define(2001_n);
+	fabric.get(2001_n, 4_n).define(66_n);
+	fabric.get(221_n, 2_n).define(2002_n);
+	fabric.get(2002_n, 66_n).define(77_n);
 	
 	std::vector<Nid> res(10);
 	
@@ -102,92 +137,39 @@ void test_fabric_paths()
 /* Check that nested (but normalised) paths evaluate correctly */
 void test_fabric_agregatepaths()
 {
-	10_n[2_n] = Nid::unique();
-	10_n[2_n][3_n] = Nid::unique();
-	10_n[2_n][3_n][4_n] = 66_n;
-	11_n[2_n] = Nid::unique();
-	11_n[2_n][66_n] = 77_n;
+	fabric.get(10_n, 2_n).define(3000_n);
+	fabric.get(3000_n, 3_n).define(3001_n);
+	fabric.get(3001_n, 4_n).define(66_n);
+	fabric.get(11_n, 2_n).define(3002_n);
+	fabric.get(3002_n, 66_n).define(77_n);
 	
 	CHECK(fabric.path({{11_n,2_n},{10_n,2_n,3_n,4_n}}) == 77_n);
 	DONE;
 }
 
-void test_fabric_concurrentdef() {
-	// First chain
-	1000_n[2_n] = Nid::unique();
-	1000_n[2_n][3_n] = Nid::unique();
-	1000_n[2_n][3_n][4_n] = 600_n;
-	
-	// Second chain
-	1001_n[2_n] = Nid::unique();
-	1001_n[2_n][3_n] = Nid::unique();
-	1001_n[2_n][3_n][4_n] = 500_n;
-	
-	// Third chain
-	1002_n[2_n] = Nid::unique();
-	1002_n[2_n][3_n] = Nid::unique();
-	1002_n[2_n][3_n][4_n] = 400_n;
-	
-	// Forth chain
-	1003_n[2_n] = Nid::unique();
-	1003_n[2_n][3_n] = Nid::unique();
-	1003_n[2_n][3_n][4_n] = 300_n;
-	
-	// Fith chain
-	1004_n[2_n] = Nid::unique();
-	1004_n[2_n][3_n] = Nid::unique();
-	1004_n[2_n][3_n][4_n] = 200_n;
-	
-	// First dependency chain
-	1005_n[2_n] = Nid::unique();
-	1005_n[2_n][3_n] = Nid::unique();
-	1005_n[2_n][3_n][4_n].define({{1004_n, 2_n, 3_n, 4_n}});
-	
-	// Final chain
-	600_n[500_n] = Nid::unique();
-	600_n[500_n][400_n] = Nid::unique();
-	600_n[500_n][400_n][300_n] = Nid::unique();
-	600_n[500_n][400_n][300_n][200_n] = 555_n;
-	
-	// Test definition
-	500_n[1_n].define({
-		{1000_n, 2_n, 3_n, 4_n},
-		{1001_n, 2_n, 3_n, 4_n},
-		{1002_n, 2_n, 3_n, 4_n},
-		{1003_n, 2_n, 3_n, 4_n},
-		{1005_n, 2_n, 3_n, 4_n}
-	});
-	
-	CHECK(500_n[1_n] == 555_n);
-	DONE;
-}
-
 void test_fabric_duplicateeval() {
 	//Main chain
-	2000_n[2_n] = Nid::unique();
-	2000_n[2_n][3_n] = Nid::unique();
-	2000_n[2_n][3_n][4_n] = Nid::unique();
-	2000_n[2_n][3_n][4_n][5_n] = Nid::unique();
-	2000_n[2_n][3_n][4_n][5_n][6_n] = Nid::unique();
-	2000_n[2_n][3_n][4_n][5_n][6_n][7_n] = Nid::unique();
-	2000_n[2_n][3_n][4_n][5_n][6_n][7_n][8_n] = 10_n;
+	fabric.get(2000_n, 2_n).define(5000_n);
+	fabric.get(5000_n, 3_n).define(5001_n);
+	fabric.get(5001_n, 4_n).define(5002_n);
+	fabric.get(5002_n, 5_n).define(5003_n);
+	fabric.get(5003_n, 6_n).define(5004_n);
+	fabric.get(5004_n, 7_n).define(5005_n);
+	fabric.get(5005_n, 8_n).define(10_n);
 	
 	//Result chain
-	10_n[10_n] = Nid::unique();
-	10_n[10_n][10_n] = Nid::unique();
-	10_n[10_n][10_n][10_n] = Nid::unique();
-	10_n[10_n][10_n][10_n][10_n] = 99_n;
+	fabric.get(10_n, 10_n).define(6000_n);
+	fabric.get(6000_n, 10_n).define(6001_n);
+	fabric.get(6001_n, 10_n).define(6002_n);
+	fabric.get(6002_n, 10_n).define(99_n);
 	
-	// Test definition
-	2001_n[1_n].define({
+	CHECK(fabric.path({
 		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
 		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
 		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
 		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n},
 		{2000_n, 2_n, 3_n, 4_n, 5_n, 6_n, 7_n, 8_n}
-	});
-	
-	CHECK(2001_n[1_n] == 99_n);
+	}) == 99_n);
 	DONE;
 }
 
@@ -220,9 +202,11 @@ void test_fabric_changes() {
 
 void test_fabric_partnersexist() {
 	Nid n1 = 333_n;
-	n1[34_n] = 78_n;
-	n1[35_n] = 79_n;
-	n1[36_n] = 80_n;
+
+	fabric.get(n1, 34_n).define(78_n);
+	fabric.get(n1, 35_n).define(79_n);
+	fabric.get(n1, 36_n).define(80_n);
+
 	auto partners = fabric.partners(n1);
 	CHECK(partners.size() == 3);
 	
@@ -233,29 +217,14 @@ void test_fabric_partnersexist() {
 	DONE;
 }
 
-void test_fabric_partnersort() {
-	Nid n1 = 67_n;
-	n1[1_n] = 6_n;
-	n1[2_n] = 7_n;
-	n1[3_n] = 8_n;
-	CHECK(fabric.partners(n1).front()->tail_partner(n1) == 3_n);
-	CHECK(n1[1_n] == 6_n);
-	CHECK(n1[1_n] == 6_n);
-	CHECK(fabric.partners(n1).size() == 3);
-	CHECK(fabric.partners(n1).front()->tail_partner(n1) == 1_n);
-	DONE;
-}
-
 int main(int argc, char *argv[]) {
 	test(test_fabric_symetric);
 	test(test_fabric_path);
 	test(test_fabric_paths);
 	test(test_fabric_agregatepaths);
-	test(test_fabric_concurrentdef);
 	test(test_fabric_duplicateeval);
 	test(test_fabric_changes);
 	test(test_fabric_partnersexist);
-	// test(test_fabric_partnersort);
 	return test_fail_count();
 }
 

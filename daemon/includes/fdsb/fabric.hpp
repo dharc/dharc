@@ -66,14 +66,23 @@ class Fabric {
 	Harc &get(const pair<Nid, Nid> &key);
 
 	/**
-	 * Evaluate a normalised path through the fabric.
+	 * Evaluate a normalised path through the fabric. If a dependant Harc is
+	 * given then it will be added as a dependant to all visited Harcs in the
+	 * path.
+	 * @param p Normalised nested path through fabric.
+	 * @param dep The Harc to add as dependant on this path.
+	 * @return Result of following the normalised path p.
 	 */
-	Nid path(const vector<vector<Nid>> &, Harc *dep = nullptr);
+	Nid path(const vector<vector<Nid>> &p, Harc *dep = nullptr);
 
 	/**
-	 * Evaluate several simple paths in parallel.
+	 * Evaluate several simple paths in parallel. If dep is given then it is
+	 * added as a dependant on each of the paths.
+	 * @param p Set of simple paths to evaluate separately.
+	 * @param res Vector to put each result into.
+	 * @param dep Harc to add as dependant on each path.
 	 */
-	void paths(const vector<vector<Nid>> &, Nid *res, Harc *dep = nullptr);
+	void paths(const vector<vector<Nid>> &p, Nid *res, Harc *dep = nullptr);
 
 	/**
 	 * Get the fabric singleton.
