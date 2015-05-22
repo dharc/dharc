@@ -41,9 +41,6 @@ struct Nid {
 	char c;
 	};
 
-	void serialise(std::ostream &);
-	void deserialise(std::istream &);
-
 	/**
 	 * Combine with a second NID to retrieve a Harc.
 	 * NOTE: Implemented as part of fabric(.cpp).

@@ -9,7 +9,7 @@ set(fdsb_VERSION_MAJOR "0")
 set(fdsb_VERSION_MINOR "1")
 set(fdsb_VERSION_PATCH "1")
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++11 -g -Wall -Werror -Wno-psabi")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -g -Wall -Werror -Wno-psabi")
 set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 

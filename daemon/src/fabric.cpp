@@ -149,3 +149,4 @@ Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
 Fabric &Fabric::singleton() {
 	return *(new Fabric());
 }
+

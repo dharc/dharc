@@ -11,6 +11,7 @@
 #include <vector>
 #include <chrono>
 #include <utility>
+#include <iterator>
 
 #include "fdsb/nid.hpp"
 #include "fdsb/harc.hpp"
@@ -122,6 +123,14 @@ class Fabric {
 };
 
 extern Fabric &fabric;
+
+inline auto begin(const Nid &n) {
+	return fabric.partners(n).begin();
+}
+
+inline auto end(const Nid &n) {
+	return fabric.partners(n).end();
+}
 
 };  // namespace fdsb
 
