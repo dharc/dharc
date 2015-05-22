@@ -19,8 +19,9 @@ before_script:
 script:
  - cmake ..
  - make
- - "./nid-test"
- - "./harc-test"
- - "./fabric-test"
+ - "./nid-unit"
+ - "./def-unit"
+ - "./harc-unit"
+ - "./fabric-unit"
  - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
  - ../tools/cpplint.py --filter=-whitespace/braces,-whitespace/tab,-build/c++11,-runtime/int,-runtime/references --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/fdsb/*
