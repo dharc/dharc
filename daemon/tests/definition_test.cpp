@@ -21,7 +21,7 @@ Fabric &Fabric::singleton() {
 
 Nid dummy_path;
 
-Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
+Nid Fabric::path(const vector<vector<Nid>> &p, const Harc *dep) {
 	return dummy_path;
 }
 

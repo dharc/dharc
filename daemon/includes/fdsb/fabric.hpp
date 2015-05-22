@@ -49,7 +49,7 @@ class Fabric {
 	 * A list of Harc changes since this function was last called. The change
 	 * log is reset when this function is called.
 	 */
-	unique_ptr<forward_list<Harc*>> changes();
+	unique_ptr<forward_list<const Harc*>> changes();
 
 	/**
 	 * Array of all Harcs that the given Nid is involved in.
@@ -74,7 +74,7 @@ class Fabric {
 	 * @param dep The Harc to add as dependant on this path.
 	 * @return Result of following the normalised path p.
 	 */
-	Nid path(const vector<vector<Nid>> &p, Harc *dep = nullptr);
+	Nid path(const vector<vector<Nid>> &p, const Harc *dep = nullptr);
 
 	/**
 	 * Evaluate several simple paths in parallel. If dep is given then it is
@@ -83,7 +83,9 @@ class Fabric {
 	 * @param res Vector to put each result into.
 	 * @param dep Harc to add as dependant on each path.
 	 */
-	void paths(const vector<vector<Nid>> &p, Nid *res, Harc *dep = nullptr);
+	void paths(const vector<vector<Nid>> &p,
+			Nid *res,
+			const Harc *dep = nullptr);
 
 	/**
 	 * Get the fabric singleton.
@@ -106,17 +108,17 @@ class Fabric {
 	private:
 	Fabric();
 	~Fabric();
-	Nid path_s(const vector<Nid> &, Harc *dep = nullptr);
+	Nid path_s(const vector<Nid> &, const Harc *dep = nullptr);
 	static bool path_r(
 			const vector<vector<Nid>> &p,
 			Nid *res,
 			int s, int e,
-			Harc *dep);
-	void log_change(Harc *h);
+			const Harc *dep);
+	void log_change(const Harc *h);
 	static void counter_thread();
 
 	unordered_map<pair<Nid, Nid>, Harc*, TailHash> m_harcs;
-	unique_ptr<forward_list<Harc*>> m_changes;
+	unique_ptr<forward_list<const Harc*>> m_changes;
 	unordered_map<Nid, list<Harc*>, NidHash> m_partners;
 
 	static std::atomic<unsigned long long> s_counter;

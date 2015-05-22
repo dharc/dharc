@@ -50,6 +50,8 @@ class Harc {
 	 */
 	const Nid &query();
 
+	const Nid &query() const;
+
 	/**
 	 * Get the pair of tail nodes that uniquely identify this Harc.
 	 * @return Tail node pair.
@@ -91,7 +93,7 @@ class Harc {
 	inline bool check_flag(Flag f) const;
 	inline void clear_flag(Flag f);
 
-	inline const list<Harc*> &dependants() const;
+	inline const list<const Harc*> &dependants() const;
 
 	/**
 	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.
@@ -118,7 +120,7 @@ class Harc {
 	Flag m_flags;						/* Flags for type of Harc etc */
 	unsigned long long m_lastquery;		/* Ticks since last query */
 	float m_strength;					/* Strength of the Harc relation */
-	list<Harc*> m_dependants;  	/* Who depends upon me */
+	mutable list<const Harc*> m_dependants;  	/* Who depends upon me */
 
 	// Might be moved to meta structure
 	list<Harc*>::iterator m_partix[2];
@@ -126,8 +128,8 @@ class Harc {
 	Harc() {}  							/* Only Fabric should call */
 	explicit Harc(const pair<Nid, Nid> &t);
 
-	void dirty();  						/* Mark as out-of-date and propagate */
-	void add_dependant(Harc &);  		/* Notify given Harc on change. */
+	void dirty() const;  				/* Mark as out-of-date and propagate */
+	void add_dependant(const Harc &);  	/* Notify given Harc on change. */
 	void update_partners(const Nid &n, list<Harc*>::iterator &it);
 	void reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it);
 };
@@ -165,7 +167,7 @@ inline void Harc::set_flag(Flag f) { m_flags |= f; }
 inline bool Harc::check_flag(Flag f) const { return (m_flags & f) == f; }
 inline void Harc::clear_flag(Flag f) { m_flags &= ~f; }
 
-std::ostream &operator<<(std::ostream &os, Harc &h);
+std::ostream &operator<<(std::ostream &os, const Harc &h);
 
 inline const pair<Nid, Nid> &Harc::tail() const { return m_tail; }
 
@@ -177,7 +179,7 @@ inline const Nid &Harc::tail_partner(const Nid &n) const {
 	return (m_tail.first == n) ? m_tail.second : m_tail.first;
 }
 
-inline const list<Harc*> &Harc::dependants() const {
+inline const list<const Harc*> &Harc::dependants() const {
 	return m_dependants;
 }
 

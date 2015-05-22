@@ -19,11 +19,15 @@ Harc::Harc(const pair<Nid, Nid> &t) :
 	m_lastquery(Fabric::counter()),
 	m_strength(0.0) {}
 
-void Harc::add_dependant(Harc &h) {
+void Harc::add_dependant(const Harc &h) {
 	m_dependants.push_back(&h);
 }
 
 const Nid &Harc::query() {
+	return m_head;
+}
+
+const Nid &Harc::query() const {
 	return m_head;
 }
 

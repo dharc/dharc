@@ -36,7 +36,7 @@ Fabric &Fabric::singleton() {
 
 Nid dummy_result;
 
-Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
+Nid Fabric::path(const vector<vector<Nid>> &p, const Harc *dep) {
 	if (dep) {
 		Harc &h = get(p[0][0],p[0][1]);
 		h.add_dependant(*dep);
@@ -44,9 +44,9 @@ Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
 	return dummy_result;
 }
 
-Harc *last_log = nullptr;
+const Harc *last_log = nullptr;
 
-void Fabric::log_change(Harc *h) {
+void Fabric::log_change(const Harc *h) {
 	last_log = h;
 }
 
@@ -62,7 +62,7 @@ Harc &Fabric::get(const pair<Nid, Nid> &key) {
 	}
 }
 
-const Nid &Definition::evaluate(Harc *harc) const {
+const Nid &Definition::evaluate(const Harc *harc) const {
 	m_cache = fabric.path(m_path, harc);
 	return m_cache;
 }

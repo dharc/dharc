@@ -31,7 +31,7 @@ class Definition {
 	 * @param h The hyperarc that this definition is evaluated for.
 	 * @return Result of following definition path.
 	 */
-	const Nid &evaluate(Harc *h) const;
+	const Nid &evaluate(const Harc *h) const;
 
 	/**
 	 * [internal] Mark this definition as out-of-date and therefore in need of

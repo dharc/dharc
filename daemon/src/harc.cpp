@@ -28,7 +28,7 @@ Harc::Harc(const pair<Nid, Nid> &t) :
 	m_lastquery(Fabric::counter()),
 	m_strength(0.0) {}
 
-void Harc::add_dependant(Harc &h) {
+void Harc::add_dependant(const Harc &h) {
 	m_dependants.push_back(&h);
 }
 
@@ -115,7 +115,15 @@ const Nid &Harc::query() {
 	}
 }
 
-void Harc::dirty() {
+const Nid &Harc::query() const {
+	if (check_flag(Flag::defined)) {
+		return m_def->evaluate(this);
+	} else {
+		return m_head;
+	}
+}
+
+void Harc::dirty() const {
 	if (check_flag(Flag::defined)) m_def->mark();
 	for (auto i : m_dependants) {
 		i->dirty();
@@ -169,7 +177,7 @@ Harc &Harc::operator[](const Nid &n) {
 	return fabric.get(query(), n);
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, Harc &h) {
+std::ostream &fdsb::operator<<(std::ostream &os, const Harc &h) {
 	os << '[' << h.tail().first << ',' << h.tail().second
 		<< "->" << h.query() << ']';
 	return os;

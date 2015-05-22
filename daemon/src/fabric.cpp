@@ -32,7 +32,7 @@ void Fabric::counter_thread() {
 Fabric &fdsb::fabric = Fabric::singleton();
 
 Fabric::Fabric()
-	: m_changes(new forward_list<Harc*>()) {
+	: m_changes(new forward_list<const Harc*>()) {
 	std::thread t(counter_thread);
 	t.detach();
 }
@@ -40,13 +40,14 @@ Fabric::Fabric()
 Fabric::~Fabric() {
 }
 
-unique_ptr<forward_list<Harc*>> Fabric::changes() {
-	unique_ptr<forward_list<Harc*>> newptr(new forward_list<Harc*>());
+unique_ptr<forward_list<const Harc*>> Fabric::changes() {
+	unique_ptr<forward_list<const Harc*>> newptr(
+		new forward_list< const Harc*>());
 	m_changes.swap(newptr);
 	return newptr;
 }
 
-void Fabric::log_change(Harc *h) {
+void Fabric::log_change(const Harc *h) {
 	m_changes->push_front(h);
 }
 
@@ -76,7 +77,7 @@ Harc &Fabric::get(const pair<Nid, Nid> &key) {
 	}
 }
 
-Nid Fabric::path_s(const vector<Nid> &p, Harc *dep) {
+Nid Fabric::path_s(const vector<Nid> &p, const Harc *dep) {
 	if (p.size() > 1) {
 		Nid cur = p[0];
 
@@ -102,14 +103,14 @@ Nid Fabric::path_s(const vector<Nid> &p, Harc *dep) {
 std::atomic<int> pool_count(std::thread::hardware_concurrency());
 
 bool Fabric::path_r(const vector<vector<Nid>> &p, Nid *res,
-	int s, int e, Harc *dep) {
+	int s, int e, const Harc *dep) {
 	for (auto i = s; i < e; ++i) {
 		res[i] = fabric.path_s(p[i], dep);
 	}
 	return true;
 }
 
-void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, Harc *dep) {
+void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, const Harc *dep) {
 	int size = p.size();
 
 	// Should we divide the paths?
@@ -137,7 +138,7 @@ void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, Harc *dep) {
 	}
 }
 
-Nid Fabric::path(const vector<vector<Nid>> &p, Harc *dep) {
+Nid Fabric::path(const vector<vector<Nid>> &p, const Harc *dep) {
 	vector<Nid> res(p.size());
 
 	// Process all the sub paths

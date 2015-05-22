@@ -18,7 +18,7 @@ using std::string;
 using std::vector;
 using std::stringstream;
 
-const Nid &Definition::evaluate(Harc *harc) const {
+const Nid &Definition::evaluate(const Harc *harc) const {
 	// Potentially unsafe if redefined before queried.
 	while (m_outofdate) {
 		// Can we update the definition
