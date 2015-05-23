@@ -30,21 +30,21 @@ either expressed or implied, of the FreeBSD Project.
 #define FDSB_TEST_H_
 
 #define CHECK(A) if (!(A)) { \
-	fdsb::test_checkfailed(__LINE__, __func__, "__FILE__"); \
-	} else { fdsb::test_checkpassed(); }
-#define DONE fdsb::test_done(__func__);
+	dharc::test_checkfailed(__LINE__, __func__, "__FILE__"); \
+	} else { dharc::test_checkpassed(); }
+#define DONE dharc::test_done(__func__);
 
 #define BEGIN_PERF auto tstart = high_resolution_clock::now();
 #define END_PERF(A, B) auto tend = high_resolution_clock::now(); \
 	auto time_span = duration_cast<duration<double>>(tend - tstart); \
 	std::cout << __func__ << ": " << ((A) / time_span.count()) << B << "\n";
 
-namespace fdsb {
+namespace dharc {
 int test_fail_count();
 void test_done(const char *function);
 void test_checkfailed(int line, const char *function, const char *file);
 void test_checkpassed();
 void test(void (*t)(void));
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif  // FDSB_TEST_H_

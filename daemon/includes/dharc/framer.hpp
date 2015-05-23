@@ -8,9 +8,9 @@
 #include <list>
 #include <vector>
 
-#include "fdsb/harc.hpp"
+#include "dharc/harc.hpp"
 
-namespace fdsb {
+namespace dharc {
 class Framer {
 	public:
 	static std::list<Harc*> select_partners(
@@ -40,6 +40,6 @@ class Framer {
 	 */
 	void cull();
 };
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif  /* FDSB_FRAMER_H_ */

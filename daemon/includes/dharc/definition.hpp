@@ -9,13 +9,13 @@
 #include <vector>
 #include <atomic>
 
-#include "fdsb/nid.hpp"
+#include "dharc/nid.hpp"
 
 using std::vector;
 using std::string;
 using std::atomic_flag;
 
-namespace fdsb {
+namespace dharc {
 class Harc;
 
 /**
@@ -78,6 +78,6 @@ inline void Definition::mark() const {
 
 std::ostream &operator<<(std::ostream &os, const Definition &d);
 
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif  /* FDSB_DEFINITION_H_ */

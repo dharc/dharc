@@ -1,13 +1,13 @@
-#include "fdsb/test.hpp"
-#include "fdsb/nid.hpp"
-#include "fdsb/definition.hpp"
-#include "fdsb/fabric.hpp"
+#include "dharc/test.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/definition.hpp"
+#include "dharc/fabric.hpp"
 
-using namespace fdsb;
+using namespace dharc;
 
 /* ==== MOCKS ==== */
 
-Fabric &fdsb::fabric = Fabric::singleton();
+Fabric &dharc::fabric = Fabric::singleton();
 
 Fabric::Fabric() {
 }
@@ -41,7 +41,7 @@ Nid Nid::from_string(const std::string &str) {
 	return r;
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
+std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
 	switch(n.t) {
 	case Nid::Type::integer:
 		os << '[' << n.i << ']';

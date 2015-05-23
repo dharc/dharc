@@ -2,7 +2,7 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#include "fdsb/harc.hpp"
+#include "dharc/harc.hpp"
 
 #include <vector>
 #include <iostream>
@@ -12,14 +12,14 @@
 #include <algorithm>
 #include <future>
 
-#include "fdsb/nid.hpp"
-#include "fdsb/fabric.hpp"
-#include "fdsb/definition.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/fabric.hpp"
+#include "dharc/definition.hpp"
 
-using fdsb::Harc;
-using fdsb::Fabric;
-using fdsb::Nid;
-using fdsb::Definition;
+using dharc::Harc;
+using dharc::Fabric;
+using dharc::Nid;
+using dharc::Definition;
 
 Harc::Harc(const pair<Nid, Nid> &t) :
 	m_tail(t),
@@ -177,7 +177,7 @@ Harc &Harc::operator[](const Nid &n) {
 	return fabric.get(query(), n);
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, const Harc &h) {
+std::ostream &dharc::operator<<(std::ostream &os, const Harc &h) {
 	os << '[' << h.tail().first << ',' << h.tail().second
 		<< "->" << h.query() << ']';
 	return os;

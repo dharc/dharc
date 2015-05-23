@@ -2,7 +2,7 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#include "fdsb/fabric.hpp"
+#include "dharc/fabric.hpp"
 
 #include <future>
 #include <thread>
@@ -12,9 +12,9 @@
 #include <atomic>
 #include <chrono>
 
-using fdsb::Fabric;
-using fdsb::Harc;
-using fdsb::Nid;
+using dharc::Fabric;
+using dharc::Harc;
+using dharc::Nid;
 using std::vector;
 using std::list;
 using std::atomic;
@@ -29,7 +29,7 @@ void Fabric::counter_thread() {
 	}
 }
 
-Fabric &fdsb::fabric = Fabric::singleton();
+Fabric &dharc::fabric = Fabric::singleton();
 
 Fabric::Fabric()
 	: m_changes(new forward_list<const Harc*>()) {

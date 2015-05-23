@@ -13,8 +13,8 @@
 #include <utility>
 #include <iterator>
 
-#include "fdsb/nid.hpp"
-#include "fdsb/harc.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/harc.hpp"
 
 using std::forward_list;
 using std::unique_ptr;
@@ -25,7 +25,7 @@ using std::pair;
 using std::list;
 using std::size_t;
 
-namespace fdsb {
+namespace dharc {
 
 struct TailHash {
 	public:
@@ -134,6 +134,6 @@ inline auto end(const Nid &n) {
 	return fabric.partners(n).end();
 }
 
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif /* FDSB_FABRIC_H_ */

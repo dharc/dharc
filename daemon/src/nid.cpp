@@ -2,17 +2,17 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#include "fdsb/nid.hpp"
+#include "dharc/nid.hpp"
 
 #include <atomic>
 #include <ostream>
 #include <string>
 #include <sstream>
 
-#include "fdsb/harc.hpp"
-#include "fdsb/fabric.hpp"
+#include "dharc/harc.hpp"
+#include "dharc/fabric.hpp"
 
-using fdsb::Nid;
+using dharc::Nid;
 using std::string;
 using std::stringstream;
 
@@ -64,7 +64,7 @@ string Nid::to_string() const {
 	return ss.str();
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
+std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
 	switch(n.t) {
 	case Nid::Type::special:
 		switch(n.s) {

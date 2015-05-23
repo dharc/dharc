@@ -2,8 +2,8 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef FDSB_NID_H_
-#define FDSB_NID_H_
+#ifndef DHARC_NID_H_
+#define DHARC_NID_H_
 
 #include <ostream>
 #include <istream>
@@ -11,7 +11,7 @@
 
 using std::string;
 
-namespace fdsb {
+namespace dharc {
 
 class Harc;
 
@@ -125,6 +125,6 @@ constexpr bool operator>=(const Nid &a, const Nid &b) {
 
 std::ostream &operator<<(std::ostream &os, const Nid &n);
 
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif

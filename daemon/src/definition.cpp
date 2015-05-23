@@ -2,18 +2,18 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#include "fdsb/definition.hpp"
+#include "dharc/definition.hpp"
 
 #include <string>
 #include <vector>
 #include <thread>
 #include <sstream>
 
-#include "fdsb/fabric.hpp"
+#include "dharc/fabric.hpp"
 
-using fdsb::Nid;
-using fdsb::Harc;
-using fdsb::Definition;
+using dharc::Nid;
+using dharc::Harc;
+using dharc::Definition;
 using std::string;
 using std::vector;
 using std::stringstream;
@@ -41,7 +41,7 @@ string Definition::to_string() const {
 	return res.str();
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, const Definition &d) {
+std::ostream &dharc::operator<<(std::ostream &os, const Definition &d) {
 	os << '{';
 	for (auto i : d.m_path) {
 		os << '(';

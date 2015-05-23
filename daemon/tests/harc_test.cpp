@@ -1,14 +1,14 @@
-#include "fdsb/test.hpp"
-#include "fdsb/nid.hpp"
-#include "fdsb/harc.hpp"
-#include "fdsb/fabric.hpp"
-#include "fdsb/definition.hpp"
+#include "dharc/test.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/harc.hpp"
+#include "dharc/fabric.hpp"
+#include "dharc/definition.hpp"
 #include <thread>
 #include <chrono>
 #include <atomic>
 #include <vector>
 
-using namespace fdsb;
+using namespace dharc;
 using std::vector;
 
 /* ==== MOCKS ==== */
@@ -22,7 +22,7 @@ void Fabric::counter_thread() {
 	}
 }
 
-Fabric &fdsb::fabric = Fabric::singleton();
+Fabric &dharc::fabric = Fabric::singleton();
 
 Fabric::Fabric() {
 }
@@ -73,7 +73,7 @@ Definition *Definition::from_path(const vector<vector<Nid>> &path) {
 	return res;
 }
 
-std::ostream &fdsb::operator<<(std::ostream &os, const Nid &n) {
+std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
 	switch(n.t) {
 	case Nid::Type::special:
 		switch(n.s) {

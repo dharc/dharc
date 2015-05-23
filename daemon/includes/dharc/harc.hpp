@@ -13,8 +13,8 @@
 #include <chrono>
 #include <ostream>
 
-#include "fdsb/nid.hpp"
-#include "fdsb/definition.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/definition.hpp"
 
 using std::pair;
 using std::list;
@@ -22,7 +22,7 @@ using std::vector;
 using std::chrono::time_point;
 using std::chrono::system_clock;
 
-namespace fdsb {
+namespace dharc {
 
 class Fabric;
 

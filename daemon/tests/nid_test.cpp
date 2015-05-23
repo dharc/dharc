@@ -1,9 +1,9 @@
-#include "fdsb/test.hpp"
-#include "fdsb/nid.hpp"
+#include "dharc/test.hpp"
+#include "dharc/nid.hpp"
 
 #include <sstream>
 
-using namespace fdsb;
+using namespace dharc;
 
 void test_nid_ilit()
 {
