@@ -7,13 +7,10 @@
 #include <map>
 #include <sstream>
 #include <vector>
-#include "fdsb/nid.hpp"
-#include "fdsb/fabric.hpp"
-#include "fdsb/framer.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/arch.hpp"
 
-using fdsb::Nid;
-using fdsb::Framer;
-using fdsb::Harc;
+using dharc::Nid;
 
 using std::map;
 using std::string;
@@ -37,7 +34,7 @@ vector<string> split(const string &s, char delim) {
     return elems;
 }
 
-vector<vector<Nid>> build_path(const vector<string> &e, int ix) {
+/*vector<vector<Nid>> build_path(const vector<string> &e, int ix) {
 	vector<vector<Nid>> p;
 	vector<Nid> cursub;
 
@@ -59,7 +56,7 @@ vector<vector<Nid>> build_path(const vector<string> &e, int ix) {
 	}
 
 	return p;
-}
+}*/
 
 /* ======== Command Functions =============================================== */
 
@@ -73,12 +70,13 @@ void command_query(const vector<string> &e) {
 	} else {
 		Nid t1 = Nid::from_string(e[1]);
 		Nid t2 = Nid::from_string(e[2]);
-		Nid r = fdsb::fabric.get(t1, t2).query();
+		//Nid r = fdsb::fabric.get(t1, t2).query();
+		Nid r = dharc::query(t1, t2);
 		std::cout << "  " << r << std::endl;
 	}
 }
 
-void command_define(const vector<string> &e) {
+/*void command_define(const vector<string> &e) {
 	// Just a constant definition
 	if (e.size() == 4) {
 		Nid t1 = Nid::from_string(e[1]);
@@ -173,7 +171,7 @@ void command_details(const vector<string> &e) {
 	} else {
 		cout << "  Details command expects 2 arguments." << std::endl;
 	}
-}
+}*/
 
 /* ========================================================================== */
 
@@ -182,12 +180,12 @@ void command_details(const vector<string> &e) {
  */
 map<string, void (*)(const vector<string>&)> commands = {
 		{ "%query", command_query },
-		{ "%define", command_define },
-		{ "%partners", command_partners },
-		{ "%path", command_path },
-		{ "%array", command_array },
-		{ "%dependants", command_dependants },
-		{ "%details", command_details }
+		// { "%define", command_define },
+		// { "%partners", command_partners },
+		// { "%path", command_path },
+		// { "%array", command_array },
+		// { "%dependants", command_dependants },
+		// { "%details", command_details }
 		// %string
 		// %sigpath
 		// %dependants
@@ -203,20 +201,19 @@ Nid parse_dsbscript(const vector<string> &tokens) {
 	for (int i = 1; i < static_cast<int>(tokens.size()); ++i) {
 		if (tokens[i] == "=") {
 			if (tokens[i+1] == "{") {
-				++i;
+				/*++i;
 				fdsb::fabric.get(old, other).define(
 					build_path(tokens, ++i));
 				++i;
-				cur = old;
+				cur = old;*/
 			} else {
-				fdsb::fabric.get(old, other).define(
-						Nid::from_string(tokens[++i]));
+				dharc::define(old, other, Nid::from_string(tokens[++i]));
 				cur = old;
 			}
 		} else {
 			old = cur;
 			other = Nid::from_string(tokens[i]);
-			cur = fdsb::fabric.get(old, other).query();
+			cur = dharc::query(old, other);
 		}
 	}
 
@@ -271,9 +268,13 @@ int main(int argc, char *argv[]) {
 		++i;
 	}
 
+	dharc::start(argc,argv);
+
 	if (is_i) {
 		interactive();
 	}
+
+	dharc::stop();
 
 	return 0;
 }

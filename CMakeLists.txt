@@ -19,7 +19,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 set(DHARCDSOURCE
-	daemon/src/nid.cpp
 	daemon/src/harc.cpp
 	daemon/src/fabric.cpp
 	daemon/src/main.cpp
@@ -51,11 +50,23 @@ set(DHARCAGENT
 	agent/cli/main.cpp
 )
 
-add_executable(dharcd ${DHARCDSOURCE})
+add_library(dharccommon OBJECT
+	common/src/rpc_common.cpp
+	common/src/nid.cpp
+)
+
+add_library(dharcarch STATIC
+	arch/lib/src/arch.cpp
+	$<TARGET_OBJECTS:dharccommon>
+)
+target_include_directories(dharcarch PUBLIC ${PROJECT_SOURCE_DIR}/arch/lib/includes)
+
+add_executable(dharcd ${DHARCDSOURCE} $<TARGET_OBJECTS:dharccommon>)
 target_include_directories(dharcd PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
 target_link_libraries(dharcd pthread zmq)
 
 add_executable(dharc-arch ${DHARCARCH})
+target_link_libraries(dharc-arch pthread zmq dharcarch)
 
 add_executable(gdharc-arch ${GDHARCARCH})
 target_link_libraries(gdharc-arch ${GTKMM_LIBRARIES})
@@ -77,7 +88,7 @@ add_library(dharctest OBJECT daemon/src/test.cpp)
 add_executable(nid-unit EXCLUDE_FROM_ALL
 	daemon/tests/nid_test.cpp
 	$<TARGET_OBJECTS:dharctest>
-	daemon/src/nid.cpp
+	common/src/nid.cpp
 )
 target_include_directories(nid-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
 
@@ -106,7 +117,7 @@ target_include_directories(fabric-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/inclu
 add_executable(harc-perf EXCLUDE_FROM_ALL
 	daemon/tests/harc_perf.cpp
 	$<TARGET_OBJECTS:dharctest>
-	daemon/src/nid.cpp
+	common/src/nid.cpp
 	daemon/src/harc.cpp
 	daemon/src/fabric.cpp
 	daemon/src/definition.cpp

@@ -9,9 +9,6 @@
 #include <string>
 #include <sstream>
 
-#include "dharc/harc.hpp"
-#include "dharc/fabric.hpp"
-
 using dharc::Nid;
 using std::string;
 using std::stringstream;

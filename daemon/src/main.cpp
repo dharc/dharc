@@ -38,6 +38,12 @@ int main(int argc, char *argv[]) {
 
 		if (items[0].revents & ZMQ_POLLIN) {
 			rpc.recv(&msg);
+			cout << "Message: " << (const char*)msg.data() << std::endl;
+
+			std::string res = "[666]";
+			zmq::message_t rep(res.size()+1);
+			memcpy(rep.data(), res.data(), res.size()+1);
+			rpc.send(rep);
 		}
 	}
 
