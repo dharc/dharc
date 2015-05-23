@@ -66,7 +66,7 @@ target_include_directories(dharcd PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
 target_link_libraries(dharcd pthread zmq)
 
 add_executable(dharc-arch ${DHARCARCH})
-target_link_libraries(dharc-arch pthread zmq dharcarch)
+target_link_libraries(dharc-arch dharcarch pthread zmq)
 
 add_executable(gdharc-arch ${GDHARCARCH})
 target_link_libraries(gdharc-arch ${GTKMM_LIBRARIES})
