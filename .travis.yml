@@ -10,6 +10,7 @@ install:
  - sudo apt-get install -qq cmake
  - sudo apt-get install -qq g++-4.9
  - sudo apt-get install -qq cppcheck
+ - sudo apt-get install -qq gtkmm-3.0-dev
  - export CXX="g++-4.9"
 
 before_script:
@@ -19,6 +20,7 @@ before_script:
 script:
  - cmake ..
  - make
+ - make tests
  - "./nid-unit"
  - "./def-unit"
  - "./harc-unit"

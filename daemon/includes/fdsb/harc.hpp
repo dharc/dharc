@@ -93,6 +93,11 @@ class Harc {
 	inline bool check_flag(Flag f) const;
 	inline void clear_flag(Flag f);
 
+	/**
+	 * Return a list of Harcs that are dependant upon this Harc. Note that this
+	 * will rarely be an exhaustive list of all dependencies because those Harcs
+	 * only become dependent upon this Harc when they are first evaluated.
+	 */
 	inline const list<const Harc*> &dependants() const;
 
 	/**
@@ -112,15 +117,15 @@ class Harc {
 	bool operator==(const Nid &);
 
 	private:
-	pair<Nid, Nid> m_tail;				/* Pair of tail nodes, unique */
+	pair<Nid, Nid> m_tail;
 	union {
-	Nid m_head;							/* Constant head node or ... */
-	Definition *m_def;					/* Definition if defined flag is set */
+	Nid m_head;
+	Definition *m_def;
 	};
-	Flag m_flags;						/* Flags for type of Harc etc */
-	unsigned long long m_lastquery;		/* Ticks since last query */
-	float m_strength;					/* Strength of the Harc relation */
-	mutable list<const Harc*> m_dependants;  	/* Who depends upon me */
+	Flag m_flags;
+	unsigned long long m_lastquery;
+	float m_strength;
+	mutable list<const Harc*> m_dependants;
 
 	// Might be moved to meta structure
 	list<Harc*>::iterator m_partix[2];
