@@ -192,6 +192,6 @@ inline const Definition *Harc::definition() const {
 	return (check_flag(Flag::defined)) ? m_def : nullptr;
 }
 
-};  // namespace fdsb
+};  // namespace dharc
 
 #endif /* FDSB_HARC_H_ */

@@ -13,6 +13,7 @@ install:
  - sudo apt-get install -qq g++-4.9
  - sudo apt-get install -qq cppcheck
  - sudo apt-get install -qq gtkmm-3.0-dev
+ - sudo apt-get install -qq libzmq3-dev
  - export CXX="g++-4.9"
 
 before_script:
@@ -28,4 +29,4 @@ script:
  - "./harc-unit"
  - "./fabric-unit"
  - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
- - ../tools/cpplint.py --filter=-whitespace/braces,-whitespace/tab,-build/c++11,-runtime/int,-runtime/references --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/fdsb/*
+ - ../tools/cpplint.py --filter=-whitespace/braces,-whitespace/tab,-build/c++11,-runtime/int,-runtime/references --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/dharc/* ../common/src/* ../common/includes/dharc/* ../arch/cli/* ../arch/lib/src/* ../arch/lib/includes/dharc/*

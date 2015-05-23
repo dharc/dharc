@@ -9,6 +9,8 @@
 #include <istream>
 #include <string>
 
+#include "dharc/rpc_packer.hpp"
+
 using std::string;
 
 namespace dharc {
@@ -125,6 +127,25 @@ constexpr bool operator>=(const Nid &a, const Nid &b) {
 
 std::ostream &operator<<(std::ostream &os, const Nid &n);
 
+namespace rpc {
+template <>
+struct Packer<dharc::Nid> {
+	static void pack(std::ostream &os, const Nid &n) {
+		os << '"' << static_cast<int>(n.t) << ':' << static_cast<int>(n.i) << '"';
+	}
+	static dharc::Nid unpack(std::istream &is) {
+		dharc::Nid res;
+		int type;
+		is.get();  // '"'
+		is >> type;
+		res.t = static_cast<dharc::Nid::Type>(type);
+		is.get();  // ':'
+		is >> res.i;
+		is.get();  // '"'
+		return res;
+	}
+};
+};  // namespace rpc
 };  // namespace dharc
 
 #endif

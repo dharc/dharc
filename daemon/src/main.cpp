@@ -3,10 +3,12 @@
  */
 
 #include <iostream>
+#include <string>
 
 #include "zmq.hpp"
 
 using std::cout;
+using std::string;
 
 int main(int argc, char *argv[]) {
 	int i = 1;
@@ -40,7 +42,7 @@ int main(int argc, char *argv[]) {
 			rpc.recv(&msg);
 			cout << "Message: " << (const char*)msg.data() << std::endl;
 
-			std::string res = "[666]";
+			string res = "\"1:666\"";
 			zmq::message_t rep(res.size()+1);
 			memcpy(rep.data(), res.data(), res.size()+1);
 			rpc.send(rep);

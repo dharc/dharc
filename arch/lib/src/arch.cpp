@@ -4,6 +4,8 @@
 
 #include "dharc/arch.hpp"
 
+#include <vector>
+
 using dharc::Nid;
 using dharc::rpc::Command;
 
@@ -12,7 +14,6 @@ void dharc::start(int argc, char *argv[]) {
 }
 
 void dharc::stop() {
-
 }
 
 Nid dharc::query(const Nid &a, const Nid &b) {
@@ -21,5 +22,9 @@ Nid dharc::query(const Nid &a, const Nid &b) {
 
 void dharc::define(const Nid &a, const Nid &b, const Nid &h) {
 	dharc::rpc::send<Nid>(Command::define_const, a, b, h);
+}
+
+void dharc::define(const Nid &a, const Nid &b, const vector<vector<Nid>> &p) {
+	dharc::rpc::send<Nid>(Command::define, a, b, p);
 }
 

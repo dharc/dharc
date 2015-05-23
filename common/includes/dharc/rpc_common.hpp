@@ -5,20 +5,17 @@
 #ifndef DHARC_RPC_COMMON_H_
 #define DHARC_RPC_COMMON_H_
 
-#include "zmq.hpp"
-
 #include <string>
 #include <sstream>
+#include <vector>
+
+#include "zmq.hpp"
+#include "dharc/rpc_commands.hpp"
+#include "dharc/rpc_packer.hpp"
 
 namespace dharc {
 namespace rpc {
-	enum struct Command : int {
-		query,
-		define_const,
-		define,
-		partners,
-		details
-	};
+
 
 	extern zmq::socket_t rpc_sock;
 
@@ -26,12 +23,13 @@ namespace rpc {
 
 	template<typename F>
 	void pack(std::ostream &os, F first) {
-		os << '"' << first << '"';
+		Packer<F>::pack(os, first);
 	}
 
 	template<typename F, typename... Args>
 	void pack(std::ostream &os, F first, Args... args) {
-		os << '"' << first << "\",";
+		pack(os, first);
+		os << ',';
 		pack(os, args...);
 	}
 
@@ -40,8 +38,9 @@ namespace rpc {
 		std::stringstream os;
 		os << "{\"c\": " << static_cast<int>(c);
 		os << ", \"args\": [";
-		pack(os,args...);
+		pack(os, args...);
 		os << "]}";
+
 		std::string s = os.str();
 		zmq::message_t req(s.size()+1);
 		memcpy(req.data(), s.data(), s.size()+1);
@@ -49,12 +48,13 @@ namespace rpc {
 
 		zmq::message_t rep;
 		rpc_sock.recv(&rep);
-		return R::from_string((const char*)rep.data());
+		std::stringstream is(std::string((const char*)rep.data()));
+		return Packer<R>::unpack(is);
 	}
 
 	bool disconnect();
-};
-};
+};  // namespace rpc
+};  // namespace dharc
 
 #endif  /* DHARC_RPC_COMMON_H_ */
 
