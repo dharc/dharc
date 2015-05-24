@@ -24,6 +24,7 @@ set(DHARCDSOURCE
 	daemon/src/main.cpp
 	daemon/src/framer.cpp
 	daemon/src/definition.cpp
+	daemon/src/rpc.cpp
 )
 
 set(GDHARCARCH

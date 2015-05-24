@@ -3,12 +3,18 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #include "zmq.hpp"
+#include "dharc/rpc.hpp"
+#include "dharc/nid.hpp"
+#include "dharc/fabric.hpp"
 
 using std::cout;
 using std::string;
+using dharc::Nid;
+using dharc::fabric;
 
 int main(int argc, char *argv[]) {
 	int i = 1;
@@ -42,7 +48,12 @@ int main(int argc, char *argv[]) {
 			rpc.recv(&msg);
 			cout << "Message: " << (const char*)msg.data() << std::endl;
 
-			string res = "\"1:666\"";
+			std::stringstream is((const char*)msg.data());
+			std::stringstream os;
+
+			dharc::rpc::process_msg(is, os);
+
+			string res = os.str();
 			zmq::message_t rep(res.size()+1);
 			memcpy(rep.data(), res.data(), res.size()+1);
 			rpc.send(rep);

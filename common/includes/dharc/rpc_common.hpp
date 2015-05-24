@@ -9,50 +9,57 @@
 #include <sstream>
 #include <vector>
 
-#include "zmq.hpp"
 #include "dharc/rpc_commands.hpp"
 #include "dharc/rpc_packer.hpp"
 
 namespace dharc {
 namespace rpc {
 
+bool connect(const char *addr);
 
-	extern zmq::socket_t rpc_sock;
+std::string send(const std::string &s);
 
-	bool connect(const char *addr);
+/* One argument base case */
+template<typename F>
+void pack(std::ostream &os, F first) {
+	Packer<F>::pack(os, first);
+}
 
-	template<typename F>
-	void pack(std::ostream &os, F first) {
-		Packer<F>::pack(os, first);
-	}
+/* Recursively pack the arguments into a (json) stream */
+template<typename F, typename... Args>
+void pack(std::ostream &os, F first, Args... args) {
+	pack(os, first);
+	os << ',';
+	pack(os, args...);
+}
 
-	template<typename F, typename... Args>
-	void pack(std::ostream &os, F first, Args... args) {
-		pack(os, first);
-		os << ',';
-		pack(os, args...);
-	}
+/**
+ * Send an RPC command to the server, that takes no arguments.
+ */
+template<typename R>
+R send(Command c) {
+	std::stringstream os;
+	os << "{\"c\": " << static_cast<int>(c) << '}';
+	std::stringstream is(send(os.str()));
+	return Packer<R>::unpack(is);
+}
 
-	template<typename R, typename... Args>
-	R send(Command c, Args... args) {
-		std::stringstream os;
-		os << "{\"c\": " << static_cast<int>(c);
-		os << ", \"args\": [";
-		pack(os, args...);
-		os << "]}";
+/**
+ * Send an RPC command to the server, that takes one or more arguments.
+ */
+template<typename R, typename... Args>
+R send(Command c, Args... args) {
+	std::stringstream os;
+	os << "{\"c\": " << static_cast<int>(c);
+	os << ", \"args\": [";
+	pack(os, args...);
+	os << "]}";
+	std::stringstream is(send(os.str()));
+	return Packer<R>::unpack(is);
+}
 
-		std::string s = os.str();
-		zmq::message_t req(s.size()+1);
-		memcpy(req.data(), s.data(), s.size()+1);
-		rpc_sock.send(req);
+bool disconnect();
 
-		zmq::message_t rep;
-		rpc_sock.recv(&rep);
-		std::stringstream is(std::string((const char*)rep.data()));
-		return Packer<R>::unpack(is);
-	}
-
-	bool disconnect();
 };  // namespace rpc
 };  // namespace dharc
 

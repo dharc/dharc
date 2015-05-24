@@ -7,13 +7,20 @@
 
 namespace dharc {
 namespace rpc {
-	enum struct Command : int {
-		query,
-		define_const,
-		define,
-		partners,
-		details
-	};
+/**
+ * Available RPC command constants, telling the server which procedure to
+ * call to deal with the clients request.
+ */
+enum struct Command : int {
+	version,        // int :
+	query,          // Nid : Nid, Nid
+	define_const,   // bool : Nid, Nid, Nid
+	define,         // bool : Nid, Nid, vector<vector<Nid>>
+	partners,       // list<Nid> : Nid
+	details,        // HarcStats : Nid, Nid
+	path,           // Nid : vector<vector<Nid>>
+	paths           // vector<Nid> : vector<vector<Nid>>
+};
 };  // namespace rpc
 };  // namespace dharc
 
