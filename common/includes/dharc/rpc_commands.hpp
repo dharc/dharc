@@ -5,6 +5,15 @@
 #ifndef DHARC_RPC_COMMANDS_H_
 #define DHARC_RPC_COMMANDS_H_
 
+#include <tuple>
+#include <vector>
+
+#include "dharc/nid.hpp"
+
+using std::vector;
+using std::tuple;
+using dharc::Nid;
+
 namespace dharc {
 namespace rpc {
 /**
@@ -12,15 +21,30 @@ namespace rpc {
  * call to deal with the clients request.
  */
 enum struct Command : int {
-	version,        // int :
-	query,          // Nid : Nid, Nid
-	define_const,   // bool : Nid, Nid, Nid
-	define,         // bool : Nid, Nid, vector<vector<Nid>>
-	partners,       // list<Nid> : Nid
-	details,        // HarcStats : Nid, Nid
-	path,           // Nid : vector<vector<Nid>>
-	paths           // vector<Nid> : vector<vector<Nid>>
+	nop,
+	version,
+	query,
+	define_const,
+	define,
+	// partners,
+	// details,
+	// path,
+	// paths,
+	end
 };
+
+/**
+ * Corresponding types for each command (in the same order as commands are
+ * specified in the Command enum struct).
+ */
+typedef tuple<
+	bool(*)(),
+	int(*)(),
+	Nid(*)(const Nid&, const Nid&),
+	bool(*)(const Nid&, const Nid&, const Nid&),
+	bool(*)(const Nid&, const Nid&, const vector<vector<Nid>>&)
+> commands_t;
+
 };  // namespace rpc
 };  // namespace dharc
 

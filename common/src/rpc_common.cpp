@@ -15,7 +15,7 @@ bool dharc::rpc::connect(const char *addr) {
 	return true;
 }
 
-std::string dharc::rpc::send(const std::string &s) {
+std::string dharc::rpc::send_(const std::string &s) {
 	zmq::message_t req(s.size()+1);
 	memcpy(req.data(), s.data(), s.size()+1);
 	rpc_sock.send(req);

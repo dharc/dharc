@@ -8,6 +8,10 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <iostream>
+#include <type_traits>
+
+#include <cassert>
 
 #include "dharc/rpc_commands.hpp"
 #include "dharc/rpc_packer.hpp"
@@ -17,7 +21,7 @@ namespace rpc {
 
 bool connect(const char *addr);
 
-std::string send(const std::string &s);
+std::string send_(const std::string &s);
 
 /* One argument base case */
 template<typename F>
@@ -34,28 +38,32 @@ void pack(std::ostream &os, F first, Args... args) {
 }
 
 /**
- * Send an RPC command to the server, that takes no arguments.
+ * Send an RPC command to the server. The arguments must match those expected
+ * for the given command, as must the return type. See the commands_t tuple
+ * for the correct types.
  */
-template<typename R>
-R send(Command c) {
-	std::stringstream os;
-	os << "{\"c\": " << static_cast<int>(c) << '}';
-	std::stringstream is(send(os.str()));
-	return Packer<R>::unpack(is);
-}
+template<Command C, typename... Args>
+auto send(const Args&... args) {
+	using cmd_type =
+	typename std::tuple_element<static_cast<int>(C), commands_t>::type;
 
-/**
- * Send an RPC command to the server, that takes one or more arguments.
- */
-template<typename R, typename... Args>
-R send(Command c, Args... args) {
+	using ret_type =
+	typename std::result_of<cmd_type(Args...)>::type;
+
+	// Make sure arguments are correct for this command
+	static_assert(std::is_same<ret_type(*)(const Args&...), cmd_type>::value,
+		"Incorrect RPC Arguments");
+
+	// Pack the command number and arguments
 	std::stringstream os;
-	os << "{\"c\": " << static_cast<int>(c);
+	os << "{\"c\": " << static_cast<int>(C);
 	os << ", \"args\": [";
 	pack(os, args...);
 	os << "]}";
-	std::stringstream is(send(os.str()));
-	return Packer<R>::unpack(is);
+
+	// Send and then unpack return value
+	std::stringstream is(send_(os.str()));
+	return Packer<ret_type>::unpack(is);
 }
 
 bool disconnect();
