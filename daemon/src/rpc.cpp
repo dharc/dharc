@@ -30,7 +30,7 @@ static bool rpc_nop() {
 }
 
 static int rpc_version() {
-	return 1;
+	return static_cast<int>(Command::end);
 }
 
 static Nid rpc_query(const Nid &n1, const Nid &n2) {

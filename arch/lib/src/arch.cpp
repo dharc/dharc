@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <list>
+#include <iostream>
 
 #include "dharc/nid.hpp"
 
@@ -15,6 +16,12 @@ using dharc::rpc::send;
 
 void dharc::start(int argc, char *argv[]) {
 	dharc::rpc::connect("tcp://localhost:7878");
+
+	// Do a version check!
+	if (send<Command::version>() != static_cast<int>(Command::end)) {
+		std::cout << "!!! dharcd uses different version of rpc protocol !!!";
+		std::cout << std::endl;
+	}
 }
 
 void dharc::stop() {

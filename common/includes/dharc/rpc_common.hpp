@@ -66,6 +66,26 @@ auto send(const Args&... args) {
 	return Packer<ret_type>::unpack(is);
 }
 
+/**
+ * A zero argument version of send for commands that take no arguments.
+ */
+template<Command C>
+auto send() {
+	using cmd_type =
+	typename std::tuple_element<static_cast<int>(C), commands_t>::type;
+	using ret_type =
+	typename std::result_of<cmd_type()>::type;
+
+	// Pack the command number and arguments
+	std::stringstream os;
+	os << "{\"c\": " << static_cast<int>(C);
+	os << ", \"args\": []}";
+
+	// Send and then unpack return value
+	std::stringstream is(send_(os.str()));
+	return Packer<ret_type>::unpack(is);
+}
+
 bool disconnect();
 
 };  // namespace rpc

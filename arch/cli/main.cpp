@@ -2,6 +2,8 @@
  * Copyright 2015 Nicolas Pope
  */
 
+#include <getopt.h>
+
 #include <string>
 #include <iostream>
 #include <map>
@@ -76,24 +78,24 @@ void command_query(const vector<string> &e) {
 	}
 }
 
-/*void command_define(const vector<string> &e) {
+void command_define(const vector<string> &e) {
 	// Just a constant definition
 	if (e.size() == 4) {
 		Nid t1 = Nid::from_string(e[1]);
 		Nid t2 = Nid::from_string(e[2]);
 		Nid h = Nid::from_string(e[3]);
-		fdsb::fabric.get(t1, t2).define(h);
+		dharc::define(t1, t2, h);
 
 	// Path based definition
 	} else if (e.size() > 4) {
 		Nid t1 = Nid::from_string(e[1]);
 		Nid t2 = Nid::from_string(e[2]);
-		fdsb::fabric.get(t1, t2).define(build_path(e, 3));
+		dharc::define(t1, t2, build_path(e, 3));
 
 	} else {
 		cout << "  Define command expects 3 or more arguments." << std::endl;
 	}
-}*/
+}
 
 void command_partners(const vector<string> &e) {
 	if (e.size() != 2) {
@@ -167,7 +169,7 @@ void command_details(const vector<string> &e) {
  */
 map<string, void (*)(const vector<string>&)> commands = {
 		{ "%query", command_query },
-		// { "%define", command_define },
+		{ "%define", command_define },
 		{ "%partners", command_partners },
 		// { "%path", command_path },
 		// { "%array", command_array },
@@ -206,6 +208,25 @@ Nid parse_dsbscript(const vector<string> &tokens) {
 	return cur;
 }
 
+void execute_line(string line) {
+	if (line.size() == 0) return;
+
+	vector<string> elems = split(line, ' ');
+
+	if (elems[0] == "%exit") return;
+
+	if (elems[0][0] == '%') {
+		auto it = commands.find(elems[0]);
+		if (it != commands.end()) {
+			it->second(elems);
+		} else {
+			std::cout << "  Unrecognised command: " << elems[0] << std::endl;
+		}
+	} else {
+		cout << "  " << parse_dsbscript(elems) << std::endl;
+	}
+}
+
 /*
  * Read command line entries when in interactive mode and pass to relevant
  * command function for processing.
@@ -218,45 +239,36 @@ void interactive() {
 		std::cout << "> ";
 		std::cout.flush();
 		std::getline(std::cin, line);
-
-		if (line.size() == 0) continue;
-
-		vector<string> elems = split(line, ' ');
-
-		if (elems[0] == "%exit") return;
-
-		if (elems[0][0] == '%') {
-			auto it = commands.find(elems[0]);
-			if (it != commands.end()) {
-				it->second(elems);
-			} else {
-				std::cout << "  Unrecognised command: " << elems[0] << std::endl;
-			}
-		} else {
-			cout << "  " << parse_dsbscript(elems) << std::endl;
-		}
+		execute_line(line);
 	}
 }
 
-int main(int argc, char *argv[]) {
-	int i = 1;
-	bool is_i = false;
+static struct {
+	int interactive;
+} config {
+	0
+};
 
-	while (i < argc) {
-		if (argv[i][0] == '-') {
-			switch (argv[i][1]) {
-			case 'i': is_i = true; break;
-			default:
-				cout << "Unrecognised command line argument." << std::endl;
-				return -1;
-			}
-		}
-		++i;
-	}
+static option opts[] = {
+	{"interactive", 0, &config.interactive, 1},
+	{"cmd", 1, nullptr, 'c'},
+	{nullptr, 0, nullptr, 0}
+};
+
+int main(int argc, char *argv[]) {
+	int o;
 
 	dharc::start(argc, argv);
 
-	if (is_i) {
+	while ((o = getopt_long(argc, argv, "ic:", opts, nullptr)) != -1) {
+		switch(o) {
+		case 'c': execute_line(string(optarg)); break;
+		case 'i': config.interactive = 1; break;
+		default: break;
+		}
+	}
+
+	if (config.interactive) {
 		interactive();
 	}
 
