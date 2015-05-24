@@ -93,33 +93,20 @@ void command_query(const vector<string> &e) {
 	} else {
 		cout << "  Define command expects 3 or more arguments." << std::endl;
 	}
-}
+}*/
 
 void command_partners(const vector<string> &e) {
-	if (e.size() < 2) {
-		cout << "  Partners command expects 1 or more arguments." << std::endl;
+	if (e.size() != 2) {
+		cout << "  Partners command expects 1 argument." << std::endl;
 	} else {
-		if (e[1] == "all") {
-			Nid n1 = Nid::from_string(e[2]);
-			auto part = fdsb::fabric.partners(n1);
-			for (auto i : part) {
-				cout << "  - " << *i << std::endl;
-			}
-		} else {
-			vector<Nid> nodes;
-			for (int i = 1; i < static_cast<int>(e.size()); ++i) {
-				Nid n1 = Nid::from_string(e[i]);
-				nodes.push_back(n1);
-			}
-			auto part = Framer::select_partners(nodes, 10);
-			for (auto i : part) {
-				cout << "  - [" << i->tail().first << " "
-						<< i->tail().second << "]" << std::endl;
-			}
+		Nid n1 = Nid::from_string(e[1]);
+		auto part = dharc::partners(n1);
+		for (auto i : part) {
+			cout << "  - " << i << std::endl;
 		}
 	}
 }
-
+/*
 void command_path(const vector<string> &e) {
 	if (e.size() >= 3) {
 		cout << "  " << fdsb::fabric.path(build_path(e, 1)) << std::endl;
@@ -181,7 +168,7 @@ void command_details(const vector<string> &e) {
 map<string, void (*)(const vector<string>&)> commands = {
 		{ "%query", command_query },
 		// { "%define", command_define },
-		// { "%partners", command_partners },
+		{ "%partners", command_partners },
 		// { "%path", command_path },
 		// { "%array", command_array },
 		// { "%dependants", command_dependants },

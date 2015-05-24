@@ -7,10 +7,12 @@
 
 #include <tuple>
 #include <vector>
+#include <list>
 
 #include "dharc/nid.hpp"
 
 using std::vector;
+using std::list;
 using std::tuple;
 using dharc::Nid;
 
@@ -26,7 +28,7 @@ enum struct Command : int {
 	query,
 	define_const,
 	define,
-	// partners,
+	partners,
 	// details,
 	// path,
 	// paths,
@@ -42,7 +44,8 @@ typedef tuple<
 	int(*)(),
 	Nid(*)(const Nid&, const Nid&),
 	bool(*)(const Nid&, const Nid&, const Nid&),
-	bool(*)(const Nid&, const Nid&, const vector<vector<Nid>>&)
+	bool(*)(const Nid&, const Nid&, const vector<vector<Nid>>&),
+	list<Nid>(*)(const Nid&)
 > commands_t;
 
 };  // namespace rpc

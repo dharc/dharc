@@ -5,6 +5,7 @@
 #include "dharc/arch.hpp"
 
 #include <vector>
+#include <list>
 
 #include "dharc/nid.hpp"
 
@@ -29,5 +30,9 @@ void dharc::define(const Nid &a, const Nid &b, const Nid &h) {
 
 void dharc::define(const Nid &a, const Nid &b, const vector<vector<Nid>> &p) {
 	send<Command::define>(a, b, p);
+}
+
+list<Nid> dharc::partners(const Nid &n) {
+	return send<Command::partners>(n);
 }
 

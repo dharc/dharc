@@ -7,17 +7,21 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "dharc/rpc_commands.hpp"
 #include "dharc/nid.hpp"
 #include "dharc/fabric.hpp"
+#include "dharc/harc.hpp"
 
 using std::cout;
 using std::istream;
 using std::ostream;
 using std::string;
 using std::vector;
+using std::list;
 using dharc::Nid;
+using dharc::Harc;
 using dharc::fabric;
 using dharc::rpc::Command;
 
@@ -49,12 +53,22 @@ static bool rpc_define(
 	return true;
 }
 
+static list<Nid> rpc_partners(const Nid &n) {
+	const list<Harc*> &part = fabric.partners(n);
+	list<Nid> res;
+	for (auto i : part) {
+		res.push_back(i->tail_partner(n));
+	}
+	return res;
+}
+
 dharc::rpc::commands_t commands {
 	rpc_nop,
 	rpc_version,
 	rpc_query,
 	rpc_define_const,
-	rpc_define
+	rpc_define,
+	rpc_partners
 };
 
 /* ========================================================================== */
