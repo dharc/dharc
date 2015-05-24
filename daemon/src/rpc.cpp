@@ -100,7 +100,7 @@ void callCmd<static_cast<int>(Command::end)>(
 	Command cmd) {}
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
-	int cmdtmp;
+	int cmdtmp = 0;
 
 	if (parse(is, "{\"c\": ", Token<int>{cmdtmp}, ", \"args\": [")) {
 		Command cmd = static_cast<Command>(cmdtmp);
