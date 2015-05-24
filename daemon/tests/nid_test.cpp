@@ -1,101 +1,112 @@
-#include "dharc/test.hpp"
+#include "lest.hpp"
+
 #include "dharc/nid.hpp"
 
 #include <sstream>
 
 using namespace dharc;
 
-void test_nid_ilit()
-{
+using lest::approx;
+
+const lest::test specification[] = {
+
+CASE( "Integer literal" ) {
 	Nid n1 = 123_n;
-	CHECK(n1.t == Nid::Type::integer);
-	CHECK(n1.i == 123);
-	DONE;
-}
+	EXPECT( n1.t == Nid::Type::integer );
+	EXPECT( n1.i == static_cast<unsigned>(123) );
+},
 
-void test_nid_dlit()
-{
+CASE( "Double literal") {
 	Nid n1 = 23.67_n;
-	CHECK(n1.t == Nid::Type::real);
-	CHECK(n1.d > 23.66 && n1.d < 23.68);
-	DONE;
-}
+	EXPECT( n1.t == Nid::Type::real );
+	EXPECT( n1.d == approx(23.67) );
+},
 
-void test_nid_clit()
-{
+CASE( "Character literal") {
 	Nid n1 = 'f'_n;
-	CHECK(n1.t == Nid::Type::character);
-	CHECK(n1.c == 'f');
-	DONE;
-}
+	EXPECT( n1.t == Nid::Type::character );
+	EXPECT( n1.c == 'f' );
+},
 
-void test_nid_unique()
-{
+CASE( "Generating unique nodes ids" ) {
 	Nid n1 = Nid::unique();
 	Nid n2 = Nid::unique();
-	CHECK(n1.t == Nid::Type::allocated);
-	CHECK(n1.i == 0);
-	CHECK(n2.t == Nid::Type::allocated);
-	CHECK(n2.i == 1);
-	DONE;
-}
+	EXPECT( n1.t == Nid::Type::allocated );
+	EXPECT( n2.t == Nid::Type::allocated );
+	EXPECT( n1.i != n2.i );
+},
 
-void test_nid_eqne()
-{
-	Nid n1 = 1234_n;
-	Nid n2 = 99_n;
-	CHECK(!(n1 == n2));
-	CHECK(n1 != n2);
-	n2 = 1234_n;
-	CHECK(n1 == n2);
-	CHECK(!(n1 != n2));
-	DONE;
-}
+CASE( "Nid equality" ) {
+	EXPECT( 1234_n == 1234_n );
+	EXPECT( !(99_n == 55_n) );
+},
 
-void test_nid_less() {
-	Nid n1 = 100_n;
-	Nid n2 = 102_n;
-	
-	CHECK(n1 < n2);
-	CHECK(!(n2 < n1));
-	n1 = true_n;
-	CHECK(n1 < n2);
-	n1 = 102_n;
-	CHECK(!(n1 <n2));
-	DONE;
-}
+CASE( "Nid inequality" ) {
+	EXPECT( 98_n != 'c'_n );
+	EXPECT( !('d'_n != 'd'_n) );
+},
 
-void test_nid_ostream() {
+CASE( "Nid less than" ) {
+	EXPECT( 100_n < 101_n );
+	EXPECT( true_n < 1_n );
+	EXPECT( null_n < true_n );
+	EXPECT( !(300_n < 300_n) );
+},
+
+CASE( "Output stream integer nodes" ) {
 	std::stringstream str;
+
 	str << 100_n;
-	CHECK(str.str() == "[100]");
-	str.str("");
+	EXPECT( str.str() == "[100]" );
+},
+
+CASE( "Output stream special nodes" ) {
+	std::stringstream str;
 	str << true_n;
-	CHECK(str.str() == "[true]");
-	DONE;
+	EXPECT( str.str() == "[true]" );
+	str.str("");
+	str << false_n;
+	EXPECT( str.str() == "[false]" );
+	str.str("");
+	str << null_n;
+	EXPECT( str.str() == "[null]" );
+},
+
+CASE( "Output stream character nodes" ) {
+	std::stringstream str;
+	str << 'a'_n;
+	EXPECT( str.str() == "['a']" );
+},
+
+CASE( "Integer node from string" ) {
+	EXPECT( Nid::from_string("100") == 100_n );
+	EXPECT( Nid::from_string("[100]") == 100_n );
+	EXPECT( Nid::from_string("1:100") == 100_n );
+	EXPECT( Nid::from_string("[1:100]") == 100_n );
+},
+
+CASE( "Float node from string" ) {
+	EXPECT( Nid::from_string("11.2") == 11.2_n );
+	EXPECT( Nid::from_string("[11.2]") == 11.2_n );
+},
+
+CASE( "Character node from string" ) {
+	EXPECT( Nid::from_string("'b'") == 'b'_n );
+	EXPECT( Nid::from_string("['b']") == 'b'_n );
+},
+
+CASE( "Special node from string" ) {
+	EXPECT( Nid::from_string("true") == true_n );
+	EXPECT( Nid::from_string("[true]") == true_n );
+	EXPECT( Nid::from_string("false") == false_n );
+	EXPECT( Nid::from_string("[false]") == false_n );
+	EXPECT( Nid::from_string("null") == null_n );
+	EXPECT( Nid::from_string("[null]") == null_n );
 }
 
-void test_nid_fromstr() {
-	CHECK(Nid::from_string("100") == 100_n);
-	CHECK(Nid::from_string("[100]") == 100_n);
-	CHECK(Nid::from_string("'a'") == 'a'_n);
-	CHECK(Nid::from_string("true") == true_n);
-	CHECK(Nid::from_string("null") == null_n);
-	CHECK(Nid::from_string("[false]") == false_n);
-	CHECK(Nid::from_string("[true") == null_n);
-	CHECK(Nid::from_string("11.2") == 11.2_n);
-	DONE;
-}
+};
 
 int main(int argc, char *argv[])
 {
-	test(test_nid_ilit);
-	test(test_nid_dlit);
-	test(test_nid_clit);
-	test(test_nid_unique);
-	test(test_nid_eqne);
-	test(test_nid_less);
-	test(test_nid_ostream);
-	test(test_nid_fromstr);
-	return test_fail_count();
+	return lest::run(specification);
 }

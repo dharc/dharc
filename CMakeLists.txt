@@ -89,14 +89,12 @@ add_library(dharctest OBJECT daemon/src/test.cpp)
 
 add_executable(nid-unit EXCLUDE_FROM_ALL
 	daemon/tests/nid_test.cpp
-	$<TARGET_OBJECTS:dharctest>
 	common/src/nid.cpp
 )
 target_include_directories(nid-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
 
 add_executable(def-unit EXCLUDE_FROM_ALL
 	daemon/tests/definition_test.cpp
-	$<TARGET_OBJECTS:dharctest>
 	daemon/src/definition.cpp
 )
 target_include_directories(def-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
