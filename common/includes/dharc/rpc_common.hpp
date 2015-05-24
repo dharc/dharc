@@ -21,7 +21,12 @@ namespace rpc {
 
 bool connect(const char *addr);
 
-std::string send_(const std::string &s);
+bool disconnect();
+
+/* ==== INTERNALS =========================================================== */
+namespace intern {
+/* Send a string request and get a string reply from the socket */
+std::string send(const std::string &s);
 
 /* One argument base case */
 template<typename F>
@@ -36,6 +41,8 @@ void pack(std::ostream &os, F first, Args... args) {
 	os << ',';
 	pack(os, args...);
 }
+};  // namespace intern
+/* ========================================================================== */
 
 /**
  * Send an RPC command to the server. The arguments must match those expected
@@ -58,16 +65,16 @@ auto send(const Args&... args) {
 	std::stringstream os;
 	os << "{\"c\": " << static_cast<int>(C);
 	os << ", \"args\": [";
-	pack(os, args...);
+	intern::pack(os, args...);
 	os << "]}";
 
 	// Send and then unpack return value
-	std::stringstream is(send_(os.str()));
+	std::stringstream is(intern::send(os.str()));
 	return Packer<ret_type>::unpack(is);
 }
 
 /**
- * A zero argument version of send for commands that take no arguments.
+ * A version of send for commands that take no arguments.
  */
 template<Command C>
 auto send() {
@@ -82,11 +89,9 @@ auto send() {
 	os << ", \"args\": []}";
 
 	// Send and then unpack return value
-	std::stringstream is(send_(os.str()));
+	std::stringstream is(intern::send(os.str()));
 	return Packer<ret_type>::unpack(is);
 }
-
-bool disconnect();
 
 };  // namespace rpc
 };  // namespace dharc

@@ -54,6 +54,7 @@ set(DHARCAGENT
 add_library(dharccommon OBJECT
 	common/src/rpc_common.cpp
 	common/src/nid.cpp
+	common/src/parse.cpp
 )
 
 add_library(dharcarch STATIC

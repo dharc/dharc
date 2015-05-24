@@ -29,6 +29,7 @@ enum struct Command : int {
 	define_const,
 	define,
 	partners,
+	unique,
 	// details,
 	// path,
 	// paths,
@@ -45,7 +46,8 @@ typedef tuple<
 	Nid(*)(const Nid&, const Nid&),
 	bool(*)(const Nid&, const Nid&, const Nid&),
 	bool(*)(const Nid&, const Nid&, const vector<vector<Nid>>&),
-	list<Nid>(*)(const Nid&)
+	list<Nid>(*)(const Nid&),
+	Nid(*)()
 > commands_t;
 
 };  // namespace rpc

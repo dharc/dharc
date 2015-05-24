@@ -18,6 +18,7 @@ namespace dharc {
 	void start(int argc, char *argv[]);
 	void stop();
 
+	Nid unique();
 	Nid query(const Nid &a, const Nid &b);
 	void define(const Nid &a, const Nid &b, const Nid &h);
 	void define(const Nid &a, const Nid &b, const vector<vector<Nid>> &p);

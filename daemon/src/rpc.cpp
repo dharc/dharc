@@ -13,6 +13,7 @@
 #include "dharc/nid.hpp"
 #include "dharc/fabric.hpp"
 #include "dharc/harc.hpp"
+#include "dharc/parse.hpp"
 
 using std::cout;
 using std::istream;
@@ -62,28 +63,26 @@ static list<Nid> rpc_partners(const Nid &n) {
 	return res;
 }
 
+static Nid rpc_unique() {
+	return Nid::unique();
+}
+
 dharc::rpc::commands_t commands {
 	rpc_nop,
 	rpc_version,
 	rpc_query,
 	rpc_define_const,
 	rpc_define,
-	rpc_partners
+	rpc_partners,
+	rpc_unique
 };
 
 /* ========================================================================== */
 
-static Command get_cmd(istream &is) {
-	int cmdtmp;
-	string str;
-	std::getline(is, str, ' ');
-	if (str != "{\"c\":") return Command::nop;
-	is >> cmdtmp;
-	std::getline(is, str, '[');
-	if (str != ", \"args\": ") return Command::nop;
-	return static_cast<Command>(cmdtmp);
-}
-
+/*
+ * Template nested if to find correct function to call for the received
+ * RPC command.
+ */
 template<int S>
 void callCmd(istream &is, ostream &os, Command cmd) {
 	if (static_cast<int>(cmd) == S) {
@@ -101,7 +100,11 @@ void callCmd<static_cast<int>(Command::end)>(
 	Command cmd) {}
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
-	Command cmd = get_cmd(is);
-	callCmd<0>(is, os, cmd);
+	int cmdtmp;
+
+	if (parse(is, "{\"c\": ", Token<int>{cmdtmp}, ", \"args\": [")) {
+		Command cmd = static_cast<Command>(cmdtmp);
+		callCmd<0>(is, os, cmd);
+	}
 }
 

@@ -246,12 +246,14 @@ void interactive() {
 static struct {
 	int interactive;
 } config {
-	0
+	0,
 };
 
 static option opts[] = {
 	{"interactive", 0, &config.interactive, 1},
 	{"cmd", 1, nullptr, 'c'},
+	{"port", 1, nullptr, 'p'},
+	{"host", 1, nullptr, 'h'},
 	{nullptr, 0, nullptr, 0}
 };
 
@@ -260,10 +262,13 @@ int main(int argc, char *argv[]) {
 
 	dharc::start(argc, argv);
 
-	while ((o = getopt_long(argc, argv, "ic:", opts, nullptr)) != -1) {
+	while ((o = getopt_long(argc, argv, "ic:h:p:", opts, nullptr)) != -1) {
 		switch(o) {
 		case 'c': execute_line(string(optarg)); break;
 		case 'i': config.interactive = 1; break;
+		case 'h': break;
+		case 'p': break;
+		case ':': cout << "Option '" << optopt << "' requires an argument\n"; break;
 		default: break;
 		}
 	}
