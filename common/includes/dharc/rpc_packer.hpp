@@ -17,7 +17,7 @@ namespace rpc {
  */
 template<typename T>
 struct Packer {
-	static void pack(std::ostream &os, T first) {
+	static void pack(std::ostream &os, const T &first) {
 		os << first;
 	}
 	static T unpack(std::istream &is) {

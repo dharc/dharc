@@ -30,16 +30,31 @@ std::string send(const std::string &s);
 
 /* One argument base case */
 template<typename F>
-void pack(std::ostream &os, F first) {
+void pack_(std::ostream &os, const F &first) {
 	Packer<F>::pack(os, first);
 }
 
 /* Recursively pack the arguments into a (json) stream */
 template<typename F, typename... Args>
-void pack(std::ostream &os, F first, Args... args) {
-	pack(os, first);
+void pack_(std::ostream &os, const F &first, const Args&... args) {
+	pack_(os, first);
 	os << ',';
-	pack(os, args...);
+	pack_(os, args...);
+}
+
+template<typename... Args>
+void pack(std::ostream &os, const Args&... args) {
+	os << ", \"args\": [";
+	pack_(os, args...);
+	os << "]}";
+}
+
+inline void pack(std::ostream &os) {
+	os << ", \"args\": []}";
+}
+
+inline void packcmd(std::ostream &os, Command c) {
+	os << "{\"c\": " << static_cast<int>(c);
 }
 };  // namespace intern
 /* ========================================================================== */
@@ -53,7 +68,6 @@ template<Command C, typename... Args>
 auto send(const Args&... args) {
 	using cmd_type =
 	typename std::tuple_element<static_cast<int>(C), commands_t>::type;
-
 	using ret_type =
 	typename std::result_of<cmd_type(Args...)>::type;
 
@@ -63,10 +77,8 @@ auto send(const Args&... args) {
 
 	// Pack the command number and arguments
 	std::stringstream os;
-	os << "{\"c\": " << static_cast<int>(C);
-	os << ", \"args\": [";
+	intern::packcmd(os, C);
 	intern::pack(os, args...);
-	os << "]}";
 
 	// Send and then unpack return value
 	std::stringstream is(intern::send(os.str()));
@@ -83,10 +95,14 @@ auto send() {
 	using ret_type =
 	typename std::result_of<cmd_type()>::type;
 
+	// Make sure no arguments are expected.
+	static_assert(std::is_same<ret_type(*)(), cmd_type>::value,
+		"Incorrect RPC Arguments");
+
 	// Pack the command number and arguments
 	std::stringstream os;
-	os << "{\"c\": " << static_cast<int>(C);
-	os << ", \"args\": []}";
+	intern::packcmd(os, C);
+	intern::pack(os);
 
 	// Send and then unpack return value
 	std::stringstream is(intern::send(os.str()));
