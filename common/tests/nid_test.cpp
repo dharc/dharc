@@ -102,6 +102,40 @@ CASE( "Special node from string" ) {
 	EXPECT( Nid::from_string("[false]") == false_n );
 	EXPECT( Nid::from_string("null") == null_n );
 	EXPECT( Nid::from_string("[null]") == null_n );
+},
+
+CASE( "Nid packer pack" ) {
+	std::stringstream ss;
+	rpc::Packer<Nid>::pack(ss, true_n);
+	EXPECT( ss.str() == "\"0:1\"" );
+},
+
+CASE( "Nid packer unpack" ) {
+	std::stringstream ss;
+	ss.str("\"0:2\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == false_n );
+	ss.str("\"1:99\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == 99_n );
+},
+
+CASE( "Nid packer unpack missing quotes (fail)" ) {
+	std::stringstream ss;
+	ss.str("1:200\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
+	ss.str("\"1:200");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
+	ss.str("1:200");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
+},
+
+CASE( "Nid packer unpack incorrect colon (fail)" ) {
+	std::stringstream ss;
+	ss.str("\"1200\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
+	ss.str("\":1200\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
+	ss.str("\"1200:\"");
+	EXPECT( rpc::Packer<Nid>::unpack(ss) == null_n );
 }
 
 };

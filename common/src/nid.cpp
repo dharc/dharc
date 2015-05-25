@@ -91,3 +91,20 @@ std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
 	}
 	return os;
 }
+
+void dharc::rpc::Packer<Nid>::pack(std::ostream &os, const Nid &n) {
+	os << '"' << static_cast<int>(n.t) << ':' << static_cast<int>(n.i) << '"';
+}
+
+Nid dharc::rpc::Packer<Nid>::unpack(std::istream &is) {
+	Nid res;
+	int type;
+	if (is.get() != '"') return null_n;
+	is >> type;
+	res.t = static_cast<Nid::Type>(type);
+	if (is.get() != ':') return null_n;
+	is >> res.i;
+	if (is.get() != '"') return null_n;
+	return res;
+}
+

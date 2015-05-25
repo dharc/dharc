@@ -169,8 +169,8 @@ bool Harc::operator==(const Nid &n) {
 	return query() == n;
 }
 
-Harc &Nid::operator[](const Nid &n) {
-	return fabric.get(*this, n);
+Nid Nid::operator[](const Nid &n) {
+	return fabric.get(*this, n).query();
 }
 
 Harc &Harc::operator[](const Nid &n) {

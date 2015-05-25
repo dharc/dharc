@@ -11,8 +11,6 @@
 
 #include "dharc/rpc_packer.hpp"
 
-using std::string;
-
 namespace dharc {
 
 class Harc;
@@ -43,20 +41,16 @@ struct Nid {
 	char c;
 	};
 
-	/**
-	 * Combine with a second NID to retrieve a Harc.
-	 * NOTE: Implemented as part of fabric(.cpp).
-	 */
-	Harc &operator[](const Nid &);
+	Nid operator[](const Nid &);
 
-	string to_string() const;
+	std::string to_string() const;
 
 	/**
 	 * Generate a new unique node id.
 	 */
 	static Nid unique();
 
-	static Nid from_string(const string &str);
+	static Nid from_string(const std::string &str);
 
 	constexpr static Nid from_int(unsigned long long v) {
 		return {Nid::Type::integer, {.i = v}};
@@ -129,21 +123,9 @@ std::ostream &operator<<(std::ostream &os, const Nid &n);
 
 namespace rpc {
 template <>
-struct Packer<dharc::Nid> {
-	static void pack(std::ostream &os, const Nid &n) {
-		os << '"' << static_cast<int>(n.t) << ':' << static_cast<int>(n.i) << '"';
-	}
-	static dharc::Nid unpack(std::istream &is) {
-		dharc::Nid res;
-		int type;
-		is.get();  // '"'
-		is >> type;
-		res.t = static_cast<dharc::Nid::Type>(type);
-		is.get();  // ':'
-		is >> res.i;
-		is.get();  // '"'
-		return res;
-	}
+struct Packer<Nid> {
+	static void pack(std::ostream &os, const Nid &n);
+	static Nid unpack(std::istream &is);
 };
 };  // namespace rpc
 };  // namespace dharc

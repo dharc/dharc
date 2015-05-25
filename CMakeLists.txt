@@ -88,10 +88,23 @@ target_link_libraries(gdharc-agent ${GTKMM_LIBRARIES})
 add_library(dharctest OBJECT daemon/src/test.cpp)
 
 add_executable(nid-unit EXCLUDE_FROM_ALL
-	daemon/tests/nid_test.cpp
+	common/tests/nid_test.cpp
 	common/src/nid.cpp
 )
-target_include_directories(nid-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
+
+add_executable(pack-unit EXCLUDE_FROM_ALL
+	common/tests/pack_test.cpp
+)
+
+add_executable(rpc-common-unit EXCLUDE_FROM_ALL
+	common/tests/rpc_common_test.cpp
+	common/src/nid.cpp
+)
+
+add_executable(parse-unit EXCLUDE_FROM_ALL
+	common/tests/parse_test.cpp
+	common/src/parse.cpp
+)
 
 add_executable(def-unit EXCLUDE_FROM_ALL
 	daemon/tests/definition_test.cpp

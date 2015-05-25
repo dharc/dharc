@@ -6,56 +6,89 @@
 #define DHARC_PARSE_H_
 
 #include <istream>
+#include <string>
 
 namespace dharc {
 
-template<typename T>
-struct Token {
-	T &value;
-	bool parse(std::istream &is);
+struct Parser;
+
+struct ws_ {
+	bool operator()(Parser &ctx);
 };
-
-/* ==== INTERNALS =========================================================== */
-namespace intern {
-
-/* Parse a string that matches str */
-bool parse__(std::istream &is, const char *str);
-
-/* Use a parse structure for reading out values of certain types */
-template<typename T>
-bool parse__(std::istream &is, T t) {
-	return t.parse(is);
-}
-
-/* Base nop case for no more arguments to be parsed */
-constexpr bool parse_(std::istream &is) {
-	return true;
-}
-
-/* Recursively parse the arguments. */
-template<typename F, typename... Args>
-bool parse_(std::istream &is, F first, Args... args) {
-	return parse__(is, first) && parse_(is, args...);
-}
-
-};  // namespace intern
-/* ========================================================================== */
 
 /**
  * Parse a variable number of items from the stream and return true if all
  * were parsed and false if not. If it failed to parse all items then the
- * stream is reset to its original read position.
+ * stream is reset to its original read position. Items can be functors,
+ * function pointers or lambdas. A lambda can be used at the end to act as
+ * an action to take if successful, because it will only be called if
+ * everything before it parsed.
  */
-template<typename... Args>
-bool parse(std::istream &is, Args... args) {
-	std::streampos pos = is.tellg();
-	if (intern::parse_(is, args...)) {
+struct Parser {
+	std::istream &stream;
+	ws_ skip;
+
+	public:
+	Parser() = delete;
+	explicit Parser(std::istream &s) : stream(s) {}
+ 
+	template<typename... Args>
+	bool operator()(Args... args) {
+		std::streampos pos = stream.tellg();
+		if (!parse_(args...) || stream.fail()) {
+			stream.clear();
+			stream.seekg(pos);
+			return false;
+		}
 		return true;
-	} else {
-		is.seekg(pos);
-		return false;
 	}
-}
+
+	private:
+	/* Parse a string that matches str */
+	bool parse__(const char *str);
+	bool parse__(char c);
+
+	/* Use a Functor for reading out values of certain types */
+	template<typename T>
+	bool parse__(T &t) {
+		return t(*this);
+	}
+
+	/* Base nop case for no more arguments to be parsed */
+	inline bool parse_() {
+		return true;
+	}
+
+	/* Recursively parse the arguments. */
+	template<typename F, typename... Args>
+	bool parse_(F &first, Args&... args) {
+		return skip(*this) && parse__(first) && parse_(args...);
+	}
+};
+
+
+template<typename T>
+struct value_ {
+	T &value;
+	bool operator()(Parser &ctx) {
+		if (ctx.stream.eof()) return false;
+		ctx.stream >> value;
+		if (ctx.stream.fail()) {
+			return false;
+		}
+		return true;
+	}
+};
+
+struct word_ {
+	const char *word;
+	bool operator()(Parser &ctx);
+};
+
+struct id_ {
+	std::string &id;
+	bool operator()(Parser &ctx);
+};
 
 };  // namespace dharc
 

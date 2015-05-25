@@ -86,3 +86,7 @@ list<Nid> dharc::partners(const Nid &n) {
 	return send<Command::partners>(n);
 }
 
+Nid Nid::operator[](const Nid &n) {
+	return query(*this, n);
+}
+
