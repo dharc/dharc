@@ -34,7 +34,6 @@ bool dharc::Parser::start_parse() {
 	// skip(*this);
 	if (!messages.empty()) messages.pop_back();
 	if (stream.eof()) {
-		//syntax_error("Unexpected end-of-input");
 		return false;
 	}
 	return true;
@@ -43,6 +42,11 @@ bool dharc::Parser::start_parse() {
 bool dharc::Parser::eof() {
 	skip(*this);
 	return stream.eof();
+}
+
+void dharc::Parser::skip_line() {
+	stream.ignore(100000,'\n');
+	++lines;
 }
 
 constexpr bool is_alphanumeric(char c) {

@@ -76,7 +76,7 @@ bool command_query(Parser &parse) {
 	Nid t2;
 
 	if (!parse(value_<Nid>{t1}, value_<Nid>{t2})) {
-		parse.syntax_error("Query requires two node ids");
+		parse.syntax_error("'%query' requires two node ids");
 		return true;
 	}
 	if (!parse(';')) {
@@ -84,6 +84,23 @@ bool command_query(Parser &parse) {
 	}
 	Nid r = dharc::query(t1, t2);
 	std::cout << "  " << r << std::endl;
+	return true;
+}
+
+bool command_partners(Parser &parse) {
+	Nid t1;
+
+	if (!parse(value_<Nid>{t1})) {
+		parse.syntax_error("'%partners' needs a node id");
+		return true;
+	}
+	if (!parse(';')) {
+		parse.warning("Expected ';'");
+	}
+	auto part = dharc::partners(t1);
+	for (auto i : part) {
+		cout << "  - " << i << std::endl;
+	}
 	return true;
 }
 
@@ -106,17 +123,6 @@ void command_define(const vector<string> &e) {
 	}
 }
 
-void command_partners(const vector<string> &e) {
-	if (e.size() != 2) {
-		cout << "  Partners command expects 1 argument." << std::endl;
-	} else {
-		Nid n1 = Nid::from_string(e[1]);
-		auto part = dharc::partners(n1);
-		for (auto i : part) {
-			cout << "  - " << i << std::endl;
-		}
-	}
-}
 /*
 void command_path(const vector<string> &e) {
 	if (e.size() >= 3) {
@@ -223,7 +229,10 @@ void execute(std::istream &ss, const char *source) {
 
 	while (!parse.eof()) {
 		parse('%', [](auto &parse) {
-			if (!(parse(word_{"query"}, command_query))) {
+			if (!(
+				parse(word_{"query"}, command_query)
+				|| parse(word_{"partners"}, command_partners)
+			)) {
 				parse.syntax_error("Unrecognised command");
 				return false;
 			}
@@ -232,7 +241,7 @@ void execute(std::istream &ss, const char *source) {
 
 		if (!parse.messages.empty()) {
 			parse.print_messages(source);
-			break;
+			parse.skip_line();
 		}
 	}
 

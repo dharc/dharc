@@ -72,6 +72,7 @@ struct Parser {
 	void print_messages(const char *prefix=nullptr);
 
 	bool eof();
+	void skip_line();
  
 	template<typename... Args>
 	bool operator()(Args... args) {
