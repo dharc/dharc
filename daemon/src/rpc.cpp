@@ -141,8 +141,9 @@ inline void callCmd<static_cast<int>(Command::end)>(
 /* ========================================================================== */
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
+	Parser parse(is);
 	int cmd = 0;
-	if (parse(is, "{\"c\": ", Value<int>{cmd}, ", \"args\": [")) {
+	if (parse("{\"c\": ", value_<int>{cmd}, ", \"args\": [")) {
 		if (cmd >= static_cast<int>(Command::end) || cmd < 0) cmd = 0;
 		callCmd<0>(is, os, cmd);
 	}

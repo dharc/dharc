@@ -4,12 +4,14 @@
 
 #include "dharc/parse.hpp"
 
-#include <istream>
+#include <iostream>
 #include <string>
 #include <cstring>
 
 using std::istream;
 using std::string;
+using dharc::Parser;
+using std::cout;
 
 bool dharc::Parser::parse__(const char *str) {
 	char buf[100];
@@ -36,9 +38,77 @@ constexpr bool is_alphanumeric(char c) {
 	);
 }
 
+#define GREEN "\033[0;32m"
+#define RED "\033[0;31;1m"
+#define YELLOW "\033[0;33;1m"
+#define BOLDWHITE "\033[0;37;1m"
+#define NOCOLOR "\033[0m"
+
+void Parser::message(Message::Type type, const string &msg, int tag) {
+	char snap[26];
+	int pos;
+	stream.clear();
+	skip(*this);
+	if (stream.tellg() < 10) {
+		pos = stream.tellg();
+		stream.seekg(0);
+	} else {
+		pos = 10;
+		stream.seekg(-10, std::ios_base::cur);
+	}
+	int start = stream.tellg();
+	stream.get(snap, 25);
+
+	string snapstr(snap);
+	if (!stream.eof()) snapstr += "...";
+	if (start > 0) {
+		snapstr.insert(0, "...");
+	}
+
+	messages.push_back({type, msg, snapstr, pos, lines, tag});
+}
+
+void Parser::print_messages(const char *prefix) {
+	for (auto i : messages) {
+		if (prefix) cout << BOLDWHITE << prefix << NOCOLOR << ':';
+		cout << BOLDWHITE << i.line << ": " << NOCOLOR;
+		cout << std::endl << "  ";
+
+		switch (i.type) {
+		case Message::Type::syntax_error:
+			cout << RED << "error: " << NOCOLOR; break;
+		case Message::Type::runtime_error:
+			cout << RED << "error: " << NOCOLOR; break;
+		case Message::Type::warning:
+			cout << "warn: "; break;
+		case Message::Type::information:
+			cout << "info: "; break;
+		}
+
+		int len = 1;
+		string snapstr = i.snapshot;
+
+		if (is_alphanumeric(snapstr.at(i.pos))) {
+			while ((i.pos + len < static_cast<int>(snapstr.size()))
+				&& is_alphanumeric(snapstr.at(i.pos+len))) ++len;
+		} else {
+			while ((i.pos + len < static_cast<int>(snapstr.size()))
+				&& !is_alphanumeric(snapstr.at(i.pos+len))) ++len;
+		}
+
+		snapstr.insert(i.pos+len, NOCOLOR);
+		snapstr.insert(i.pos, YELLOW);
+
+		cout << i.message;
+		cout << std::endl;
+		cout << "    " << snapstr;
+		cout << std::endl;
+	}
+}
+
 namespace dharc {
 
-bool ws_::operator()(Parser &ctx) {
+bool skip_::operator()(Parser &ctx) {
 	char c;
 	while (!ctx.stream.eof() && (c = ctx.stream.peek()) &&
 		((c == ' ') || (c == '\t') || (c == '\n'))) {

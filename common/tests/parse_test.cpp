@@ -5,7 +5,33 @@
 #include "lest.hpp"
 #include "dharc/parse.hpp"
 
+#include <string>
+
 using namespace dharc;
+
+bool complex_parse(Parser &parse) {
+	return parse(word_{"var"}, [&](auto &ctx) {
+		token_t type;
+		std::string id;
+
+		if (!(parse(token_<word_>{{"int"},type,1})
+			|| parse(token_<word_>{{"float"},type,2})
+			|| parse(token_<word_>{{"bool"},type,3})
+			)) {
+			ctx.syntax_error("Expected type after 'var'");
+			return false;
+		}
+		if (!parse(id_{id})) {
+			ctx.syntax_error("Invalid identifier after type");
+			return false;
+		}
+		if (!(parse("=") || parse(";"))) {
+			ctx.syntax_error("Unexpected item after identifier '"+id+"'");
+			return false;
+		}
+		return true;
+	});
+}
 
 const lest::test specification[] = {
 
@@ -166,6 +192,25 @@ CASE( "Using lambda as actor" ) {
 		return true;
 	});
 	EXPECT( success == false );
+},
+
+CASE( "Complex test parser" ) {
+	std::stringstream ss;
+	Parser parse(ss);
+
+	ss.str("var int myvar = 534;");
+	EXPECT( complex_parse(parse) );
+
+	ss.str("var in myvar = 534;");
+	EXPECT( complex_parse(parse) == false );
+
+	ss.str("var float 0myvar = 534;");
+	EXPECT( complex_parse(parse) == false );
+
+	ss.str("var float myvar : 534;");
+	EXPECT( complex_parse(parse) == false );
+
+	//parse.print_messages("parse_test");
 }
 
 };

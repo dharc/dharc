@@ -7,12 +7,13 @@
 
 #include <istream>
 #include <string>
+#include <list>
 
 namespace dharc {
 
 struct Parser;
 
-struct ws_ {
+struct skip_ {
 	bool operator()(Parser &ctx);
 };
 
@@ -26,11 +27,47 @@ struct ws_ {
  */
 struct Parser {
 	std::istream &stream;
-	ws_ skip;
+	skip_ skip;
+	int lines;
+	
+	struct Message {
+		enum struct Type {
+			warning,
+			information,
+			syntax_error,
+			runtime_error
+		};
+
+		Type type;
+		std::string message;
+		std::string snapshot;
+		int pos;
+		int line;
+		int tag;
+	};
+
+	std::list<Message> messages;
 
 	public:
 	Parser() = delete;
-	explicit Parser(std::istream &s) : stream(s) {}
+	explicit Parser(std::istream &s) : stream(s), lines(0) {}
+
+	void message(Message::Type type, const std::string &msg, int tag=0);
+
+	inline void syntax_error(const std::string &msg, int tag=0) {
+		message(Message::Type::syntax_error, msg, tag);
+	}
+	inline void runtime_error(const std::string &msg, int tag=0) {
+		message(Message::Type::runtime_error, msg, tag);
+	}
+	inline void warning(const std::string &msg, int tag=0) {
+		message(Message::Type::warning, msg, tag);
+	}
+	inline void info(const std::string &msg, int tag=0) {
+		message(Message::Type::information, msg, tag);
+	}
+
+	void print_messages(const char *prefix=nullptr);
  
 	template<typename... Args>
 	bool operator()(Args... args) {
@@ -88,6 +125,23 @@ struct word_ {
 struct id_ {
 	std::string &id;
 	bool operator()(Parser &ctx);
+};
+
+typedef int token_t;
+
+template<typename P>
+struct token_ {
+	P match;
+	token_t &dest;
+	token_t value;
+
+	bool operator()(Parser &ctx) {
+		if (match(ctx)) {
+			dest = value;
+			return true;
+		}
+		return false;
+	}
 };
 
 };  // namespace dharc
