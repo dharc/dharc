@@ -9,6 +9,8 @@
 #include <string>
 #include <list>
 
+#include "dharc/nid.hpp"
+
 namespace dharc {
 
 struct Parser;
@@ -68,9 +70,12 @@ struct Parser {
 	}
 
 	void print_messages(const char *prefix=nullptr);
+
+	bool eof();
  
 	template<typename... Args>
 	bool operator()(Args... args) {
+		if (!start_parse()) return false;
 		std::streampos pos = stream.tellg();
 		if (!parse_(args...) || stream.fail()) {
 			stream.clear();
@@ -101,6 +106,8 @@ struct Parser {
 	bool parse_(F &first, Args&... args) {
 		return skip(*this) && parse__(first) && parse_(args...);
 	}
+
+	bool start_parse();
 };
 
 
@@ -116,6 +123,9 @@ struct value_ {
 		return true;
 	}
 };
+
+template<>
+bool value_<Nid>::operator()(Parser &ctx);
 
 struct word_ {
 	const char *word;

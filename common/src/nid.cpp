@@ -9,15 +9,31 @@
 #include <string>
 #include <sstream>
 
+#include "dharc/parse.hpp"
+
 using dharc::Nid;
+using dharc::Parser;
 using std::string;
 using std::stringstream;
+using dharc::value_;
 
 std::atomic<unsigned long long> last_nid(0);
 
 Nid Nid::unique() {
 	return {Nid::Type::allocated, last_nid++};
 }
+
+namespace dharc {
+template<>
+bool value_<Nid>::operator()(Parser &ctx) {
+	if (!ctx(value_<long long unsigned int>{value.i},
+		[&](auto &ctx){value.t = Nid::Type::integer; return true;})) {
+		ctx.syntax_error("Not a valid node id");
+		return false;
+	}
+	return true;
+}
+};
 
 Nid Nid::from_string(const std::string &str) {
 	Nid r = null_n;

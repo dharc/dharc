@@ -72,6 +72,7 @@ CASE( "Multiple parses of same string" ) {
 	ss.str("hello 55");
 	int val;
 	EXPECT( parse("hello", "world") == false );
+	EXPECT( parse("hello", value_<int>{val}, '[') == false );
 	EXPECT( parse("hello", value_<int>{val}) );
 },
 

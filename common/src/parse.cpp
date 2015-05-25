@@ -30,6 +30,21 @@ bool dharc::Parser::parse__(char c) {
 	return stream.get() == c;
 }
 
+bool dharc::Parser::start_parse() {
+	// skip(*this);
+	if (!messages.empty()) messages.pop_back();
+	if (stream.eof()) {
+		//syntax_error("Unexpected end-of-input");
+		return false;
+	}
+	return true;
+}
+
+bool dharc::Parser::eof() {
+	skip(*this);
+	return stream.eof();
+}
+
 constexpr bool is_alphanumeric(char c) {
 	return (
 		(c >= 'A' && c <= 'Z')
@@ -45,34 +60,39 @@ constexpr bool is_alphanumeric(char c) {
 #define NOCOLOR "\033[0m"
 
 void Parser::message(Message::Type type, const string &msg, int tag) {
-	char snap[26];
-	int pos;
-	stream.clear();
-	skip(*this);
-	if (stream.tellg() < 10) {
-		pos = stream.tellg();
-		stream.seekg(0);
-	} else {
-		pos = 10;
-		stream.seekg(-10, std::ios_base::cur);
+	char snap[61];
+	int pos = 0;
+	//stream.clear();
+	//skip(*this);
+
+	if (stream.eof()) stream.seekg(-1, std::ios_base::cur);
+
+	int start_pos = stream.tellg();
+
+	while ((stream.tellg() > 0) && (pos < 40)) {
+		stream.seekg(-1, std::ios_base::cur);
+		++pos;
+		if (stream.peek() == '\n') {
+			stream.ignore(1);
+			--pos;
+			break;
+		}
 	}
-	int start = stream.tellg();
-	stream.get(snap, 25);
+
+	stream.get(snap, 60);
 
 	string snapstr(snap);
-	if (!stream.eof()) snapstr += "...";
-	if (start > 0) {
-		snapstr.insert(0, "...");
-	}
+	if (snapstr.length() >= 60) snapstr += "...";
 
-	messages.push_back({type, msg, snapstr, pos, lines, tag});
+	messages.push_back({type, msg, snapstr, pos, lines+1, tag});
+
+	stream.seekg(start_pos);
 }
 
 void Parser::print_messages(const char *prefix) {
 	for (auto i : messages) {
 		if (prefix) cout << BOLDWHITE << prefix << NOCOLOR << ':';
 		cout << BOLDWHITE << i.line << ": " << NOCOLOR;
-		cout << std::endl << "  ";
 
 		switch (i.type) {
 		case Message::Type::syntax_error:
@@ -80,7 +100,7 @@ void Parser::print_messages(const char *prefix) {
 		case Message::Type::runtime_error:
 			cout << RED << "error: " << NOCOLOR; break;
 		case Message::Type::warning:
-			cout << "warn: "; break;
+			cout << YELLOW << "warn: " << NOCOLOR; break;
 		case Message::Type::information:
 			cout << "info: "; break;
 		}
@@ -88,22 +108,27 @@ void Parser::print_messages(const char *prefix) {
 		int len = 1;
 		string snapstr = i.snapshot;
 
-		if (is_alphanumeric(snapstr.at(i.pos))) {
-			while ((i.pos + len < static_cast<int>(snapstr.size()))
-				&& is_alphanumeric(snapstr.at(i.pos+len))) ++len;
-		} else {
-			while ((i.pos + len < static_cast<int>(snapstr.size()))
-				&& !is_alphanumeric(snapstr.at(i.pos+len))) ++len;
-		}
+		if (i.pos < static_cast<int>(snapstr.size())) {
+			if (is_alphanumeric(snapstr.at(i.pos))) {
+				while ((i.pos + len < static_cast<int>(snapstr.size()))
+					&& is_alphanumeric(snapstr.at(i.pos+len))) ++len;
+			} else {
+				while ((i.pos + len < static_cast<int>(snapstr.size()))
+					&& !is_alphanumeric(snapstr.at(i.pos+len))) ++len;
+			}
 
-		snapstr.insert(i.pos+len, NOCOLOR);
-		snapstr.insert(i.pos, YELLOW);
+			snapstr.insert(i.pos+len, NOCOLOR);
+			snapstr.insert(i.pos, YELLOW);
+		} else {
+			snapstr += YELLOW "^" NOCOLOR;
+		}
 
 		cout << i.message;
 		cout << std::endl;
 		cout << "    " << snapstr;
 		cout << std::endl;
 	}
+	messages.clear();
 }
 
 namespace dharc {
@@ -112,6 +137,7 @@ bool skip_::operator()(Parser &ctx) {
 	char c;
 	while (!ctx.stream.eof() && (c = ctx.stream.peek()) &&
 		((c == ' ') || (c == '\t') || (c == '\n'))) {
+		if (c == '\n') ++ctx.lines;
 		ctx.stream.ignore(1);
 	}
 	return true;
