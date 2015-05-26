@@ -24,9 +24,4 @@ script:
  - cmake ..
  - make
  - make tests
- - "./nid-unit"
- - "./def-unit"
- - "./harc-unit"
- - "./fabric-unit"
- - cppcheck -I../daemon/includes --error-exitcode=2 ../daemon/src
- - ../tools/cpplint.py --filter=-whitespace/braces,-whitespace/tab,-build/c++11,-runtime/int,-runtime/references --extensions=hpp,cpp ../daemon/src/* ../daemon/includes/dharc/* ../common/src/* ../common/includes/dharc/* ../arch/cli/* ../arch/lib/src/* ../arch/lib/includes/dharc/*
+ - ../tools/all-tests.py
