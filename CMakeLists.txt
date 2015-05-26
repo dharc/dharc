@@ -59,6 +59,7 @@ add_library(dharccommon OBJECT
 
 add_library(dharcarch STATIC
 	arch/lib/src/arch.cpp
+	arch/lib/src/script.cpp
 	$<TARGET_OBJECTS:dharccommon>
 )
 target_include_directories(dharcarch PUBLIC ${PROJECT_SOURCE_DIR}/arch/lib/includes)
@@ -90,6 +91,7 @@ add_library(dharctest OBJECT daemon/src/test.cpp)
 add_executable(nid-unit EXCLUDE_FROM_ALL
 	common/tests/nid_test.cpp
 	common/src/nid.cpp
+	common/src/parse.cpp
 )
 
 add_executable(pack-unit EXCLUDE_FROM_ALL
@@ -98,7 +100,6 @@ add_executable(pack-unit EXCLUDE_FROM_ALL
 
 add_executable(rpc-common-unit EXCLUDE_FROM_ALL
 	common/tests/rpc_common_test.cpp
-	common/src/nid.cpp
 )
 
 add_executable(parse-unit EXCLUDE_FROM_ALL
@@ -114,7 +115,6 @@ target_include_directories(def-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes
 
 add_executable(harc-unit EXCLUDE_FROM_ALL
 	daemon/tests/harc_test.cpp
-	$<TARGET_OBJECTS:dharctest>
 	daemon/src/harc.cpp
 )
 target_include_directories(harc-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
@@ -144,5 +144,7 @@ add_dependencies(tests
 	def-unit
 	harc-unit
 	fabric-unit
-	harc-perf
+	parse-unit
+	rpc-common-unit
+	pack-unit
 )

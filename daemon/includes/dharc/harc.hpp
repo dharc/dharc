@@ -114,7 +114,7 @@ class Harc {
 
 	Harc &operator[](const Nid &);
 	Harc &operator=(const Nid &);
-	bool operator==(const Nid &);
+	bool operator==(const Nid &) const;
 
 	private:
 	pair<Nid, Nid> m_tail;

@@ -165,7 +165,7 @@ Harc &Harc::operator=(const Nid &n) {
 	return *this;
 }
 
-bool Harc::operator==(const Nid &n) {
+bool Harc::operator==(const Nid &n) const {
 	return query() == n;
 }
 

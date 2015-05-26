@@ -12,10 +12,10 @@
 #include "dharc/parse.hpp"
 
 using dharc::Nid;
-using dharc::Parser;
+using dharc::parser::Context;
 using std::string;
 using std::stringstream;
-using dharc::value_;
+using dharc::parser::value_;
 
 std::atomic<unsigned long long> last_nid(0);
 
@@ -25,15 +25,22 @@ Nid Nid::unique() {
 
 namespace dharc {
 template<>
-bool value_<Nid>::operator()(Parser &ctx) {
-	if (!ctx(value_<long long unsigned int>{value.i},
-		[&](auto &ctx){value.t = Nid::Type::integer; return true;})) {
-		ctx.syntax_error("Not a valid node id");
+bool value_<Nid>::operator()(Context &ctx) {
+	if (!(
+		ctx(value_<long long unsigned int>{value.i},
+			[&](){value.t = Nid::Type::integer; })
+		|| ctx('[', value_<Nid>{value}, ']', noact)
+		|| ctx(word_{"<new>"}, [&]()
+			{ value = Nid::unique(); })
+		|| ctx(word_{"true"}, [&](){ value = true_n; })
+		|| ctx(word_{"false"}, [&](){ value = false_n; })
+		|| ctx(word_{"null"}, [&](){ value = null_n; })
+	)) {
 		return false;
 	}
 	return true;
 }
-};
+};  // namespace dharc
 
 Nid Nid::from_string(const std::string &str) {
 	Nid r = null_n;

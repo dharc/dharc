@@ -29,6 +29,9 @@ using dharc::Nid;
 using dharc::Harc;
 using dharc::fabric;
 using dharc::rpc::Command;
+using dharc::parser::Context;
+using dharc::parser::noact;
+using dharc::parser::value_;
 
 namespace {
 
@@ -141,9 +144,9 @@ inline void callCmd<static_cast<int>(Command::end)>(
 /* ========================================================================== */
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
-	Parser parse(is);
+	Context parse(is);
 	int cmd = 0;
-	if (parse("{\"c\": ", value_<int>{cmd}, ", \"args\": [")) {
+	if (parse("{\"c\": ", value_<int>{cmd}, ", \"args\": [", noact)) {
 		if (cmd >= static_cast<int>(Command::end) || cmd < 0) cmd = 0;
 		callCmd<0>(is, os, cmd);
 	}

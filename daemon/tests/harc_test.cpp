@@ -1,4 +1,5 @@
-#include "dharc/test.hpp"
+#include "lest.hpp"
+
 #include "dharc/nid.hpp"
 #include "dharc/harc.hpp"
 #include "dharc/fabric.hpp"
@@ -74,158 +75,91 @@ Definition *Definition::from_path(const vector<vector<Nid>> &path) {
 }
 
 std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
-	switch(n.t) {
-	case Nid::Type::special:
-		switch(n.s) {
-		case Nid::Special::null:
-			os << "[null]";
-			break;
-		case Nid::Special::bool_true:
-			os << "[true]";
-			break;
-		case Nid::Special::bool_false:
-			os << "[false]";
-			break;
-		}
-		break;
-	case Nid::Type::integer:
-		os << '[' << n.i << ']';
-		break;
-	case Nid::Type::real:
-		os << '[' << n.d << ']';
-		break;
-	case Nid::Type::character:
-		os << "['" << n.c << "']";
-		break;
-	default:
-		os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';
-		break;
-	}
+	os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';
 	return os;
 }
 
 /* ==== END MOCKS ==== */
 
-/* Subscript operator overload test:
- * Does the subscript operator for Nid and Harc work as expected.
- */
-void test_harc_subscript()
-{
-	Harc &h1 = 19_n[20_n];
-	Harc &h2 = 20_n[19_n];
-	
-	CHECK(&h1 == &h2);
-	DONE;
-}
 
-/* Basic Harc creation, definition and query:
- * Make sure Harcs are created correctly and the a constant define and
- * associated query match.
- */
-void test_harc_defquery()
-{
+const lest::test specification[] = {
+
+CASE( "Define and then query same value" ) {
 	Harc &h1 = fabric.get(123_n,'g'_n);
 	h1.define(55_n);
-	CHECK(h1.query() == 55_n);
+	EXPECT( h1.query() == 55_n );
 	h1.define(77_n);
-	CHECK(h1.query() == 77_n);
-	DONE;
-}
+	EXPECT( h1.query() == 77_n );
+},
 
-/* Check Nid assignment operator:
- * Does assigning a Nid to a Harc perform a constant define.
- */
-void test_harc_assign()
-{
+CASE( "Use of harc assignment operator to define") {
 	Harc &h1 = fabric.get(44_n,55_n);
 	h1 = 66_n;
-	CHECK(h1.query() == 66_n);
+	EXPECT( h1.query() == 66_n );
 	h1 = 88_n;
-	CHECK(h1.query() == 88_n);
-	DONE;
-}
+	EXPECT( h1.query() == 88_n );
+},
 
-/* Nid Harc equality operator:
- * If a Harc is compared with a Nid for equality, it should compare the head
- * with the Nid.
- */
-void test_harc_eqnid()
-{
-	Harc h1 = fabric.get(33_n, 22_n);
+CASE( "Comparison of harc to a nid") {
+	Harc &h1 = fabric.get(33_n, 22_n);
 	h1 = 78_n;
-	CHECK(h1 == 78_n);
-	CHECK(!(h1 == 'a'_n));
-	DONE;
-}
+	EXPECT( h1 == 78_n );
+	EXPECT( !(h1 == 'a'_n) );
+},
 
-/* Check a basic definition
- */
-void test_harc_definition()
-{
-	Harc &h1 = 102_n[103_n];
+CASE( "A simple one path definition with out-of-date trigger" ) {
+	Harc &h1 = fabric.get(102_n, 103_n);
 	
 	h1.define({{100_n,101_n}});
 	dummy_result = 49_n;
-	CHECK(h1.query() == 49_n);
+	EXPECT( h1.query() == 49_n );
 	
 	dummy_result = 50_n;
-	100_n[101_n].define(10_n);
-	CHECK(h1.query() == 50_n);
-	DONE;
-}
+	fabric.get(100_n, 101_n).define(10_n);
+	EXPECT( h1.query() == 50_n );
+},
 
-/*
- * Make sure flags set, check and clear correctly.
- */
-void test_harc_flags() {
-	Harc &h1 = 99_n[88_n];
+CASE( "Check and set harc flags" ) {
+	Harc &h1 = fabric.get(99_n, 88_n);
 	
-	CHECK(h1.check_flag(Harc::Flag::none));
+	EXPECT( h1.check_flag(Harc::Flag::none) );
 	
 	h1.set_flag(Harc::Flag::log);
-	CHECK(h1.check_flag(Harc::Flag::log));
-	CHECK(h1.check_flag(Harc::Flag::meta) == false);
+	EXPECT( h1.check_flag(Harc::Flag::log) );
+	EXPECT( h1.check_flag(Harc::Flag::meta) == false );
 	
 	h1.set_flag(Harc::Flag::meta);
-	CHECK(h1.check_flag(Harc::Flag::log));
-	CHECK(h1.check_flag(Harc::Flag::meta));
+	EXPECT( h1.check_flag(Harc::Flag::log) );
+	EXPECT( h1.check_flag(Harc::Flag::meta) );
 	
 	h1.clear_flag(Harc::Flag::log);
-	CHECK(h1.check_flag(Harc::Flag::log) == false);
-	CHECK(h1.check_flag(Harc::Flag::meta));
-	DONE;
-}
+	EXPECT( h1.check_flag(Harc::Flag::log) == false );
+	EXPECT( h1.check_flag(Harc::Flag::meta) );
+},
 
-void test_harc_log() {
-	Harc &h = 2_n[3_n];
+CASE( "Harcs flag log are logged when changed" ) {
+	Harc &h = fabric.get(2_n, 3_n);
 	
-	CHECK(h.check_flag(Harc::Flag::log) == false);
+	EXPECT( h.check_flag(Harc::Flag::log) == false );
 	last_log = nullptr;
 	h.define(7_n);
-	CHECK(last_log == nullptr);
+	EXPECT( last_log == nullptr );
 	
 	h.set_flag(Harc::Flag::log);
 	h.define(8_n);
-	CHECK(last_log == &h);
+	EXPECT( last_log == &h );
 	
 	last_log = nullptr;
 	h.define({{109_n,110_n}});
-	CHECK(last_log == &h);
+	EXPECT( last_log == &h );
 	
 	h.clear_flag(Harc::Flag::log);
 	last_log = nullptr;
 	h.define({{111_n,112_n}});
-	CHECK(last_log == nullptr);
-	DONE;
+	EXPECT( last_log == nullptr );
 }
+};
 
 int main(int argc, char *argv[]) {
-	test(test_harc_defquery);
-	test(test_harc_assign);
-	test(test_harc_eqnid);
-	test(test_harc_subscript);
-	test(test_harc_definition);
-	test(test_harc_flags);
-	test(test_harc_log);
-	return test_fail_count();
+	return lest::run(specification);
 }

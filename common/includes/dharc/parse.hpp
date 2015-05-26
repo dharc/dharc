@@ -8,15 +8,36 @@
 #include <istream>
 #include <string>
 #include <list>
+#include <type_traits>
 
 #include "dharc/nid.hpp"
 
 namespace dharc {
+namespace parser {
 
-struct Parser;
+struct Context;
 
 struct skip_ {
-	bool operator()(Parser &ctx);
+	bool operator()(Context &ctx);
+};
+
+/* Nop actor to terminate parse */
+inline void noact() {}
+
+struct Message {
+	enum struct Type {
+		warning,
+		information,
+		syntax_error,
+		runtime_error
+	};
+
+	Type type;
+	std::string message;
+	std::string snapshot;
+	int pos;
+	int line;
+	int tag;
 };
 
 /**
@@ -27,60 +48,59 @@ struct skip_ {
  * an action to take if successful, because it will only be called if
  * everything before it parsed.
  */
-struct Parser {
+struct Context {
 	std::istream &stream;
 	skip_ skip;
 	int lines;
-	
-	struct Message {
-		enum struct Type {
-			warning,
-			information,
-			syntax_error,
-			runtime_error
-		};
-
-		Type type;
-		std::string message;
-		std::string snapshot;
-		int pos;
-		int line;
-		int tag;
-	};
+	bool noinfo;
 
 	std::list<Message> messages;
 
 	public:
-	Parser() = delete;
-	explicit Parser(std::istream &s) : stream(s), lines(0) {}
+	Context() = delete;
+	explicit Context(std::istream &s) : stream(s), lines(0), noinfo(false) {}
 
-	void message(Message::Type type, const std::string &msg, int tag=0);
+	void message(Message::Type type, const std::string &msg, int tag = 0);
 
-	inline void syntax_error(const std::string &msg, int tag=0) {
+	inline void syntax_error(const std::string &msg, int tag = 0) {
 		message(Message::Type::syntax_error, msg, tag);
 	}
-	inline void runtime_error(const std::string &msg, int tag=0) {
+	inline void runtime_error(const std::string &msg, int tag = 0) {
 		message(Message::Type::runtime_error, msg, tag);
 	}
-	inline void warning(const std::string &msg, int tag=0) {
+	inline void warning(const std::string &msg, int tag = 0) {
 		message(Message::Type::warning, msg, tag);
 	}
-	inline void info(const std::string &msg, int tag=0) {
-		message(Message::Type::information, msg, tag);
-	}
+	void info(const std::string &msg, int tag = 0);
 
-	void print_messages(const char *prefix=nullptr);
+	void print_messages(const char *prefix = nullptr);
 
 	bool eof();
 	void skip_line();
- 
+
+	inline bool success() const { return !failed(); }
+	bool failed() const;
+	inline operator bool() const { return success(); }
+
+	inline void show_info(bool b) { noinfo = !b; }
+
+	void reset();
+
+	/**
+	 * Main parse function. Sets up the parsing process and then calls the
+	 * recursive template parse function to go through each argument.
+	 */
 	template<typename... Args>
 	bool operator()(Args... args) {
 		if (!start_parse()) return false;
+		// Save position incase of failure
 		std::streampos pos = stream.tellg();
+		int lcount = lines;
 		if (!parse_(args...) || stream.fail()) {
 			stream.clear();
+			// Reset because of failure
 			stream.seekg(pos);
+			lines = lcount;
 			return false;
 		}
 		return true;
@@ -97,8 +117,12 @@ struct Parser {
 		return t(*this);
 	}
 
-	/* Base nop case for no more arguments to be parsed */
-	inline bool parse_() {
+	/* Base case, call the actor */
+	template<typename T>
+	bool parse_(T &t) {
+		static_assert(std::is_void<typename std::result_of<T()>::type>::value,
+			"Parse actor had non-void return type");
+		t();
 		return true;
 	}
 
@@ -115,7 +139,7 @@ struct Parser {
 template<typename T>
 struct value_ {
 	T &value;
-	bool operator()(Parser &ctx) {
+	bool operator()(Context &ctx) {
 		if (ctx.stream.eof()) return false;
 		ctx.stream >> value;
 		if (ctx.stream.fail()) {
@@ -126,16 +150,16 @@ struct value_ {
 };
 
 template<>
-bool value_<Nid>::operator()(Parser &ctx);
+bool value_<Nid>::operator()(Context &ctx);
 
 struct word_ {
 	const char *word;
-	bool operator()(Parser &ctx);
+	bool operator()(Context &ctx);
 };
 
 struct id_ {
 	std::string &id;
-	bool operator()(Parser &ctx);
+	bool operator()(Context &ctx);
 };
 
 typedef int token_t;
@@ -146,7 +170,7 @@ struct token_ {
 	token_t &dest;
 	token_t value;
 
-	bool operator()(Parser &ctx) {
+	bool operator()(Context &ctx) {
 		if (match(ctx)) {
 			dest = value;
 			return true;
@@ -155,6 +179,7 @@ struct token_ {
 	}
 };
 
+};  // namespace parser
 };  // namespace dharc
 
 #endif  /* DHARC_PARSE_H_ */
