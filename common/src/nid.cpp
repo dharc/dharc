@@ -30,8 +30,8 @@ bool value_<Nid>::operator()(Context &ctx) {
 		ctx(value_<long long unsigned int>{value.i},
 			[&](){value.t = Nid::Type::integer; })
 		|| ctx('[', value_<Nid>{value}, ']', noact)
-		|| ctx(word_{"<new>"}, [&]()
-			{ value = Nid::unique(); })
+		// || ctx(word_{"<new>"}, [&]()
+		//	{ value = Nid::unique(); })
 		|| ctx(word_{"true"}, [&](){ value = true_n; })
 		|| ctx(word_{"false"}, [&](){ value = false_n; })
 		|| ctx(word_{"null"}, [&](){ value = null_n; })

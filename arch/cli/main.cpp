@@ -27,9 +27,11 @@ using std::cout;
 static struct {
 	int interactive;
 	int no_info;
+	vector<Nid> params;
 } config {
 	0,
-	0
+	0,
+	{}
 };
 
 static void execute(std::istream &ss, const char *source) {
@@ -41,8 +43,9 @@ static void execute(std::istream &ss, const char *source) {
 		script.show_info(true);
 	}
 
+	Nid res = script(config.params);
 	if (config.interactive) cout << "    ";
-	cout << script() << std::endl;
+	cout << res << std::endl;
 }
 
 /*
@@ -71,6 +74,7 @@ static option opts[] = {
 	{"port", 1, nullptr, 'p'},
 	{"host", 1, nullptr, 'h'},
 	{"file", 1, nullptr, 'f'},
+	{"param", 1, nullptr, '*'},
 	{nullptr, 0, nullptr, 0}
 };
 
@@ -87,6 +91,7 @@ int main(int argc, char *argv[]) {
 		case 'i': config.interactive = 1; break;
 		case 'h': break;
 		case 'p': break;
+		case '*': config.params.push_back(Nid::from_string(optarg)); break;
 		case 'f': ifs.open(optarg); execute(ifs, optarg); ifs.close(); break;
 		case ':': cout << "Option '" << optopt << "' requires an argument\n"; break;
 		default: break;
