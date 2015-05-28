@@ -54,7 +54,7 @@ struct Node {
 	explicit constexpr Node(int value) : t(Type::integer), i(value) {}
 	explicit constexpr Node(float value) : t(Type::real), d(value) {}
 	explicit constexpr Node(double value) : t(Type::real), d(value) {}
-	explicit constexpr Node(char value) : t(Type::character), c(value) {}
+	explicit constexpr Node(char value) : t(Type::character), i(value) {}
 	explicit constexpr Node(bool value)
 		: t(Type::special), i((value) ? kTrueNode : kFalseNode) {}
 
