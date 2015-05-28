@@ -43,6 +43,8 @@ class Definition {
 	Definition() = delete;
 	explicit Definition(const vector<vector<Node>> &);
 
+	vector<vector<Node>> instantiate(const Node &any);
+
 	friend std::ostream &operator<<(std::ostream &os, const Definition &d);
 };
 

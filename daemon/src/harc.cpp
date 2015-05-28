@@ -157,10 +157,24 @@ void Harc::definition(std::ostream &os) const {
 }
 
 
+Harc *Harc::instantiate(const Node &any) {
+	if (checkFlag(Flag::defined)) {
+		Node partner = tailPartner(dharc::any_n);
+		Harc *newharc = new Harc((any < partner) ?
+			pair<Node,Node>(any, partner) :
+			pair<Node, Node>(partner, any));
+		newharc->define(def_->instantiate(any));
+		return newharc;
+	} else {
+		return this;
+	}
+}
+
+
 
 std::ostream &dharc::operator<<(std::ostream &os, const Harc &h) {
 	os << '[' << h.tail().first << ',' << h.tail().second
-		<< "->" << h.query() << ']';
+		<< "->" << '?' << ']';
 	return os;
 }
 

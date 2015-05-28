@@ -20,7 +20,8 @@ static_assert(sizeof(double) <= 64, "Double is too big");
 enum {
 	kNullNode = 0,
 	kTrueNode = 1,
-	kFalseNode = 2
+	kFalseNode = 2,
+	kAnyNode = 3
 };
 
 /**
@@ -120,6 +121,7 @@ constexpr Node operator"" _n(char value) {
 constexpr Node null_n = Node(Node::Type::special, kNullNode);
 constexpr Node true_n = Node(Node::Type::special, kTrueNode);
 constexpr Node false_n = Node(Node::Type::special, kFalseNode);
+constexpr Node any_n = Node(Node::Type::special, kAnyNode);
 
 /* Relational operators */
 constexpr bool operator==(const Node &a, const Node &b) {

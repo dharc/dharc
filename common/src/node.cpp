@@ -65,6 +65,8 @@ istream &dharc::operator>>(istream &is, Node &n) {
 			[&]() { n.t = Node::Type::real; })
 		|| parse(value<int64_t>{n.i},
 			[&]() { n.t = Node::Type::integer; })
+		|| parse(word{"$"},
+			[&]() { n = any_n; })
 		|| parse(word{"true"},
 			[&]() { n = true_n; })
 		|| parse(word{"false"},
@@ -84,6 +86,7 @@ ostream &dharc::operator<<(ostream &os, const Node &n) {
 		case kNullNode   : os << "null";   break;
 		case kTrueNode   : os << "true";   break;
 		case kFalseNode  : os << "false";  break;
+		case kAnyNode    : os << "$";      break;
 		}
 		break;
 	case Node::Type::integer    : os << n.i;                 break;

@@ -81,6 +81,12 @@ class Fabric {
 	 */
 	bool get(const pair<Node, Node> &key, Harc*& result);
 
+	bool get(const Node &a, const Node &b, Harc*& result) {
+		return get((a < b) ? pair<Node,
+			Node>(a, b) : pair<Node, Node>(b, a),
+			result);
+	}
+
 	/**
 	 * Evaluate a normalised path through the fabric. If a dependant Harc is
 	 * given then it will be added as a dependant to all visited Harcs in the
@@ -135,6 +141,7 @@ class Fabric {
 
 	void updatePartners(const Node &n, list<Harc*>::iterator &it);
 	void reposition(const list<Harc*> &p, list<Harc*>::iterator &it);
+	void add(Harc *h);
 
 	unordered_map<pair<Node, Node>, Harc*, TailHash>  harcs_;
 	unique_ptr<forward_list<const Harc*>>             changes_;

@@ -58,22 +58,41 @@ const list<Harc*> &Fabric::partners(const Node &n) {
 	return partners_[n];
 }
 
+void Fabric::add(Harc *h) {
+	harcs_.insert({h->tail(), h});
+
+	// Update node partners to include this harc
+	// TODO(knicos): This should be insertion sorted.
+	auto &p1 = partners_[h->tail().first];
+	p1.push_front(h);
+	h->partix_[0] = p1.begin();
+	auto &p2 = partners_[h->tail().second];
+	p2.push_front(h);
+	h->partix_[1] = p2.begin();
+}
+
 Harc &Fabric::get(const pair<Node, Node> &key) {
 	Harc *h;
 	if (get(key, h)) return *h;
 
-	h = new Harc(key);
-	harcs_.insert({key, h});
+	std::cout << "Not found: " << key.first << "," << key.second << std::endl;
 
-	// Update node partners to include this harc
-	// TODO(knicos): This should be insertion sorted.
-	auto &p1 = partners_[key.first];
-	p1.push_front(h);
-	h->partix_[0] = p1.begin();
-	auto &p2 = partners_[key.second];
-	p2.push_front(h);
-	h->partix_[1] = p2.begin();
+	// Check for an Any($) entry
+	if (get(dharc::any_n, key.first, h)) {
+		Harc *oldh = h;
+		h = h->instantiate(key.second);
+		if (oldh == h) return *h;
+	} else if (get(dharc::any_n, key.second, h)) {
+		Harc *oldh = h;
+		h = h->instantiate(key.first);
+		if (oldh == h) return *h;
+	} else {
+		h = new Harc(key);
+	}
 
+	std::cout << "Adding Harc: " << *h << std::endl;
+
+	add(h);
 	return *h;
 }
 

@@ -137,6 +137,8 @@ class Harc {
 	explicit Harc(const pair<Node, Node> &t);
 	void dirty() const;  				/* Mark as out-of-date and propagate */
 	void addDependant(const Harc &);  	/* Notify given Harc on change. */
+
+	Harc *instantiate(const Node &any);
 };
 
 
