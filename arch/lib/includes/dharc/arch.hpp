@@ -8,7 +8,7 @@
 #include <vector>
 #include <list>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/rpc_common.hpp"
 
 using std::vector;
@@ -18,12 +18,12 @@ namespace dharc {
 	void start(int argc, char *argv[]);
 	void stop();
 
-	Nid unique();
-	Nid query(const Nid &a, const Nid &b);
-	void define(const Nid &a, const Nid &b, const Nid &h);
-	void define(const Nid &a, const Nid &b, const vector<vector<Nid>> &p);
-	list<Nid> partners(const Nid &a);
+	Node unique();
+	Node query(const Node &a, const Node &b);
+	void define(const Node &a, const Node &b, const Node &h);
+	void define(const Node &a, const Node &b, const vector<vector<Node>> &p);
+	list<Node> partners(const Node &a);
 };
 
-#endif  /* DHARC_ARCH_HPP_ */
+#endif  // DHARC_ARCH_HPP_
 

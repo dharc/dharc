@@ -11,9 +11,9 @@
 #include <iostream>
 #include <string>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 
-using dharc::Nid;
+using dharc::Node;
 using dharc::rpc::Command;
 using dharc::rpc::send;
 using std::string;
@@ -66,27 +66,29 @@ void dharc::start(int argc, char *argv[]) {
 void dharc::stop() {
 }
 
-Nid dharc::unique() {
+Node dharc::unique() {
 	return send<Command::unique>();
 }
 
-Nid dharc::query(const Nid &a, const Nid &b) {
+Node dharc::query(const Node &a, const Node &b) {
 	return send<Command::query>(a, b);
 }
 
-void dharc::define(const Nid &a, const Nid &b, const Nid &h) {
+void dharc::define(const Node &a, const Node &b, const Node &h) {
 	send<Command::define_const>(a, b, h);
 }
 
-void dharc::define(const Nid &a, const Nid &b, const vector<vector<Nid>> &p) {
+void dharc::define(const Node &a,
+					const Node &b,
+					const vector<vector<Node>> &p) {
 	send<Command::define>(a, b, p);
 }
 
-list<Nid> dharc::partners(const Nid &n) {
+list<Node> dharc::partners(const Node &n) {
 	return send<Command::partners>(n);
 }
 
-Nid Nid::operator[](const Nid &n) {
+/*Node Node::operator[](const Node &n) {
 	return query(*this, n);
-}
+}*/
 

@@ -8,12 +8,12 @@
 
 #include "zmq.hpp"
 #include "dharc/rpc.hpp"
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
 
 using std::cout;
 using std::string;
-using dharc::Nid;
+using dharc::Node;
 using dharc::fabric;
 
 int main(int argc, char *argv[]) {

@@ -10,30 +10,33 @@
 #include <utility>
 #include <list>
 #include <atomic>
+#include <algorithm>
 #include <chrono>
+
+#include "dharc/harc.hpp"
 
 using dharc::Fabric;
 using dharc::Harc;
-using dharc::Nid;
+using dharc::Node;
 using std::vector;
 using std::list;
 using std::atomic;
 
-atomic<unsigned long long> Fabric::s_counter(0);
+atomic<unsigned long long> Fabric::counter__(0);
 
-void Fabric::counter_thread() {
+void Fabric::counterThread() {
 	while (true) {
-		++s_counter;
+		++counter__;
 		std::this_thread::sleep_for(
-				std::chrono::milliseconds(counter_resolution()));
+				std::chrono::milliseconds(counterResolution()));
 	}
 }
 
 Fabric &dharc::fabric = Fabric::singleton();
 
 Fabric::Fabric()
-	: m_changes(new forward_list<const Harc*>()) {
-	std::thread t(counter_thread);
+	: changes_(new forward_list<const Harc*>()) {
+	std::thread t(counterThread);
 	t.detach();
 }
 
@@ -43,48 +46,48 @@ Fabric::~Fabric() {
 unique_ptr<forward_list<const Harc*>> Fabric::changes() {
 	unique_ptr<forward_list<const Harc*>> newptr(
 		new forward_list< const Harc*>());
-	m_changes.swap(newptr);
+	changes_.swap(newptr);
 	return newptr;
 }
 
-void Fabric::log_change(const Harc *h) {
-	m_changes->push_front(h);
+void Fabric::logChange(const Harc *h) {
+	changes_->push_front(h);
 }
 
-const list<Harc*> &Fabric::partners(const Nid &n) {
-	return m_partners[n];
+const list<Harc*> &Fabric::partners(const Node &n) {
+	return partners_[n];
 }
 
-Harc &Fabric::get(const pair<Nid, Nid> &key) {
-	auto it = m_harcs.find(key);
+Harc &Fabric::get(const pair<Node, Node> &key) {
+	auto it = harcs_.find(key);
 
-	if (it != m_harcs.end()) {
+	if (it != harcs_.end()) {
 		return *(it->second);
 	} else {
 		auto h = new Harc(key);
-		m_harcs.insert({key, h});
+		harcs_.insert({key, h});
 
 		// Update node partners to include this harc
 		// TODO(knicos): This should be insertion sorted.
-		auto &p1 = m_partners[key.first];
+		auto &p1 = partners_[key.first];
 		p1.push_front(h);
-		h->m_partix[0] = p1.begin();
-		auto &p2 = m_partners[key.second];
+		h->partix_[0] = p1.begin();
+		auto &p2 = partners_[key.second];
 		p2.push_front(h);
-		h->m_partix[1] = p2.begin();
+		h->partix_[1] = p2.begin();
 
 		return *h;
 	}
 }
 
-Nid Fabric::path_s(const vector<Nid> &p, const Harc *dep) {
+Node Fabric::path(const vector<Node> &p, const Harc *dep) {
 	if (p.size() > 1) {
-		Nid cur = p[0];
+		Node cur = p[0];
 
 		if (dep) {
 			for (auto i = ++p.begin(); i != p.end(); ++i) {
 				Harc &h = get(cur, *i);
-				h.add_dependant(*dep);
+				h.addDependant(*dep);
 				cur = h.query();
 			}
 		} else {
@@ -102,19 +105,20 @@ Nid Fabric::path_s(const vector<Nid> &p, const Harc *dep) {
 
 std::atomic<int> pool_count(std::thread::hardware_concurrency());
 
-bool Fabric::path_r(const vector<vector<Nid>> &p, Nid *res,
+bool Fabric::path_r(const vector<vector<Node>> &p, Node *res,
 	int s, int e, const Harc *dep) {
 	for (auto i = s; i < e; ++i) {
-		res[i] = fabric.path_s(p[i], dep);
+		res[i] = fabric.path(p[i], dep);
 	}
 	return true;
 }
 
-void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, const Harc *dep) {
+vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
+	vector<Node> result(p.size());
 	int size = p.size();
 
 	// Should we divide the paths?
-	if (size > 2 && pool_count > 0) {
+	/*if (size > 2 && pool_count > 0) {
 		--pool_count;
 
 		// Divide paths into 2 parts.
@@ -131,20 +135,68 @@ void Fabric::paths(const vector<vector<Nid>> &p, Nid *res, const Harc *dep) {
 		// Sync results
 		++pool_count;  // Add myself to the pool.
 		fa.get();
-	} else {
+	} else {*/
 		for (auto i = 0; i < size; ++i) {
-			res[i] = path_s(p[i], dep);
+			result[i] = path(p[i], dep);
 		}
-	}
+	//}
+	return result;
 }
 
-Nid Fabric::path(const vector<vector<Nid>> &p, const Harc *dep) {
-	vector<Nid> res(p.size());
 
-	// Process all the sub paths
-	paths(p, res.data(), dep);
-	// Final recombination
-	return path_s(res, dep);
+void Fabric::reposition(const list<Harc*> &p, list<Harc*>::iterator &it) {
+	if (p.begin() == it) return;
+	auto it2 = it--;
+	std::swap(*it, *it2);
+
+	// Brute force if IX not in meta data for harc.
+	/* if (p.front() == this) return;
+	for (auto i = ++p.begin(); i != p.end(); ++i) {
+		if (*i == this) {
+			// Move one place
+			//auto i2 = i--;
+			//std::swap(*i, *i2);
+			//p.insert(--(p.erase(i)), this);
+			return;
+		}
+	} */
+}
+
+void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
+	auto &partners = partners_[n];
+
+	Harc *h = *it;
+	partners.erase(it);
+
+	// Insertion sort this harc by significance value
+	// Most likely very near the front of the list
+	auto j = partners.begin();
+	while (j != partners.end()) {
+		if ((*j)->significance() <= h->significance()) {
+			it = partners.insert(j, h);
+			break;
+		}
+		++j;
+	}
+
+	if (j == partners.end()) {
+		partners.push_back(h);
+		it = --partners.end();
+	}
+
+	// Shift all other partners up one place
+	// TODO(knicos): In another thread.
+	for (auto i : partners) {
+		if (i == h) continue;  // Ignore self.
+
+		if (i->tail().first == n) {
+			auto &p = partners_[i->tail().second];
+			reposition(p, i->partix_[1]);
+		} else {
+			auto &p = partners_[i->tail().first];
+			reposition(p, i->partix_[0]);
+		}
+	}
 }
 
 Fabric &Fabric::singleton() {

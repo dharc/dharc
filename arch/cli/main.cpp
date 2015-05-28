@@ -10,12 +10,12 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/arch.hpp"
 #include "dharc/script.hpp"
 
-using dharc::Nid;
-using dharc::Script;
+using dharc::Node;
+using dharc::arch::Script;
 
 using std::map;
 using std::string;
@@ -27,7 +27,7 @@ using std::cout;
 static struct {
 	int interactive;
 	int no_info;
-	vector<Nid> params;
+	vector<Node> params;
 } config {
 	0,
 	0,
@@ -38,12 +38,12 @@ static void execute(std::istream &ss, const char *source) {
 	Script script(ss, source);
 
 	if (config.no_info) {
-		script.show_info(false);
+		script.showInformation(false);
 	} else {
-		script.show_info(true);
+		script.showInformation(true);
 	}
 
-	Nid res = script(config.params);
+	Node res = script(config.params);
 	if (config.interactive) cout << "    ";
 	cout << res << std::endl;
 }
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 		case 'i': config.interactive = 1; break;
 		case 'h': break;
 		case 'p': break;
-		case '*': config.params.push_back(Nid::from_string(optarg)); break;
+		case '*': config.params.push_back(Node(optarg)); break;
 		case 'f': ifs.open(optarg); execute(ifs, optarg); ifs.close(); break;
 		case ':': cout << "Option '" << optopt << "' requires an argument\n"; break;
 		default: break;

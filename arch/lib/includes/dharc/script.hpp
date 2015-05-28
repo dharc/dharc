@@ -2,36 +2,42 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef DHARC_SCRIPT_H_
-#define DHARC_SCRIPT_H_
+#ifndef DHARC_ARCH_SCRIPT_HPP_
+#define DHARC_ARCH_SCRIPT_HPP_
 
 #include <vector>
+#include <map>
+#include <string>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/parse.hpp"
 
 namespace dharc {
+namespace arch {
 
 class Script {
-	dharc::parser::Context ctx;
-	const char *source;
-	const std::vector<dharc::Nid> *params;
+	dharc::parser::Context ctx_;
+	const char *source_;
+	const std::vector<dharc::Node> *params_;
+	// std::map<std::string,dharc::Node> label_to_nid;
+	// std::map<dharc::Node,std::string> nid_to_label;
 
 	public:
 	Script() = delete;
 	explicit Script(std::istream &is, const char *src = nullptr);
 
-	dharc::Nid operator()() { return (*this)(std::vector<dharc::Nid>{}); }
-	dharc::Nid operator()(const std::vector<dharc::Nid> &p);
+	dharc::Node operator()() { return (*this)(std::vector<dharc::Node>{}); }
+	dharc::Node operator()(const std::vector<dharc::Node> &p);
 
-	inline void show_info(bool b) { ctx.show_info(b); }
+	inline void showInformation(bool b) { ctx_.showInformation(b); }
 
 	private:
-	void parse_statement(dharc::Nid &cur, dharc::parser::Context &parse);
-	bool parse_node(dharc::parser::Context &ctx, dharc::Nid &value);
+	void parseStatement(dharc::Node &cur);
+	bool parseNode(dharc::Node &val);
 };
 
+};  // namespace arch
 };  // namespace dharc
 
-#endif  /* DHARC_SCRIPT_H_ */
+#endif  // DHARC_ARCH_SCRIPT_HPP_
 

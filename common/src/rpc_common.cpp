@@ -7,8 +7,10 @@
 #include "zmq.hpp"
 #include "dharc/rpc_common.hpp"
 
-static zmq::context_t context(1);
+namespace {
+zmq::context_t context(1);
 zmq::socket_t rpc_sock(context, ZMQ_REQ);
+};
 
 bool dharc::rpc::connect(const char *addr) {
 	rpc_sock.connect(addr);

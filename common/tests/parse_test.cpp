@@ -11,24 +11,24 @@ using namespace dharc;
 using namespace dharc::parser;
 
 void complex_parse(Context &parse) {
-	if (!parse(word_{"var"}, [&]() {
+	if (!parse(word{"var"}, [&]() {
 		token_t type;
-		std::string id;
+		std::string id_tmp;
 
-		if (!(parse(token_<word_>{{"int"},type,1}, noact)
-			|| parse(token_<word_>{{"float"},type,2}, noact)
-			|| parse(token_<word_>{{"bool"},type,3}, noact)
+		if (!(parse(token<word>{{"int"},type,1}, noact)
+			|| parse(token<word>{{"float"},type,2}, noact)
+			|| parse(token<word>{{"bool"},type,3}, noact)
 			)) {
-			parse.syntax_error("Expected type after 'var'");
+			parse.syntaxError("Expected type after 'var'");
 		}
-		if (!parse(id_{id}, noact)) {
-			parse.syntax_error("Invalid identifier after type");
+		if (!parse(id{id_tmp}, noact)) {
+			parse.syntaxError("Invalid identifier after type");
 		}
 		if (!(parse("=", noact) || parse(";", noact))) {
-			parse.syntax_error("Unexpected item after identifier '"+id+"'");
+			parse.syntaxError("Unexpected item after identifier '"+id_tmp+"'");
 		}
 	})) {
-		parse.syntax_error("Invalid statement");
+		parse.syntaxError("Invalid statement");
 	}
 }
 
@@ -41,11 +41,11 @@ CASE(  "Parse comma separated ints" ) {
 	
 	int vals[3];
 	EXPECT( parse(
-		value_<int>{vals[0]},
-		", ",
-		value_<int>{vals[1]},
-		", ",
-		value_<int>{vals[2]}, noact) );
+		value<int>{vals[0]},
+		',',
+		value<int>{vals[1]},
+		',',
+		value<int>{vals[2]}, noact) );
 	EXPECT( vals[0] == 100 );
 	EXPECT( vals[1] == 200 );
 	EXPECT( vals[2] == 300 );
@@ -58,11 +58,11 @@ CASE( "Attempt to parse ints (fail)" ) {
 	
 	int vals[3];
 	EXPECT( parse(
-		value_<int>{vals[0]},
+		value<int>{vals[0]},
 		", ",
-		value_<int>{vals[1]},
+		value<int>{vals[1]},
 		", ",
-		value_<int>{vals[2]}, noact) == false );
+		value<int>{vals[2]}, noact) == false );
 },
 
 CASE( "Multiple parses of same string" ) {
@@ -71,8 +71,9 @@ CASE( "Multiple parses of same string" ) {
 	ss.str("hello 55");
 	int val;
 	EXPECT( parse("hello", "world", noact) == false );
-	EXPECT( parse("hello", value_<int>{val}, '[', noact) == false );
-	EXPECT( parse("hello", value_<int>{val}, noact) );
+	EXPECT( parse("hello", value<int>{val}, '[', noact) == false );
+	EXPECT( parse("hello", value<int>{val}, noact) );
+	EXPECT( val == 55 );
 },
 
 CASE( "Remove all kinds of whitespace" ) {
@@ -86,39 +87,56 @@ CASE( "Correctly check for a keyword" ) {
 	std::stringstream ss;
 	Context parse(ss);
 	ss.str("    void hello");
-	EXPECT( parse(word_{"void"}, noact) );
+	EXPECT( parse(word{"void"}, noact) );
+},
+
+CASE( "Check for massive non-existing keyword (fail)" ) {
+	std::stringstream ss;
+	Context parse(ss);
+	ss.str("const int myvar = 45;");
+	EXPECT( parse(word{"somemassivekeywordthatsurelycannotbearealthing"
+						"becauseitwouldtakeforevertotype"}, noact) == false );
+},
+
+CASE( "Check for massive keyword" ) {
+	std::stringstream ss;
+	Context parse(ss);
+	ss.str("somemassivekeywordthatsurelycannotbearealthing"
+						"becauseitwouldtakeforevertotype");
+	EXPECT( parse(word{"somemassivekeywordthatsurelycannotbearealthing"
+						"becauseitwouldtakeforevertotype"}, noact) );
 },
 
 CASE( "Keyword at end of input" ) {
 	std::stringstream ss;
 	Context parse(ss);
-	ss.str("    void");
-	EXPECT( parse(word_{"void"}, noact) );
+	ss.str("    const");
+	EXPECT( parse(word{"const"}, noact) );
 },
 
 CASE( "Keyword not found (fail)" ) {
 	std::stringstream ss;
 	Context parse(ss);
 	ss.str("    void");
-	EXPECT( parse(word_{"bool"}, noact) == false );
+	EXPECT( parse(word{"bool"}, noact) == false );
 },
 
 CASE( "Keyword as prefix (fail)" ) {
 	std::stringstream ss;
 	Context parse(ss);
 	ss.str("    voided");
-	EXPECT( parse(word_{"void"}, noact) == false );
+	EXPECT( parse(word{"void"}, noact) == false );
 	ss.str("    voidEd");
-	EXPECT( parse(word_{"void"}, noact) == false );
+	EXPECT( parse(word{"void"}, noact) == false );
 	ss.str("    void00");
-	EXPECT( parse(word_{"void"}, noact) == false );
+	EXPECT( parse(word{"void"}, noact) == false );
 },
 
 CASE( "Keyword followed by non-alphanumeric" ) {
 	std::stringstream ss;
 	Context parse(ss);
 	ss.str("    void[");
-	EXPECT( parse(word_{"void"}, noact) );
+	EXPECT( parse(word{"void"}, noact) );
 },
 
 CASE( "Use of custom lamda" ) {
@@ -136,28 +154,28 @@ CASE( "Use of custom lamda" ) {
 CASE( "Parsing valid identifiers" ) {
 	std::stringstream ss;
 	Context parse(ss);
-	std::string id;
+	std::string id_tmp;
 	ss.str("helloid[");
-	EXPECT( parse(id_{id}, "[", noact) );
-	EXPECT( id == "helloid" );
+	EXPECT( parse(id{id_tmp}, "[", noact) );
+	EXPECT( id_tmp == "helloid" );
 	ss.str("hello40[");
-	EXPECT( parse(id_{id}, "[", noact) );
-	EXPECT( id == "hello40" );
+	EXPECT( parse(id{id_tmp}, "[", noact) );
+	EXPECT( id_tmp == "hello40" );
 	ss.str("_hello_id ");
-	EXPECT( parse(id_{id}, noact) );
-	EXPECT( id == "_hello_id" );
+	EXPECT( parse(id{id_tmp}, noact) );
+	EXPECT( id_tmp == "_hello_id" );
 },
 
 CASE( "Parsing invalid identifiers (fail)" ) {
 	std::stringstream ss;
 	Context parse(ss);
-	std::string id;
+	std::string id_tmp;
 	ss.str("7elloid[");
-	EXPECT( parse(id_{id}, "[", noact) == false );
+	EXPECT( parse(id{id_tmp}, "[", noact) == false );
 	ss.str("&elloid[");
-	EXPECT( parse(id_{id}, "[", noact) == false );
+	EXPECT( parse(id{id_tmp}, "[", noact) == false );
 	ss.str("7[");
-	EXPECT( parse(id_{id}, "[", noact) == false );
+	EXPECT( parse(id{id_tmp}, "[", noact) == false );
 },
 
 CASE( "Checking for individual characters" ) {
@@ -172,21 +190,21 @@ CASE( "Checking for individual characters" ) {
 CASE( "Using lambda as actor" ) {
 	std::stringstream ss;
 	Context parse(ss);
-	std::string id;
+	std::string id_tmp;
 	int val;
 	bool success = false;
 	ss.str("x = 55");
 
-	parse(id_{id}, '=', value_<int>{val}, [&]() {
+	parse(id{id_tmp}, '=', value<int>{val}, [&]() {
 		success = true;
 		EXPECT( val == 55 );
-		EXPECT( id == "x" );
+		EXPECT( id_tmp == "x" );
 	});
 	EXPECT( success );
 
 	success = false;
 	ss.str("x & 55");
-	parse(id_{id}, '=', value_<int>{val}, [&]() {
+	parse(id{id_tmp}, '=', value<int>{val}, [&]() {
 		success = true;
 	});
 	EXPECT( success == false );
@@ -200,22 +218,28 @@ CASE( "Complex test parser" ) {
 	complex_parse(parse);
 	EXPECT( parse.success() );
 
+	parse.printMessages("parse_test");
+
 	parse.reset();
 	ss.str("var in myvar = 534;");
 	complex_parse(parse);
 	EXPECT( parse.failed() );
+
+	parse.printMessages("parse_test");
 
 	parse.reset();
 	ss.str("var float 0myvar = 534;");
 	complex_parse(parse);
 	EXPECT( parse.failed() );
 
+	parse.printMessages("parse_test");
+
 	parse.reset();
 	ss.str("var float myvar : 534;");
 	complex_parse(parse);
 	EXPECT( parse.failed() );
 
-	//parse.print_messages("parse_test");
+	parse.printMessages("parse_test");
 }
 
 };

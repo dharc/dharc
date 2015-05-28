@@ -8,21 +8,22 @@
 #include <iostream>
 #include <string>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/parse.hpp"
 #include "dharc/arch.hpp"
 
-using dharc::Nid;
+using dharc::Node;
 using dharc::parser::Context;
 using std::vector;
 using std::string;
 using std::cout;
-using dharc::parser::word_;
-using dharc::parser::value_;
+
+using dharc::parser::word;
+using dharc::parser::value;
 using dharc::parser::noact;
 
-dharc::Script::Script(std::istream &is, const char *src)
-: ctx(is), source(src), params(nullptr) {
+dharc::arch::Script::Script(std::istream &is, const char *src)
+: ctx_(is), source_(src), params_(nullptr) {
 }
 
 namespace {
@@ -30,17 +31,17 @@ struct command_query {
 	Context &parse;
 
 	void operator()() {
-		Nid t1;
-		Nid t2;
+		Node t1;
+		Node t2;
 
-		if (!parse(value_<Nid>{t1}, value_<Nid>{t2}, noact)) {
-			parse.syntax_error("'%query' requires two node ids");
+		if (!parse(value<Node>{t1}, value<Node>{t2}, noact)) {
+			parse.syntaxError("'%query' requires two node ids");
 			return;
 		}
 		if (!parse(';', noact)) {
 			parse.warning("Expected ';'");
 		}
-		Nid r = dharc::query(t1, t2);
+		Node r = dharc::query(t1, t2);
 		std::cout << "  " << r << std::endl;
 	}
 };
@@ -49,10 +50,10 @@ struct command_partners {
 	Context &parse;
 
 	void operator()() {
-		Nid t1;
+		Node t1;
 
-		if (!parse(value_<Nid>{t1}, noact)) {
-			parse.syntax_error("'%partners' needs a node id");
+		if (!parse(value<Node>{t1}, noact)) {
+			parse.syntaxError("'%partners' needs a node id");
 		}
 		if (!parse(';', noact)) {
 			parse.warning("Expected ';'");
@@ -65,77 +66,87 @@ struct command_partners {
 };
 };  // namespace
 
-bool dharc::Script::parse_node(Context &ctx, Nid &value) {
-	return (ctx(value_<Nid>{value}, noact)
-	|| ctx(word_{"<new>"}, [&]() { value = dharc::unique(); })
-	|| ctx('$', [&]() {
+bool dharc::arch::Script::parseNode(Node &val) {
+	return (ctx_(value<Node>{val}, noact)
+	// || ctx_(word{"<new>"}, [&]() { value = dharc::unique(); })
+	|| ctx_('$', [&]() {
 		int id = 0;
-		if (!ctx(value_<int>{id}, noact)) {
-			ctx.syntax_error("'$' must be followed by a parameter number");
+		if (!ctx_(value<int>{id}, noact)) {
+			ctx_.syntaxError("'$' must be followed by a parameter number");
 		}
-		if (id >= static_cast<int>(params->size())) {
-			ctx.runtime_error(string("parameter '$")
+		if (id >= static_cast<int>(params_->size())) {
+			ctx_.runtimeError(string("parameter '$")
 				+ std::to_string(id)
 				+ "' not found");
-			value = dharc::null_n;
+			val = dharc::null_n;
 		} else {
-			value = (*params)[id];
+			val = (*params_)[id];
 		}
 	}));
 }
 
-void dharc::Script::parse_statement(Nid &cur, Context &parse) {
-	Nid n;
+void dharc::arch::Script::parseStatement(Node &cur) {
+	Node n;
 
-	if (parse(';', noact)) return;
-	if (parse_node(parse, n)) {
-		if (parse('=', noact)) {
-			Nid r;
+	if (ctx_(';', noact)) return;
+	if (ctx_(word{"<typeint>"}, noact)) {
+		cur = Node(static_cast<int>(cur.t));
+		parseStatement(cur);
+	} else if (ctx_(word{"<int>"}, noact)) {
+		cur = Node(static_cast<int>(cur.i));
+		parseStatement(cur);
+	} else if (parseNode(n)) {
+		if (ctx_('=', noact)) {
+			Node r;
 
-			if (parse_node(parse, r)) {
+			if (parseNode(r)) {
 				dharc::define(cur, n, r);
-				parse_statement(cur, parse);
+				parseStatement(cur);
 			} else {
-				parse.syntax_error("'=' must be followed by a node id");
+				ctx_.syntaxError("'=' must be followed by a node id");
 			}
 		} else {
 			if ((cur == dharc::null_n) || (n == dharc::null_n)) {
-				parse.info("querying a 'null' node");
+				ctx_.information("querying a 'null' node");
 			}
 			cur = dharc::query(cur, n);
-			parse_statement(cur, parse);
+			parseStatement(cur);
 		}
 	} else {
-		if (parse.eof()) {
-			parse.warning("expected a node id or ';'");
+		if (ctx_.eof()) {
+			ctx_.warning("expected a node id or ';'");
 		} else {
-			parse.syntax_error("expected a node id");
+			ctx_.syntaxError("expected a node id");
 		}
 	}
 }
 
-Nid dharc::Script::operator()(const vector<Nid> &p) {
-	Nid cur = null_n;
-	params = &p;
+Node dharc::arch::Script::operator()(const vector<Node> &p) {
+	Node cur = null_n;
+	params_ = &p;
 
-	while (!ctx.eof()) {
-		if (ctx('%', noact)) {
+	while (!ctx_.eof()) {
+		if (ctx_('%', noact)) {
 			if (!(
-				ctx(word_{"query"}, command_query{ctx})
-				|| ctx(word_{"partners"}, command_partners{ctx})))
+				ctx_(word{"query"}, command_query{ctx_})
+				|| ctx_(word{"partners"}, command_partners{ctx_})))
 			{
-				ctx.syntax_error("Unrecognised command");
+				ctx_.syntaxError("Unrecognised command");
 			}
-		} else if (parse_node(ctx, cur)) {
-			parse_statement(cur, ctx);
+		} else if (parseNode(cur)) {
+			parseStatement(cur);
+		} else if (ctx_(word{"<typeint>"}, noact)) {
+			ctx_.syntaxError("node cast '<typeint>' must follow node");
+		} else if (ctx_(';', noact)) {
+			// Nothing
 		} else {
-			ctx.syntax_error("Invalid statement");
+			ctx_.syntaxError("Invalid statement");
 		}
 
-		if (!ctx) {
-			ctx.skip_line();
+		if (!ctx_) {
+			ctx_.skipLine();
 		}
-		ctx.print_messages(source);
+		ctx_.printMessages(source_);
 	}
 	return cur;
 }

@@ -11,10 +11,10 @@
 
 using std::list;
 using std::vector;
-using dharc::Nid;
+using dharc::Node;
 using dharc::Harc;
 
-list<Harc*> dharc::Framer::select_partners(const vector<Nid> &p, int max) {
+list<Harc*> dharc::Framer::select_partners(const vector<Node> &p, int max) {
 	vector<const list<Harc*>*> parts;
 	list<Harc*> res;
 	auto *heads = new list<Harc*>::const_iterator[p.size()];

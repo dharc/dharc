@@ -2,16 +2,14 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef DHARC_RPC_COMMON_H_
-#define DHARC_RPC_COMMON_H_
+#ifndef DHARC_RPC_COMMON_HPP_
+#define DHARC_RPC_COMMON_HPP_
 
 #include <string>
 #include <sstream>
 #include <vector>
 #include <iostream>
 #include <type_traits>
-
-#include <cassert>
 
 #include "dharc/rpc_commands.hpp"
 #include "dharc/rpc_packer.hpp"
@@ -64,15 +62,15 @@ inline void packcmd(std::ostream &os, Command c) {
  * for the given command, as must the return type. See the commands_t tuple
  * for the correct types.
  */
-template<Command C, typename... Args>
-auto send(const Args&... args) {
+template<Command C, typename... A>
+auto send(const A&... args) {
 	using cmd_type =
 	typename std::tuple_element<static_cast<int>(C), commands_t>::type;
 	using ret_type =
-	typename std::result_of<cmd_type(Args...)>::type;
+	typename std::result_of<cmd_type(A...)>::type;
 
 	// Make sure arguments are correct for this command
-	static_assert(std::is_same<ret_type(*)(const Args&...), cmd_type>::value,
+	static_assert(std::is_same<ret_type(*)(const A&...), cmd_type>::value,
 		"Incorrect RPC Arguments");
 
 	// Pack the command number and arguments
@@ -112,5 +110,5 @@ auto send() {
 };  // namespace rpc
 };  // namespace dharc
 
-#endif  /* DHARC_RPC_COMMON_H_ */
+#endif  // DHARC_RPC_COMMON_HPP_
 

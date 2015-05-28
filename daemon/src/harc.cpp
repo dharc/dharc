@@ -6,179 +6,161 @@
 
 #include <vector>
 #include <iostream>
-#include <thread>
 #include <list>
 #include <utility>
-#include <algorithm>
+#include <string>
 #include <future>
+#include <sstream>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
 #include "dharc/definition.hpp"
 
 using dharc::Harc;
 using dharc::Fabric;
-using dharc::Nid;
+using dharc::Node;
 using dharc::Definition;
+using std::stringstream;
 
-Harc::Harc(const pair<Nid, Nid> &t) :
-	m_tail(t),
-	m_head(null_n),
-	m_flags(Flag::none),
-	m_lastquery(Fabric::counter()),
-	m_strength(0.0) {}
 
-void Harc::add_dependant(const Harc &h) {
-	m_dependants.push_back(&h);
+
+Harc::Harc(const pair<Node, Node> &t) :
+	tail_(t),
+	flags_(static_cast<unsigned char>(Flag::none)),
+	head_(null_n),
+	lastquery_(Fabric::counter()),
+	strength_(0.0),
+	dependants_(nullptr) {}
+
+
+
+void Harc::addDependant(const Harc &h) {
+	lock_.lock();
+	if (!dependants_) dependants_ = new list<const Harc*>();
+	dependants_->push_back(&h);
+	lock_.unlock();
 }
 
-void Harc::reposition_harc(const list<Harc*> &p, list<Harc*>::iterator &it) {
-	if (p.begin() == it) return;
-	auto it2 = it--;
-	std::swap(*it, *it2);
 
-	// Brute force if IX not in meta data for harc.
-	/* if (p.front() == this) return;
-	for (auto i = ++p.begin(); i != p.end(); ++i) {
-		if (*i == this) {
-			// Move one place
-			//auto i2 = i--;
-			//std::swap(*i, *i2);
-			//p.insert(--(p.erase(i)), this);
-			return;
-		}
-	} */
-}
 
 float Harc::significance() const {
 	float delta = static_cast<float>(Fabric::counter()) -
-						static_cast<float>(m_lastquery);
+					static_cast<float>(lastquery_);
 	if (delta == 0) delta = 1.0;
 	return 1.0 / delta;
 }
 
-float Harc::last_query() const {
+
+
+float Harc::lastQuery() const {
 	float delta = static_cast<float>(Fabric::counter()) -
-						static_cast<float>(m_lastquery);
-	return (delta * Fabric::counter_resolution()) / 1000.0f;
+					static_cast<float>(lastquery_);
+	return (delta * Fabric::counterResolution()) / 1000.0f;
 }
 
-void Harc::update_partners(const Nid &n, list<Harc*>::iterator &it) {
-	auto &partners = fabric.m_partners[n];
 
-	Harc *h = *it;
-	partners.erase(it);
 
-	// Insertion sort this harc by significance value
-	// Most likely very near the front of the list
-	auto j = partners.begin();
-	while (j != partners.end()) {
-		if ((*j)->significance() <= h->significance()) {
-			it = partners.insert(j, h);
-			break;
-		}
-		++j;
-	}
-
-	if (j == partners.end()) {
-		partners.push_back(h);
-		it = --partners.end();
-	}
-
-	// Shift all other partners up one place
-	// TODO(knicos): In another thread.
-	for (auto i : partners) {
-		if (i == h) continue;  // Ignore self.
-
-		if (i->tail().first == n) {
-			auto &p = fabric.m_partners[i->tail().second];
-			reposition_harc(p, i->m_partix[1]);
-		} else {
-			auto &p = fabric.m_partners[i->tail().first];
-			reposition_harc(p, i->m_partix[0]);
-		}
-	}
-}
-
-const Nid &Harc::query() {
+const Node &Harc::query() {
 	// Boost significance
-	if (m_lastquery < Fabric::counter()) {
-		m_lastquery = Fabric::counter();
-		update_partners(m_tail.first, m_partix[0]);
-		update_partners(m_tail.second, m_partix[1]);
+	if (lastquery_ < Fabric::counter()) {
+		lastquery_ = Fabric::counter();
+		fabric.updatePartners(tail_.first, partix_[0]);
+		fabric.updatePartners(tail_.second, partix_[1]);
 	}
 
-	if (check_flag(Flag::defined)) {
-		return m_def->evaluate(this);
-	} else {
-		return m_head;
-	}
+	const auto *_ = this;
+	return _->query();
 }
 
-const Nid &Harc::query() const {
-	if (check_flag(Flag::defined)) {
-		return m_def->evaluate(this);
-	} else {
-		return m_head;
+
+
+const Node &Harc::query() const {
+	lock_.lock();
+	if (checkFlag(Flag::defined) && checkFlag(Flag::outofdate)) {
+		head_ = def_->evaluate(this);
+		clearFlag(Flag::outofdate);
 	}
+	lock_.unlock();
+
+	return head_;
 }
+
+
 
 void Harc::dirty() const {
-	if (check_flag(Flag::defined)) m_def->mark();
-	for (auto i : m_dependants) {
+	if (checkFlag(Flag::defined)) setFlag(Flag::outofdate);
+
+	lock_.lock();
+	if (!dependants_) {
+		lock_.unlock();
+		return;
+	}
+	auto dependants = dependants_;
+	dependants_ = nullptr;
+	lock_.unlock();
+
+	for (auto i : *dependants) {
 		i->dirty();
 	}
-	m_dependants.clear();
+	delete dependants;
 }
 
-void Harc::define(const Nid &n) {
-	if (check_flag(Flag::log)) fabric.log_change(this);
 
-	if (check_flag(Flag::defined)) {
-		delete m_def;
-		clear_flag(Flag::defined);
+
+void Harc::define(const Node &n) {
+	if (checkFlag(Flag::log)) fabric.logChange(this);
+
+	lock_.lock();
+	if (checkFlag(Flag::defined)) {
+		delete def_;
+		clearFlag(Flag::defined);
 	}
-
-	m_head = n;
-
-	for (auto i : m_dependants) {
-		i->dirty();
-	}
-	m_dependants.clear();
-}
-
-void Harc::define(const vector<vector<Nid>> &p) {
-	if (check_flag(Flag::defined)) {
-		delete m_def;
-	} else {
-		set_flag(Flag::defined);
-	}
-	m_def = Definition::from_path(p);
-
-	if (check_flag(Flag::log)) fabric.log_change(this);
+	head_ = n;
+	lock_.unlock();
 
 	dirty();
 }
 
-Harc &Harc::operator=(const Nid &n) {
-	define(n);
-	return *this;
+
+
+void Harc::define(const vector<vector<Node>> &definition) {
+	lock_.lock();
+	if (checkFlag(Flag::defined)) {
+		delete def_;
+	} else {
+		setFlag(Flag::defined);
+	}
+	def_ = new Definition(definition);
+	setFlag(Flag::outofdate);
+	lock_.unlock();
+
+	if (checkFlag(Flag::log)) fabric.logChange(this);
+
+	dirty();
 }
 
-bool Harc::operator==(const Nid &n) const {
-	return query() == n;
+std::string Harc::definition() const {
+	if (checkFlag(Flag::defined)) {
+		stringstream ss;
+		ss << *def_;
+		return ss.str();
+	}
+	return (std::string)head_;
 }
 
-Nid Nid::operator[](const Nid &n) {
-	return fabric.get(*this, n).query();
+void Harc::definition(std::ostream &os) const {
+	if (checkFlag(Flag::defined)) {
+		os << *def_;
+	} else {
+		os << head_;
+	}
 }
 
-Harc &Harc::operator[](const Nid &n) {
-	return fabric.get(query(), n);
-}
+
 
 std::ostream &dharc::operator<<(std::ostream &os, const Harc &h) {
 	os << '[' << h.tail().first << ',' << h.tail().second
 		<< "->" << h.query() << ']';
 	return os;
 }
+

@@ -1,6 +1,6 @@
 #include "lest.hpp"
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/harc.hpp"
 #include "dharc/fabric.hpp"
 #include "dharc/definition.hpp"
@@ -8,17 +8,18 @@
 #include <chrono>
 #include <atomic>
 #include <vector>
+#include <sstream>
 
 using namespace dharc;
 using std::vector;
 
 /* ==== MOCKS ==== */
 
-std::atomic<unsigned long long> Fabric::s_counter(0);
+std::atomic<unsigned long long> Fabric::counter__(0);
 
-void Fabric::counter_thread() {
+void Fabric::counterThread() {
 	while (true) {
-		++s_counter;
+		++counter__;
 		std::this_thread::sleep_for(std::chrono::seconds(2));
 	}
 }
@@ -31,56 +32,84 @@ Fabric::Fabric() {
 Fabric::~Fabric() {
 }
 
+void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
+}
+
 Fabric &Fabric::singleton() {
 	return *(new Fabric());
 }
 
-Nid dummy_result;
+Node dummy_result;
 
-Nid Fabric::path(const vector<vector<Nid>> &p, const Harc *dep) {
+Node Fabric::path(const vector<Node> &p, const Harc *dep) {
+	return p[0];
+}
+
+vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
+	vector<Node> results;
+
+	Harc &h = get(p[0][0],p[0][1]);
 	if (dep) {
-		Harc &h = get(p[0][0],p[0][1]);
-		h.add_dependant(*dep);
+		h.addDependant(*dep);
 	}
-	return dummy_result;
+	results.push_back(dummy_result);
+	return results;
 }
 
 const Harc *last_log = nullptr;
 
-void Fabric::log_change(const Harc *h) {
+void Fabric::logChange(const Harc *h) {
 	last_log = h;
 }
 
-Harc &Fabric::get(const pair<Nid, Nid> &key) {
-	auto it = m_harcs.find(key);
+Harc &Fabric::get(const pair<Node, Node> &key) {
+	auto it = harcs_.find(key);
 
-	if (it != m_harcs.end()) {
+	if (it != harcs_.end()) {
 		return *(it->second);
 	} else {
 		auto h = new Harc(key);
-		m_harcs.insert({key, h});
+		harcs_.insert({key, h});
 		return *h;
 	}
 }
 
-const Nid &Definition::evaluate(const Harc *harc) const {
-	m_cache = fabric.path(m_path, harc);
-	return m_cache;
+Definition::Definition(const vector<vector<Node>> &definition) {
+	path_ = definition;
 }
 
-Definition *Definition::from_path(const vector<vector<Nid>> &path) {
-	Definition *res = new Definition();
-	res->m_path = path;
-	return res;
+Node Definition::evaluate(const Harc *harc) const {
+	vector<Node> aggregate = fabric.paths(path_, harc);
+	return fabric.path(aggregate, harc);
 }
 
-std::ostream &dharc::operator<<(std::ostream &os, const Nid &n) {
+
+std::ostream &dharc::operator<<(std::ostream &os, const Node &n) {
 	os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';
 	return os;
 }
 
+
+std::ostream &dharc::operator<<(std::ostream &os, const Definition &d) {
+	return os;
+}
+
+Node::operator string() const {
+	std::stringstream ss;
+	ss << *this;
+	return ss.str();
+}
+
+Node::operator int() const {
+	switch(t) {
+	case Type::integer : return static_cast<int>(i);
+	default            : return 0;
+	}
+}
+
 /* ==== END MOCKS ==== */
 
+typedef vector<vector<Node>> path_t;
 
 const lest::test specification[] = {
 
@@ -92,25 +121,10 @@ CASE( "Define and then query same value" ) {
 	EXPECT( h1.query() == 77_n );
 },
 
-CASE( "Use of harc assignment operator to define") {
-	Harc &h1 = fabric.get(44_n,55_n);
-	h1 = 66_n;
-	EXPECT( h1.query() == 66_n );
-	h1 = 88_n;
-	EXPECT( h1.query() == 88_n );
-},
-
-CASE( "Comparison of harc to a nid") {
-	Harc &h1 = fabric.get(33_n, 22_n);
-	h1 = 78_n;
-	EXPECT( h1 == 78_n );
-	EXPECT( !(h1 == 'a'_n) );
-},
-
 CASE( "A simple one path definition with out-of-date trigger" ) {
 	Harc &h1 = fabric.get(102_n, 103_n);
 	
-	h1.define({{100_n,101_n}});
+	h1.define(path_t{{100_n,101_n}});
 	dummy_result = 49_n;
 	EXPECT( h1.query() == 49_n );
 	
@@ -119,43 +133,25 @@ CASE( "A simple one path definition with out-of-date trigger" ) {
 	EXPECT( h1.query() == 50_n );
 },
 
-CASE( "Check and set harc flags" ) {
-	Harc &h1 = fabric.get(99_n, 88_n);
-	
-	EXPECT( h1.check_flag(Harc::Flag::none) );
-	
-	h1.set_flag(Harc::Flag::log);
-	EXPECT( h1.check_flag(Harc::Flag::log) );
-	EXPECT( h1.check_flag(Harc::Flag::meta) == false );
-	
-	h1.set_flag(Harc::Flag::meta);
-	EXPECT( h1.check_flag(Harc::Flag::log) );
-	EXPECT( h1.check_flag(Harc::Flag::meta) );
-	
-	h1.clear_flag(Harc::Flag::log);
-	EXPECT( h1.check_flag(Harc::Flag::log) == false );
-	EXPECT( h1.check_flag(Harc::Flag::meta) );
-},
-
 CASE( "Harcs flag log are logged when changed" ) {
 	Harc &h = fabric.get(2_n, 3_n);
 	
-	EXPECT( h.check_flag(Harc::Flag::log) == false );
+	EXPECT( h.checkFlag(Harc::Flag::log) == false );
 	last_log = nullptr;
 	h.define(7_n);
 	EXPECT( last_log == nullptr );
 	
-	h.set_flag(Harc::Flag::log);
+	h.startRecording();
 	h.define(8_n);
 	EXPECT( last_log == &h );
 	
 	last_log = nullptr;
-	h.define({{109_n,110_n}});
+	h.define(path_t{{109_n,110_n}});
 	EXPECT( last_log == &h );
 	
-	h.clear_flag(Harc::Flag::log);
+	h.stopRecording();
 	last_log = nullptr;
-	h.define({{111_n,112_n}});
+	h.define(path_t{{111_n,112_n}});
 	EXPECT( last_log == nullptr );
 }
 };

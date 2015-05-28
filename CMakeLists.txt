@@ -14,9 +14,11 @@ set(dharc_VERSION_MAJOR "0")
 set(dharc_VERSION_MINOR "1")
 set(dharc_VERSION_PATCH "1")
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -Wall -Werror -Wno-psabi")
+set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -Wall -Wno-deprecated -Werror -Wno-psabi")
 set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -g -Wall -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+
+SET(CMAKE_USE_RELATIVE_PATHS ON)
 
 set(DHARCDSOURCE
 	daemon/src/harc.cpp
@@ -53,7 +55,7 @@ set(DHARCAGENT
 
 add_library(dharccommon OBJECT
 	common/src/rpc_common.cpp
-	common/src/nid.cpp
+	common/src/node.cpp
 	common/src/parse.cpp
 )
 
@@ -88,9 +90,9 @@ target_link_libraries(gdharc-agent ${GTKMM_LIBRARIES})
 
 add_library(dharctest OBJECT daemon/src/test.cpp)
 
-add_executable(nid-unit EXCLUDE_FROM_ALL
-	common/tests/nid_test.cpp
-	common/src/nid.cpp
+add_executable(node-unit EXCLUDE_FROM_ALL
+	common/tests/node_test.cpp
+	common/src/node.cpp
 	common/src/parse.cpp
 )
 
@@ -122,7 +124,6 @@ target_link_libraries(harc-unit pthread)
 
 add_executable(fabric-unit EXCLUDE_FROM_ALL
 	daemon/tests/fabric_test.cpp
-	$<TARGET_OBJECTS:dharctest>
 	daemon/src/fabric.cpp
 )
 target_include_directories(fabric-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
@@ -130,7 +131,7 @@ target_include_directories(fabric-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/inclu
 add_executable(harc-perf EXCLUDE_FROM_ALL
 	daemon/tests/harc_perf.cpp
 	$<TARGET_OBJECTS:dharctest>
-	common/src/nid.cpp
+	common/src/node.cpp
 	daemon/src/harc.cpp
 	daemon/src/fabric.cpp
 	daemon/src/definition.cpp
@@ -140,7 +141,7 @@ target_link_libraries(harc-perf pthread)
 
 add_custom_target(tests)
 add_dependencies(tests
-	nid-unit
+	node-unit
 	def-unit
 	harc-unit
 	fabric-unit

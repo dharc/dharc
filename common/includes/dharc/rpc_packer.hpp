@@ -2,8 +2,8 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef DHARC_PACKER_H_
-#define DHARC_PACKER_H_
+#ifndef DHARC_PACKER_HPP_
+#define DHARC_PACKER_HPP_
 
 #include <iostream>
 #include <vector>
@@ -86,5 +86,5 @@ struct Packer<std::list<R>> {
 };  // namespace rpc
 };  // namespace dharc
 
-#endif  /* DHARC_PACKER_H_ */
+#endif  // DHARC_PACKER_HPP_
 

@@ -2,19 +2,19 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef DHARC_RPC_COMMANDS_H_
-#define DHARC_RPC_COMMANDS_H_
+#ifndef DHARC_RPC_COMMANDS_HPP_
+#define DHARC_RPC_COMMANDS_HPP_
 
 #include <tuple>
 #include <vector>
 #include <list>
 
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 
 using std::vector;
 using std::list;
 using std::tuple;
-using dharc::Nid;
+using dharc::Node;
 
 namespace dharc {
 namespace rpc {
@@ -43,15 +43,15 @@ enum struct Command : int {
 typedef tuple<
 	bool(*)(),
 	int(*)(),
-	Nid(*)(const Nid&, const Nid&),
-	bool(*)(const Nid&, const Nid&, const Nid&),
-	bool(*)(const Nid&, const Nid&, const vector<vector<Nid>>&),
-	list<Nid>(*)(const Nid&),
-	Nid(*)()
+	Node(*)(const Node&, const Node&),
+	bool(*)(const Node&, const Node&, const Node&),
+	bool(*)(const Node&, const Node&, const vector<vector<Node>>&),
+	list<Node>(*)(const Node&),
+	Node(*)()
 > commands_t;
 
 };  // namespace rpc
 };  // namespace dharc
 
-#endif  /* DHARC_RPC_COMMANDS_H_ */
+#endif  // DHARC_RPC_COMMANDS_HPP_
 

@@ -12,7 +12,7 @@
 #include <tuple>
 
 #include "dharc/rpc_commands.hpp"
-#include "dharc/nid.hpp"
+#include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
 #include "dharc/harc.hpp"
 #include "dharc/parse.hpp"
@@ -25,13 +25,13 @@ using std::ostream;
 using std::string;
 using std::vector;
 using std::list;
-using dharc::Nid;
+using dharc::Node;
 using dharc::Harc;
 using dharc::fabric;
 using dharc::rpc::Command;
 using dharc::parser::Context;
 using dharc::parser::noact;
-using dharc::parser::value_;
+using dharc::parser::value;
 
 namespace {
 
@@ -46,38 +46,39 @@ int rpc_version() {
 }
 
 /* rpc::Command::query */
-Nid rpc_query(const Nid &n1, const Nid &n2) {
+Node rpc_query(const Node &n1, const Node &n2) {
 	return fabric.get(n1, n2).query();
 }
 
 /* rpc::Command::define_const */
-bool rpc_define_const(const Nid &n1, const Nid &n2, const Nid &h) {
+bool rpc_define_const(const Node &n1, const Node &n2, const Node &h) {
 	fabric.get(n1, n2).define(h);
 	return true;
 }
 
 /* rpc::Command::define */
 bool rpc_define(
-		const Nid &n1,
-		const Nid &n2,
-		const vector<vector<Nid>> &p) {
+		const Node &n1,
+		const Node &n2,
+		const vector<vector<Node>> &p) {
 	fabric.get(n1, n2).define(p);
 	return true;
 }
 
 /* rpc::Command::partners */
-list<Nid> rpc_partners(const Nid &n) {
+list<Node> rpc_partners(const Node &n) {
 	const list<Harc*> &part = fabric.partners(n);
-	list<Nid> res;
+	list<Node> res;
 	for (auto i : part) {
-		res.push_back(i->tail_partner(n));
+		res.push_back(i->tailPartner(n));
 	}
 	return res;
 }
 
 /* rpc::Command::unique */
-Nid rpc_unique() {
-	return Nid::unique();
+Node rpc_unique() {
+	// return Node::unique();
+	return dharc::null_n;
 }
 
 /* Register the handler for each rpc command */
@@ -146,7 +147,7 @@ inline void callCmd<static_cast<int>(Command::end)>(
 void dharc::rpc::process_msg(istream &is, ostream &os) {
 	Context parse(is);
 	int cmd = 0;
-	if (parse("{\"c\": ", value_<int>{cmd}, ", \"args\": [", noact)) {
+	if (parse("{\"c\": ", value<int>{cmd}, ", \"args\": [", noact)) {
 		if (cmd >= static_cast<int>(Command::end) || cmd < 0) cmd = 0;
 		callCmd<0>(is, os, cmd);
 	}
