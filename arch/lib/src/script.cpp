@@ -85,26 +85,87 @@ bool dharc::arch::Script::parseNode(Node &val) {
 	}));
 }
 
+void dharc::arch::Script::parseDefinition(vector<vector<Node>> &def) {
+	Node temp;
+
+	while (true) {
+		if (ctx_.eof()) {
+			ctx_.warning("Missing '}' at end of definition");
+			return;
+		}
+		if (ctx_('}', noact)) return;
+		if (ctx_(';', noact)) {
+			ctx_.warning("Missing '}' in definition");
+			return;
+		}
+
+		if (ctx_('(', noact)) {
+			def.push_back({});
+
+			while (true) {
+				if (ctx_.eof()) {
+					ctx_.warning("Missing ')' in definition");
+					return;
+				}
+				if (ctx_(')', noact)) break;
+				if (ctx_(';', noact)) {
+					ctx_.warning("Missing ')' in definition");
+					return;
+				}
+
+				if (parseNode(temp)) {
+					def.back().push_back(temp);
+
+				} else if (ctx_('(', noact)) {
+					ctx_.syntaxError("Un-normalised definitions not supported");
+					return;
+
+				} else {
+					ctx_.syntaxError("Need a node or ')' in path");
+					break;
+				}
+			}
+
+		} else if (parseNode(temp)) {
+			def.push_back({temp});
+
+		} else {
+			ctx_.syntaxError("Need a node or '(' in definition");
+			return;
+		}
+	}
+}
+
 void dharc::arch::Script::parseStatement(Node &cur) {
 	Node n;
 
 	if (ctx_(';', noact)) return;
+
 	if (ctx_(word{"<typeint>"}, noact)) {
 		cur = Node(static_cast<int>(cur.t));
 		parseStatement(cur);
+
 	} else if (ctx_(word{"<int>"}, noact)) {
 		cur = Node(static_cast<int>(cur.i));
 		parseStatement(cur);
+
 	} else if (parseNode(n)) {
 		if (ctx_('=', noact)) {
 			Node r;
 
-			if (parseNode(r)) {
+			if (ctx_('{', noact)) {
+				vector<vector<Node>> def;
+				parseDefinition(def);
+				dharc::define(cur, n, def);
+
+			} else if (parseNode(r)) {
 				dharc::define(cur, n, r);
 				parseStatement(cur);
+
 			} else {
-				ctx_.syntaxError("'=' must be followed by a node id");
+				ctx_.syntaxError("'=' must be followed by a node or '{'");
 			}
+
 		} else {
 			if ((cur == dharc::null_n) || (n == dharc::null_n)) {
 				ctx_.information("querying a 'null' node");
@@ -112,9 +173,11 @@ void dharc::arch::Script::parseStatement(Node &cur) {
 			cur = dharc::query(cur, n);
 			parseStatement(cur);
 		}
+
 	} else {
 		if (ctx_.eof()) {
 			ctx_.warning("expected a node id or ';'");
+
 		} else {
 			ctx_.syntaxError("expected a node id");
 		}

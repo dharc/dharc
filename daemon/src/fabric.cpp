@@ -59,25 +59,32 @@ const list<Harc*> &Fabric::partners(const Node &n) {
 }
 
 Harc &Fabric::get(const pair<Node, Node> &key) {
+	Harc *h;
+	if (get(key, h)) return *h;
+
+	h = new Harc(key);
+	harcs_.insert({key, h});
+
+	// Update node partners to include this harc
+	// TODO(knicos): This should be insertion sorted.
+	auto &p1 = partners_[key.first];
+	p1.push_front(h);
+	h->partix_[0] = p1.begin();
+	auto &p2 = partners_[key.second];
+	p2.push_front(h);
+	h->partix_[1] = p2.begin();
+
+	return *h;
+}
+
+bool Fabric::get(const pair<Node, Node> &key, Harc*& result) {
 	auto it = harcs_.find(key);
 
 	if (it != harcs_.end()) {
-		return *(it->second);
-	} else {
-		auto h = new Harc(key);
-		harcs_.insert({key, h});
-
-		// Update node partners to include this harc
-		// TODO(knicos): This should be insertion sorted.
-		auto &p1 = partners_[key.first];
-		p1.push_front(h);
-		h->partix_[0] = p1.begin();
-		auto &p2 = partners_[key.second];
-		p2.push_front(h);
-		h->partix_[1] = p2.begin();
-
-		return *h;
+		result = it->second;
+		return true;
 	}
+	return false;
 }
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
@@ -96,8 +103,10 @@ Node Fabric::path(const vector<Node> &p, const Harc *dep) {
 			}
 		}
 		return cur;
+	// Base case, should never really occur
 	} else if (p.size() == 1) {
 		return p[0];
+	// Pointless
 	} else {
 		return null_n;
 	}

@@ -44,8 +44,9 @@ std::ostream &dharc::operator<<(std::ostream &os, const Definition &d) {
 			os << j << ' ';
 		}
 		os.seekp(-1, std::ios_base::end);
-		os << ')';
+		os << ") ";
 	}
+	os.seekp(-1, std::ios_base::end);
 	os << '}';
 	return os;
 }

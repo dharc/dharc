@@ -34,6 +34,7 @@ class Script {
 	private:
 	void parseStatement(dharc::Node &cur);
 	bool parseNode(dharc::Node &val);
+	void parseDefinition(std::vector<std::vector<dharc::Node>> &def);
 };
 
 };  // namespace arch

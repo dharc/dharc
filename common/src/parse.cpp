@@ -15,6 +15,7 @@ using std::string;
 using dharc::parser::Context;
 using dharc::parser::Message;
 using std::cout;
+using std::cerr;
 
 bool Context::parse__(const char *str) {
 	if (stream.eof()) return false;
@@ -129,10 +130,14 @@ constexpr bool isWhiteSpace(char c) {
 void Context::message(Message::Type type, const string &msg, int tag) {
 	char snap[61];
 	int pos = 0;
+	bool waseof = false;
 
 	skip_(*this);
 
-	if (stream.eof()) stream.seekg(-1, std::ios_base::cur);
+	if (stream.eof()) {
+		stream.seekg(-1, std::ios_base::cur);
+		waseof = true;
+	}
 
 	// Record position to restore at the end
 	int start_pos = stream.tellg();
@@ -155,10 +160,14 @@ void Context::message(Message::Type type, const string &msg, int tag) {
 	string snapstr(snap);
 	if (snapstr.length() >= 60) snapstr += "...";
 
-	messages_.push_back({type, msg, snapstr, pos, lines_+1, tag});
-
 	// Restore
-	stream.seekg(start_pos);
+	if (waseof) {
+		messages_.push_back({type, msg, snapstr, pos+1, lines_+1, tag});
+		stream.seekg(start_pos+1);
+	} else {
+		messages_.push_back({type, msg, snapstr, pos, lines_+1, tag});
+		stream.seekg(start_pos);
+	}
 }
 
 
@@ -186,22 +195,22 @@ void Context::printMessages(const char *prefix) {
 		if (noinfo_ && i.type == Message::Type::information) continue;
 
 		// Add bold prefix (filename...) and line number
-		if (prefix) cout << BOLDWHITE << prefix << NOCOLOR << ':';
-		cout << BOLDWHITE << i.line << ": " << NOCOLOR;
+		if (prefix) cerr << BOLDWHITE << prefix << NOCOLOR << ':';
+		cerr << BOLDWHITE << i.line << ": " << NOCOLOR;
 
 		// Print red errors, yellow warns and blue infos
 		switch (i.type) {
 		case Message::Type::syntax_error:
-			cout << RED << "error: " << NOCOLOR; break;
+			cerr << RED << "error: " << NOCOLOR; break;
 		case Message::Type::runtime_error:
-			cout << RED << "error: " << NOCOLOR; break;
+			cerr << RED << "error: " << NOCOLOR; break;
 		case Message::Type::warning:
-			cout << YELLOW << "warning: " << NOCOLOR; break;
+			cerr << YELLOW << "warning: " << NOCOLOR; break;
 		case Message::Type::information:
-			cout << BLUE << "info: " << NOCOLOR; break;
+			cerr << BLUE << "info: " << NOCOLOR; break;
 		}
 
-		cout << i.message << std::endl;
+		cerr << i.message << std::endl;
 
 		if (i.snapshot.length() != 0) {
 			int len = 1;
@@ -224,8 +233,8 @@ void Context::printMessages(const char *prefix) {
 				snapstr += NOCOLOR;
 			}
 
-			cout << "    " << snapstr;
-			cout << std::endl;
+			cerr << "    " << snapstr;
+			cerr << std::endl;
 		}
 	}
 	messages_.clear();

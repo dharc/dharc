@@ -67,7 +67,19 @@ class Fabric {
 	Harc &get(const Node &a, const Node &b) {
 		return get((a < b) ? pair<Node, Node>(a, b) : pair<Node, Node>(b, a));
 	}
+
 	Harc &get(const pair<Node, Node> &key);
+
+	/**
+	 * Get a Harc without constructing it if it doesn't exist.
+	 *     If the Harc is found its pointer is put into result and this
+	 *     function returns true. Otherwise nullptr is put into result and
+	 *     the function returns false. Used internally for paths over virtual
+	 *     harcs.
+	 * @param result Reference to a Harc pointer filled with result.
+	 * @return True if found, false otherwise.
+	 */
+	bool get(const pair<Node, Node> &key, Harc*& result);
 
 	/**
 	 * Evaluate a normalised path through the fabric. If a dependant Harc is
