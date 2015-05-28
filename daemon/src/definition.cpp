@@ -21,6 +21,10 @@ using std::ostream;
 
 Definition::Definition(const vector<vector<Node>> &definition) {
 	path_ = definition;
+	for (auto i : path_) {
+		i.shrink_to_fit();
+	}
+	path_.shrink_to_fit();
 }
 
 
