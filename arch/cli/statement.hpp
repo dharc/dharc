@@ -51,7 +51,7 @@ class Statement {
 	void moveRight();
 	void insertCurrent(int ch);
 	void moveToRhs();
-	void moveToNext();
+	void insertToken();
 	void movePrev();
 	void deleteChar();
 };

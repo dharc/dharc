@@ -111,7 +111,7 @@ void Statement::moveToRhs() {
 
 
 
-void Statement::moveToNext() {
+void Statement::insertToken() {
 	// Don't allow empty tokens
 	if (is_lhs_) {
 		if (lhs_tokens_[current_token_].size() == 0) return;
@@ -167,11 +167,12 @@ void Statement::deleteChar() {
 
 void Statement::insert(int ch) {
 	switch (ch) {
+	case '('           : insertCurrent('('); insertToken(); break;
 	case KEY_LEFT      : moveLeft();            break;
 	case KEY_RIGHT     : moveRight();           break;
 	case KEY_BACKSPACE : deleteChar();          break;
 	case '='           : moveToRhs();           break;
-	case ' '           : moveToNext();          break;
+	case ' '           : insertToken();         break;
 	default            : insertCurrent(ch);
 	}
 }
