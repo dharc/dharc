@@ -25,72 +25,154 @@ Statement::~Statement() {
 
 }
 
+
+
+void Statement::enter() {
+	is_lhs_ = true;
+	current_token_ = 0;
+	token_position_ = lhs_tokens_[0].size();
+	::move(getcury(stdscr), lhs_tokens_[current_token_].size() + 2);
+}
+
+
+
+void Statement::exit() {
+
+}
+
+
+
+void Statement::moveRight() {
+	if (is_lhs_) {
+		++current_token_;
+		if (current_token_ == static_cast<int>(lhs_tokens_.size())) {
+			current_token_ = 0;
+			is_lhs_ = false;
+			::move(getcury(stdscr), getcurx(stdscr)+3+
+					rhs_tokens_[0].size());
+			token_position_ = rhs_tokens_[0].size();
+			return;
+		} else {
+			token_position_ = lhs_tokens_[current_token_].size();
+			::move(getcury(stdscr), getcurx(stdscr)+
+				lhs_tokens_[current_token_].size() + 1);
+		}
+	} else {
+		++current_token_;
+		if (current_token_ == static_cast<int>(rhs_tokens_.size())) {
+			--current_token_;
+			return;
+		} else {
+			::move(getcury(stdscr), getcurx(stdscr)+
+				rhs_tokens_[current_token_].size() + 1);
+			token_position_ = rhs_tokens_[current_token_].size();
+		}
+	}
+}
+
+
+
+void Statement::moveLeft() {
+	if (is_lhs_) {
+		--current_token_;
+
+		if (current_token_ < 0) {
+			current_token_ = 0;
+			return;
+		} else {
+			token_position_ = lhs_tokens_[current_token_].size();
+			::move(getcury(stdscr), getcurx(stdscr)-
+				lhs_tokens_[current_token_ + 1].size() - 1);
+		}
+	} else {
+		--current_token_;
+		if (current_token_ < 0) {
+			is_lhs_ = true;
+			current_token_ = lhs_tokens_.size()-1;
+			token_position_ = lhs_tokens_[current_token_].size();
+			::move(getcury(stdscr), getcurx(stdscr)-
+				rhs_tokens_[0].size() - 3);
+		} else {
+			token_position_ = rhs_tokens_[current_token_].size();
+			::move(getcury(stdscr), getcurx(stdscr)-
+				rhs_tokens_[current_token_ + 1].size() - 1);
+		}
+	}
+}
+
+
+
+void Statement::moveToRhs() {
+	is_lhs_ = false;
+	current_token_ = 0;
+	token_position_ = 0;
+	::move(getcury(stdscr), getcurx(stdscr)+3);
+}
+
+
+
+void Statement::moveToNext() {
+	// Don't allow empty tokens
+	if (is_lhs_) {
+		if (lhs_tokens_[current_token_].size() == 0) return;
+	} else {
+		if (rhs_tokens_[current_token_].size() == 0) return;
+	}
+	++current_token_;
+	if (is_lhs_) {
+		if (static_cast<int>(lhs_tokens_.size()) == current_token_) {
+			lhs_tokens_.push_back("");
+		}
+	} else {
+		if (static_cast<int>(rhs_tokens_.size()) == current_token_) {
+			rhs_tokens_.push_back("");
+		}
+	}
+	token_position_ = 0;
+	::move(getcury(stdscr), getcurx(stdscr)+1);
+}
+
+
+
+void Statement::insertCurrent(int ch) {
+	if (is_lhs_) {
+		lhs_tokens_[current_token_].insert(token_position_, 1, ch);
+		++token_position_;
+	} else {
+		rhs_tokens_[current_token_].insert(token_position_, 1, ch);
+		++token_position_;
+	}
+	::move(getcury(stdscr), getcurx(stdscr)+1);
+}
+
+
+
+void Statement::deleteChar() {
+	if (is_lhs_) {
+		if (lhs_tokens_[current_token_].size() > 0) {
+			lhs_tokens_[current_token_].pop_back();
+			--token_position_;
+			::move(getcury(stdscr), getcurx(stdscr)-1);
+		}
+	} else {
+		if (rhs_tokens_[current_token_].size() > 0) {
+			rhs_tokens_[current_token_].pop_back();
+			--token_position_;
+			::move(getcury(stdscr), getcurx(stdscr)-1);
+		}
+	}
+}
+
+
+
 void Statement::insert(int ch) {
 	switch (ch) {
-	case KEY_LEFT : break;
-	case KEY_RIGHT :
-		if (is_lhs_) {
-			++token_position_;
-			if (token_position_ > static_cast<int>(lhs_tokens_[current_token_].size())) {
-				token_position_ = 0;
-				++current_token_;
-				if (current_token_ == static_cast<int>(lhs_tokens_.size())) {
-					current_token_ = 0;
-					is_lhs_ = false;
-					::move(getcury(stdscr), getcurx(stdscr)+3);
-					break;
-				}
-			}
-			::move(getcury(stdscr), getcurx(stdscr)+1);
-		} else {
-			++token_position_;
-			if (token_position_ > static_cast<int>(rhs_tokens_[current_token_].size())) {
-				token_position_ = 0;
-				++current_token_;
-				if (current_token_ == static_cast<int>(rhs_tokens_.size())) {
-					--current_token_;
-					break;
-				}
-			}
-			::move(getcury(stdscr), getcurx(stdscr)+1);
-		}
-		break;
-	case KEY_BACKSPACE : break;
-	case '=':
-		is_lhs_ = false;
-		current_token_ = 0;
-		token_position_ = 0;
-		::move(getcury(stdscr), getcurx(stdscr)+3);
-		break;
-	case ' ' :
-		// Don't allow empty tokens
-		if (is_lhs_) {
-			if (lhs_tokens_[current_token_].size() == 0) break;
-		} else {
-			if (rhs_tokens_[current_token_].size() == 0) break;
-		}
-		++current_token_;
-		if (is_lhs_) {
-			if (static_cast<int>(lhs_tokens_.size()) == current_token_) {
-				lhs_tokens_.push_back("");
-			}
-		} else {
-			if (static_cast<int>(rhs_tokens_.size()) == current_token_) {
-				rhs_tokens_.push_back("");
-			}
-		}
-		token_position_ = 0;
-		::move(getcury(stdscr), getcurx(stdscr)+1);
-		break;
-	default  :
-		if (is_lhs_) {
-			lhs_tokens_[current_token_].insert(token_position_, 1, ch);
-			++token_position_;
-		} else {
-			rhs_tokens_[current_token_].insert(token_position_, 1, ch);
-			++token_position_;
-		}
-		::move(getcury(stdscr), getcurx(stdscr)+1);
+	case KEY_LEFT      : moveLeft();            break;
+	case KEY_RIGHT     : moveRight();           break;
+	case KEY_BACKSPACE : deleteChar();          break;
+	case '='           : moveToRhs();           break;
+	case ' '           : moveToNext();          break;
+	default            : insertCurrent(ch);
 	}
 }
 
@@ -100,12 +182,6 @@ void Statement::position(int absolute) {
 
 int Statement::position() {
 	return 0;
-}
-
-void Statement::resetPosition() {
-	is_lhs_ = true;
-	current_token_ = 0;
-	token_position_ = 0;
 }
 
 void Statement::move(int relative) {
@@ -141,6 +217,7 @@ bool Statement::isEmpty() {
 
 void Statement::display(int line) {
 	int x = getcurx(stdscr);
+	int ix = 0;
 
 	::move(line, 0);
 	::clrtoeol();
@@ -150,6 +227,7 @@ void Statement::display(int line) {
 
 	if (isEmpty()) return;
 
+	ix = 0;
 	for (auto i : lhs_tokens_) {
 		Node n = Node(i);
 		if (n == dharc::null_n) {
@@ -157,20 +235,50 @@ void Statement::display(int line) {
 				n = Node(Node::Type::constant, 0);
 			}
 		}
+
+		if (is_lhs_ && ix == current_token_) {
+			::attron(A_UNDERLINE);
+		}
+
 		syntaxOn(n);
 		::addstr(i.c_str());
 		syntaxOff(n);
+
+		if (is_lhs_ && ix == current_token_) {
+			::attroff(A_UNDERLINE);
+		}
+
 		::addch(' ');
+
+		++ix;
 	}
 
 	::addstr("= ");
 
+	ix = 0;
 	for (auto i : rhs_tokens_) {
 		Node n = Node(i);
+		if (n == dharc::null_n) {
+			if (dharc::labels.exists(i)) {
+				n = Node(Node::Type::constant, 0);
+			}
+		}
+
+		if (!is_lhs_ && ix == current_token_) {
+			::attron(A_UNDERLINE);
+		}
+
 		syntaxOn(n);
 		::addstr(i.c_str());
 		syntaxOff(n);
+
+		if (!is_lhs_ && ix == current_token_) {
+			::attroff(A_UNDERLINE);
+		}
+
 		::addch(' ');
+
+		++ix;
 	}
 
 	::addch(';');
@@ -179,8 +287,9 @@ void Statement::display(int line) {
 		::attron(A_BOLD);
 		addstr("    [");
 		::attron(COLOR_PAIR(1));
-		::addstr(error_msg_.message.c_str());
+		::addstr("error: ");
 		::attroff(COLOR_PAIR(1));
+		::addstr(error_msg_.message.c_str());
 		::addch(']');
 		::attroff(A_BOLD);
 	}
@@ -218,6 +327,8 @@ void Statement::execute() {
 		}
 		ss << ";";
 
+		error_ = false;
+
 		Script script(ss, "");
 		script.showMessages(false);
 		script({});
@@ -232,11 +343,17 @@ void Statement::execute() {
 }
 
 bool Statement::refresh() {
+	if (error_) return true;
+
 	Node oldres = result_;
 	result_ = executeLhs();
 
 	if (oldres != result_) {
-		rhs_tokens_[0] = (string)result_;
+		if (result_.t == Node::Type::constant) {
+			rhs_tokens_[0] = dharc::labels.get(result_.i);
+		} else {
+			rhs_tokens_[0] = (string)result_;
+		}
 		return true;
 	}
 	return false;

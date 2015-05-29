@@ -25,13 +25,15 @@ class Statement {
 	void position(int absolute);
 	int position();
 	void move(int relative);
-	void resetPosition();
 
 	void display(int line);
 
 	void execute();
 	Node executeLhs();
 	bool refresh();
+
+	void enter();
+	void exit();
 
 	bool isEmpty();
 
@@ -44,6 +46,14 @@ class Statement {
 	int current_token_;
 	int token_position_;
 	Node result_;
+
+	void moveLeft();
+	void moveRight();
+	void insertCurrent(int ch);
+	void moveToRhs();
+	void moveToNext();
+	void movePrev();
+	void deleteChar();
 };
 
 };  // namespace dharc

@@ -149,8 +149,9 @@ void interactive() {
 
 			if (current != 0) {
 				--current;
-				statements[current].resetPosition();
 				::move(current, 2);
+				statements[current].enter();
+				statements[current].display(current);
 			} else {
 				::move(0, 2);
 			}
@@ -172,7 +173,7 @@ void interactive() {
 				statements.push_back(Statement(""));
 			}
 			::move(getcury(stdscr)+1, 2);
-			statements[current].resetPosition();
+			statements[current].enter();
 			statements[current].display(current);
 			break;
 		default:
