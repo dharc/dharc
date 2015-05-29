@@ -156,12 +156,26 @@ void Statement::deleteChar() {
 			lhs_tokens_[current_token_].pop_back();
 			--token_position_;
 			::move(getcury(stdscr), getcurx(stdscr)-1);
+		} else {
+			// Delete the token completely
+			if (lhs_tokens_.size() > 1) {
+				lhs_tokens_.erase(lhs_tokens_.begin()+current_token_);
+				::move(getcury(stdscr), getcurx(stdscr)-1);
+				moveLeft();
+			}
 		}
 	} else {
 		if (rhs_tokens_[current_token_].size() > 0) {
 			rhs_tokens_[current_token_].pop_back();
 			--token_position_;
 			::move(getcury(stdscr), getcurx(stdscr)-1);
+		} else {
+			// Delete the token completely
+			if (rhs_tokens_.size() > 1) {
+				rhs_tokens_.erase(rhs_tokens_.begin()+current_token_);
+				::move(getcury(stdscr), getcurx(stdscr)-1);
+				moveLeft();
+			}
 		}
 	}
 }
@@ -179,6 +193,10 @@ void Statement::insertBracket(int ch) {
 		}
 	}
 	insertCurrent(ch);
+	insertToken();
+	if (ch == '{') insertCurrent('}');
+	if (ch == '(') insertCurrent(')');
+	moveLeft();
 	insertToken();
 }
 
@@ -385,6 +403,7 @@ void Statement::execute() {
 
 bool Statement::refresh() {
 	if (error_) return true;
+	if (isEmpty()) return false;
 
 	Node oldres = result_;
 	result_ = executeLhs();

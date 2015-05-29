@@ -179,8 +179,26 @@ void interactive() {
 			statements[current].display(current);
 			break;
 		default:
-			statements[current].insert(ch);
-			statements[current].display(current);
+			if ((ch == KEY_BACKSPACE) && statements[current].isEmpty()) {
+				if (current > 0) {
+					::move(current, 0);
+					::clrtobot();
+					statements.erase(statements.begin()+current);
+					--current;
+					::move(current, 2);
+
+					ix = 0;
+					for (auto i : statements) {
+						//if (i.refresh()) {
+							i.display(ix);
+						//}
+						++ix;
+					}
+				}
+			} else {
+				statements[current].insert(ch);
+				statements[current].display(current);
+			}
 		}
 	}
 }
