@@ -19,8 +19,8 @@ class Script {
 	dharc::parser::Context ctx_;
 	const char *source_;
 	const std::vector<dharc::Node> *params_;
-	// std::map<std::string,dharc::Node> label_to_nid;
-	// std::map<dharc::Node,std::string> nid_to_label;
+	bool hasresult_;
+	bool printmessages_;
 
 	public:
 	Script() = delete;
@@ -30,11 +30,20 @@ class Script {
 	dharc::Node operator()(const std::vector<dharc::Node> &p);
 
 	inline void showInformation(bool b) { ctx_.showInformation(b); }
+	inline void showMessages(bool b) { printmessages_ = b; }
+
+	const std::list<dharc::parser::Message> &messages() {
+		return ctx_.messages();
+	}
+
+	bool hasResult() const { return hasresult_; }
 
 	private:
 	void parseStatement(dharc::Node &cur);
 	bool parseNode(dharc::Node &val);
 	void parseDefinition(std::vector<std::vector<dharc::Node>> &def);
+	void commandDefine();
+	void commandLabel();
 };
 
 };  // namespace arch

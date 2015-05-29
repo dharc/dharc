@@ -21,6 +21,7 @@ struct Context;
  * Functor to skip white space from a stream.
  */
 struct skip {
+	bool ccomments;
 	bool operator()(Context &ctx);
 };
 
@@ -62,13 +63,16 @@ class Context {
 
 	public:
 	Context() = delete;
-	explicit Context(std::istream &s) : lines_(0), noinfo_(false), stream(s) {}
+	explicit Context(std::istream &s) :
+		skip_({true}), lines_(0), noinfo_(false), stream(s) {}
 
 	void message(Message::Type type, const std::string &msg, int tag = 0);
 	inline void syntaxError(const std::string &msg, int tag = 0);
 	inline void runtimeError(const std::string &msg, int tag = 0);
 	inline void warning(const std::string &msg, int tag = 0);
 	void information(const std::string &msg, int tag = 0);
+
+	const std::list<Message> &messages() const { return messages_; }
 
 	void printMessages(const char *prefix = nullptr);
 

@@ -37,8 +37,6 @@ Node Definition::evaluate(const Harc *harc) const {
 
 
 vector<vector<Node>> Definition::instantiate(const Node &any) {
-	std::cout << "Instantiating: " << *this << " with " << any << std::endl;
-
 	vector<vector<Node>> result = path_;
 	for (auto i = result.begin(); i != result.end(); ++i) {
 		for (auto j = i->begin(); j != i->end(); ++j) {
@@ -59,10 +57,10 @@ std::ostream &dharc::operator<<(std::ostream &os, const Definition &d) {
 		for (auto j : i) {
 			os << j << ' ';
 		}
-		//os.seekp(-1, std::ios_base::cur);
+		os.seekp(-1, std::ios_base::cur);
 		os << ") ";
 	}
-	//os.seekp(-1, std::ios_base::cur);
+	os.seekp(-1, std::ios_base::cur);
 	os << '}';
 	return os;
 }

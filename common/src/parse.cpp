@@ -264,9 +264,33 @@ bool value<double>::operator()(Context &ctx) {
 
 bool skip::operator()(Context &ctx) {
 	char c;
-	while (!ctx.stream.eof() && (c = ctx.stream.peek()) && isWhiteSpace(c)) {
-		if (c == '\n') ++ctx.lines_;
-		ctx.stream.ignore(1);
+	while (!ctx.stream.eof() && (c = ctx.stream.peek())) {
+		if (isWhiteSpace(c)) {
+			if (c == '\n') ++ctx.lines_;
+			ctx.stream.ignore(1);
+		} else if (ccomments && c == '/') {
+			ctx.stream.ignore(1);
+			c = ctx.stream.peek();
+			if (c == '/') {
+				ctx.skipLine();
+			} else if (c == '*') {
+				ctx.stream.ignore(1);
+				c = ctx.stream.get();
+				char nc;
+				while (!ctx.stream.eof() && (nc = ctx.stream.get())) {
+					if (nc == '/' && c == '*') {
+						break;
+					} else {
+						c = nc;
+					}
+				}
+			} else {
+				ctx.stream.unget();
+				return true;
+			}
+		} else {
+			return true;
+		}
 	}
 	return true;
 }

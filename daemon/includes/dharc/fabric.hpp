@@ -48,6 +48,8 @@ class Fabric {
 	friend Harc;
 
 	public:
+	Fabric();
+	~Fabric();
 	/**
 	 * A list of Harc changes since this function was last called. The change
 	 * log is reset when this function is called.
@@ -127,9 +129,6 @@ class Fabric {
 	// constexpr static int sig_prop_max() { return 20; }
 
 	private:
-	Fabric();
-	~Fabric();
-
 	Node path_s(const vector<Node> &, const Harc *dep = nullptr);
 	static bool path_r(
 			const vector<vector<Node>> &p,
@@ -150,7 +149,7 @@ class Fabric {
 	static std::atomic<unsigned long long> counter__;
 };
 
-extern Fabric &fabric;
+extern Fabric fabric;
 
 inline auto begin(const Node &n) {
 	return fabric.partners(n).begin();

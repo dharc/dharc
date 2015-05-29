@@ -22,6 +22,8 @@ using std::vector;
 using std::list;
 using std::atomic;
 
+Fabric dharc::fabric;
+
 atomic<unsigned long long> Fabric::counter__(0);
 
 void Fabric::counterThread() {
@@ -31,8 +33,6 @@ void Fabric::counterThread() {
 				std::chrono::milliseconds(counterResolution()));
 	}
 }
-
-Fabric &dharc::fabric = Fabric::singleton();
 
 Fabric::Fabric()
 	: changes_(new forward_list<const Harc*>()) {
@@ -75,8 +75,6 @@ Harc &Fabric::get(const pair<Node, Node> &key) {
 	Harc *h;
 	if (get(key, h)) return *h;
 
-	std::cout << "Not found: " << key.first << "," << key.second << std::endl;
-
 	// Check for an Any($) entry
 	if (get(dharc::any_n, key.first, h)) {
 		Harc *oldh = h;
@@ -89,8 +87,6 @@ Harc &Fabric::get(const pair<Node, Node> &key) {
 	} else {
 		h = new Harc(key);
 	}
-
-	std::cout << "Adding Harc: " << *h << std::endl;
 
 	add(h);
 	return *h;
@@ -227,7 +223,4 @@ void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
 	}
 }
 
-Fabric &Fabric::singleton() {
-	return *(new Fabric());
-}
 

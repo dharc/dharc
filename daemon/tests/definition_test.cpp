@@ -11,7 +11,7 @@ using namespace std;
 
 /* ==== MOCKS ==== */
 
-Fabric &dharc::fabric = Fabric::singleton();
+Fabric dharc::fabric;
 
 Fabric::Fabric() {
 }
@@ -19,9 +19,6 @@ Fabric::Fabric() {
 Fabric::~Fabric() {
 }
 
-Fabric &Fabric::singleton() {
-	return *(new Fabric());
-}
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
 	return p[0];

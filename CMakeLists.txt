@@ -35,6 +35,7 @@ set(GDHARCARCH
 
 set(DHARCARCH
 	arch/cli/main.cpp
+	arch/cli/statement.cpp
 )
 
 set(GDHARCSTREAM
@@ -57,6 +58,7 @@ add_library(dharccommon OBJECT
 	common/src/rpc_common.cpp
 	common/src/node.cpp
 	common/src/parse.cpp
+	common/src/labels.cpp
 )
 
 add_library(dharcarch STATIC
@@ -71,7 +73,7 @@ target_include_directories(dharcd PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
 target_link_libraries(dharcd pthread zmq)
 
 add_executable(dharc-arch ${DHARCARCH})
-target_link_libraries(dharc-arch dharcarch pthread zmq)
+target_link_libraries(dharc-arch dharcarch pthread zmq ncurses)
 
 add_executable(gdharc-arch ${GDHARCARCH})
 target_link_libraries(gdharc-arch ${GTKMM_LIBRARIES})

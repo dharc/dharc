@@ -24,7 +24,7 @@ void Fabric::counterThread() {
 	}
 }
 
-Fabric &dharc::fabric = Fabric::singleton();
+Fabric dharc::fabric;
 
 Fabric::Fabric() {
 }
@@ -33,10 +33,6 @@ Fabric::~Fabric() {
 }
 
 void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
-}
-
-Fabric &Fabric::singleton() {
-	return *(new Fabric());
 }
 
 Node dummy_result;
@@ -81,6 +77,10 @@ Definition::Definition(const vector<vector<Node>> &definition) {
 Node Definition::evaluate(const Harc *harc) const {
 	vector<Node> aggregate = fabric.paths(path_, harc);
 	return fabric.path(aggregate, harc);
+}
+
+vector<vector<Node>> Definition::instantiate(const Node &any) {
+	return {{}};
 }
 
 

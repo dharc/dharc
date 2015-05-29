@@ -11,6 +11,7 @@
 #include "dharc/node.hpp"
 #include "dharc/parse.hpp"
 #include "dharc/arch.hpp"
+#include "dharc/labels.hpp"
 
 using dharc::Node;
 using dharc::parser::Context;
@@ -20,10 +21,11 @@ using std::cout;
 
 using dharc::parser::word;
 using dharc::parser::value;
+using dharc::parser::id;
 using dharc::parser::noact;
 
 dharc::arch::Script::Script(std::istream &is, const char *src)
-: ctx_(is), source_(src), params_(nullptr) {
+: ctx_(is), source_(src), params_(nullptr), printmessages_(true) {
 }
 
 namespace {
@@ -67,12 +69,19 @@ struct command_partners {
 };  // namespace
 
 bool dharc::arch::Script::parseNode(Node &val) {
-	return (ctx_(value<Node>{val}, noact)
-	// || ctx_(word{"<new>"}, [&]() { value = dharc::unique(); })
-	|| ctx_('$', [&]() {
+	string labelstr;
+
+	if (ctx_(value<Node>{val}, noact)) {
+		return true;
+	} else if (ctx_(id{labelstr}, noact)) {
+		val = dharc::labels.getNode(labelstr);
+		if (val.i == -1) ctx_.runtimeError("Label does not exist");
+		return (val.i != -1);
+	} else if (ctx_('$', noact)) {
 		int id = 0;
 		if (!ctx_(value<int>{id}, noact)) {
 			ctx_.syntaxError("'$' must be followed by a parameter number");
+			return false;
 		}
 		if (id >= static_cast<int>(params_->size())) {
 			ctx_.runtimeError(string("parameter '$")
@@ -82,7 +91,9 @@ bool dharc::arch::Script::parseNode(Node &val) {
 		} else {
 			val = (*params_)[id];
 		}
-	}));
+		return true;
+	}
+	return false;
 }
 
 void dharc::arch::Script::parseDefinition(vector<vector<Node>> &def) {
@@ -152,6 +163,7 @@ void dharc::arch::Script::parseStatement(Node &cur) {
 	} else if (parseNode(n)) {
 		if (ctx_('=', noact)) {
 			Node r;
+			hasresult_ = false;
 
 			if (ctx_('{', noact)) {
 				vector<vector<Node>> def;
@@ -171,6 +183,7 @@ void dharc::arch::Script::parseStatement(Node &cur) {
 				ctx_.information("querying a 'null' node");
 			}
 			cur = dharc::query(cur, n);
+			hasresult_ = true;
 			parseStatement(cur);
 		}
 
@@ -184,19 +197,49 @@ void dharc::arch::Script::parseStatement(Node &cur) {
 	}
 }
 
+void dharc::arch::Script::commandDefine() {
+	string labelstr;
+	int labelid;
+
+	if (ctx_(id{labelstr}, value<int>{labelid}, noact)) {
+		if (!dharc::labels.set(labelid, labelstr)) {
+			ctx_.warning("Label already exists");
+		}
+	} else {
+		ctx_.syntaxError("Try: %define <labelstring> <int>");
+	}
+}
+
+void dharc::arch::Script::commandLabel() {
+	string labelstr;
+	int labelid;
+
+	if (ctx_(value<int>{labelid}, noact)) {
+		cout << "  " << labelid << " = " << dharc::labels.get(labelid) << std::endl;
+	} else if (ctx_(id{labelstr}, noact)) {
+		cout << "  " << labelstr << " = ";
+		cout << dharc::labels.get(labelstr) << std::endl;
+	} else {
+		ctx_.syntaxError("Try: %define <labelstring> <int>");
+	}
+}
+
 Node dharc::arch::Script::operator()(const vector<Node> &p) {
 	Node cur = null_n;
 	params_ = &p;
+	hasresult_ = false;
 
 	while (!ctx_.eof()) {
 		if (ctx_('%', noact)) {
-			if (!(
-				ctx_(word{"query"}, command_query{ctx_})
-				|| ctx_(word{"partners"}, command_partners{ctx_})))
-			{
+			if (ctx_(word{"define"}, noact)) {
+				commandDefine();
+			} else if (ctx_(word{"label"}, noact)) {
+				commandLabel();
+			} else {
 				ctx_.syntaxError("Unrecognised command");
 			}
 		} else if (parseNode(cur)) {
+			hasresult_ = true;
 			parseStatement(cur);
 		} else if (ctx_(word{"<typeint>"}, noact)) {
 			ctx_.syntaxError("node cast '<typeint>' must follow node");
@@ -209,7 +252,7 @@ Node dharc::arch::Script::operator()(const vector<Node> &p) {
 		if (!ctx_) {
 			ctx_.skipLine();
 		}
-		ctx_.printMessages(source_);
+		if (printmessages_) ctx_.printMessages(source_);
 	}
 	return cur;
 }

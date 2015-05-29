@@ -36,6 +36,10 @@ void Harc::define(const Node &n) {
 	head_ = n;
 }
 
+Harc *Harc::instantiate(const Node &any) {
+	return this;
+}
+
 
 std::ostream &dharc::operator<<(std::ostream &os, const Node &n) {
 	os << '[' << static_cast<int>(n.t) << ':' << n.i << ']';

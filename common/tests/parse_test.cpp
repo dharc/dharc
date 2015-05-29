@@ -142,11 +142,11 @@ CASE( "Keyword followed by non-alphanumeric" ) {
 CASE( "Use of custom lamda" ) {
 	std::stringstream ss;
 	Context parse(ss);
-	ss.str("  /**  ");
+	ss.str("  $$$  ");
 	EXPECT( parse([](auto &ctx) {
 		std::string str;
 		std::getline(ctx.stream, str, ' ');
-		if (str == "/**") return true;
+		if (str == "$$$") return true;
 		return false;
 	}, noact) );
 },
@@ -208,6 +208,20 @@ CASE( "Using lambda as actor" ) {
 		success = true;
 	});
 	EXPECT( success == false );
+},
+
+CASE( "Single line comments" ) {
+	std::stringstream ss;
+	Context parse(ss);
+	ss.str("//test comment\nvoid");
+	EXPECT( parse(word{"void"}, noact) );
+	ss.str("//test comment\nvoid //more comment");
+	parse.reset();
+	EXPECT( parse(word{"void"}, noact) );
+	ss.str("//test comment\n//another comment\nvoid");
+	EXPECT( parse(word{"void"}, noact) );
+	ss.str("//comment with void in it");
+	EXPECT( parse(word{"void"}, noact) == false );
 },
 
 CASE( "Complex test parser" ) {
