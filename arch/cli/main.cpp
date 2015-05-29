@@ -138,6 +138,7 @@ void interactive() {
 		switch (ch) {
 		case KEY_UP:
 			statements[current].execute();
+			statements[current].display(current);
 
 			ix = 0;
 			for (auto i : statements) {
@@ -159,6 +160,7 @@ void interactive() {
 		case KEY_DOWN:
 		case '\n' :
 			statements[current].execute();
+			statements[current].display(current);
 
 			ix = 0;
 			for (auto i : statements) {
@@ -356,6 +358,7 @@ int main(int argc, char *argv[]) {
 	start_color();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_BLUE, COLOR_BLACK);
+	init_pair(3, COLOR_YELLOW, COLOR_BLACK);
 	scrollok(stdscr, TRUE);
 	getmaxyx(stdscr, window_height, window_width);
 

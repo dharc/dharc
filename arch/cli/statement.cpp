@@ -32,6 +32,7 @@ void Statement::enter() {
 	current_token_ = 0;
 	token_position_ = lhs_tokens_[0].size();
 	::move(getcury(stdscr), lhs_tokens_[current_token_].size() + 2);
+	refresh();
 }
 
 
@@ -120,13 +121,15 @@ void Statement::insertToken() {
 	}
 	++current_token_;
 	if (is_lhs_) {
-		if (static_cast<int>(lhs_tokens_.size()) == current_token_) {
-			lhs_tokens_.push_back("");
-		}
+		lhs_tokens_.insert(lhs_tokens_.begin()+current_token_, "");
+		//if (static_cast<int>(lhs_tokens_.size()) == current_token_) {
+		//	lhs_tokens_.push_back("");
+		//}
 	} else {
-		if (static_cast<int>(rhs_tokens_.size()) == current_token_) {
-			rhs_tokens_.push_back("");
-		}
+		//if (static_cast<int>(rhs_tokens_.size()) == current_token_) {
+		//	rhs_tokens_.push_back("");
+		//}
+		rhs_tokens_.insert(rhs_tokens_.begin()+current_token_, "");
 	}
 	token_position_ = 0;
 	::move(getcury(stdscr), getcurx(stdscr)+1);
@@ -165,14 +168,33 @@ void Statement::deleteChar() {
 
 
 
+void Statement::insertBracket(int ch) {
+	if (is_lhs_) {
+		if (lhs_tokens_[current_token_].size() != 0) {
+			insertToken();
+		}
+	} else {
+		if (rhs_tokens_[current_token_].size() != 0) {
+			insertToken();
+		}
+	}
+	insertCurrent(ch);
+	insertToken();
+}
+
+
+
 void Statement::insert(int ch) {
 	switch (ch) {
-	case '('           : insertCurrent('('); insertToken(); break;
-	case KEY_LEFT      : moveLeft();            break;
-	case KEY_RIGHT     : moveRight();           break;
-	case KEY_BACKSPACE : deleteChar();          break;
-	case '='           : moveToRhs();           break;
-	case ' '           : insertToken();         break;
+	case '('           :
+	case ')'           :
+	case '{'           :
+	case '}'           : insertBracket(ch);                 break;
+	case KEY_LEFT      : moveLeft();                        break;
+	case KEY_RIGHT     : moveRight();                       break;
+	case KEY_BACKSPACE : deleteChar();                      break;
+	case '='           : moveToRhs();                       break;
+	case ' '           : insertToken();                     break;
 	default            : insertCurrent(ch);
 	}
 }
@@ -282,11 +304,29 @@ void Statement::display(int line) {
 		++ix;
 	}
 
+	::move(getcury(stdscr), getcurx(stdscr)-1);
 	::addch(';');
 
+	if (rhs_tokens_[0] == "{") {
+		::attron(COLOR_PAIR(3));
+		::addstr("  // == ");
+		if (result_.t == Node::Type::constant) {
+			::addstr(dharc::labels.get(result_.i).c_str());
+		} else {
+			::addstr(((string)result_).c_str());
+		}
+		::attroff(COLOR_PAIR(3));
+	}
+
 	if (error_) {
+		int window_width;
+		window_width = getmaxx(stdscr);
+
+		window_width -= error_msg_.message.size() + 10;
+		::move(getcury(stdscr), window_width);
+
 		::attron(A_BOLD);
-		addstr("    [");
+		::addch('[');
 		::attron(COLOR_PAIR(1));
 		::addstr("error: ");
 		::attroff(COLOR_PAIR(1));
@@ -350,10 +390,12 @@ bool Statement::refresh() {
 	result_ = executeLhs();
 
 	if (oldres != result_) {
-		if (result_.t == Node::Type::constant) {
-			rhs_tokens_[0] = dharc::labels.get(result_.i);
-		} else {
-			rhs_tokens_[0] = (string)result_;
+		if (rhs_tokens_[0] != "{") {
+			if (result_.t == Node::Type::constant) {
+				rhs_tokens_[0] = dharc::labels.get(result_.i);
+			} else {
+				rhs_tokens_[0] = (string)result_;
+			}
 		}
 		return true;
 	}

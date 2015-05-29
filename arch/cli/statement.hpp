@@ -52,6 +52,7 @@ class Statement {
 	void insertCurrent(int ch);
 	void moveToRhs();
 	void insertToken();
+	void insertBracket(int ch);
 	void movePrev();
 	void deleteChar();
 };
