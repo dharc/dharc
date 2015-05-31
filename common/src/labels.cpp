@@ -5,6 +5,8 @@
 #include "dharc/labels.hpp"
 
 #include <map>
+#include <utility>
+#include <string>
 
 using dharc::Node;
 using std::string;
@@ -14,15 +16,13 @@ using dharc::Labels;
 Labels dharc::labels;
 
 namespace {
-const string not_a_label("NAL");
+const char *not_a_label = "NAL";
 };  // namespace
 
 Labels::Labels() : autogen_(true), lastid_(10000) {
-
 }
 
 Labels::~Labels() {
-
 }
 
 int dharc::Labels::get(const string &str) {
@@ -68,8 +68,8 @@ bool Labels::exists(const std::string &str) {
 
 bool dharc::Labels::set(int id, const string &str) {
 	if (label_idtostr_.find(id) != label_idtostr_.end()) return false;
-	label_idtostr_.insert(std::pair<int,string>(id, str));
-	label_strtoid_.insert(std::pair<string,int>(str, id));
+	label_idtostr_.insert(std::pair<int, string>(id, str));
+	label_strtoid_.insert(std::pair<string, int>(str, id));
 
 	if (id >= lastid_) lastid_ = id+1;
 

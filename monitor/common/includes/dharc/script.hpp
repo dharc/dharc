@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <list>
 
 #include "dharc/node.hpp"
 #include "dharc/parse.hpp"

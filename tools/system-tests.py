@@ -4,10 +4,10 @@ import subprocess
 import sys
 
 code = 0
-server = subprocess.Popen("./dharcd");
+server = subprocess.Popen("./fabric/dharc-fabric");
 
 def expect(cmd, result):
-	if result != subprocess.check_output('./dharc-arch --cmd="'+cmd+'"',shell=True):
+	if result != subprocess.check_output('./monitor/command-line/dharc-mon --cmd="'+cmd+'"',shell=True):
 		code = 1
 		print "failed: " + cmd
 		return False
@@ -18,7 +18,7 @@ def test_constant_define():
 	expect("100 200 = 300; 100 200;","300\n")
 	expect("100 400 = {100 200}; 100 400;","300\n")
 
-test_constant_define()
+#test_constant_define()
 
 server.terminate()
 

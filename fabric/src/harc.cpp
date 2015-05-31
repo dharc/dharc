@@ -162,7 +162,7 @@ Harc *Harc::instantiate(const Node &any) {
 		Node partner = tailPartner(dharc::any_n);
 		Harc *newharc = new Harc(
 			(any < partner) ?
-			pair<Node,Node>(any, partner) :
+			pair<Node, Node>(any, partner) :
 			pair<Node, Node>(partner, any));
 		newharc->define(def_->instantiate(any));
 		return newharc;

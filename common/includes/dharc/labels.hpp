@@ -35,8 +35,8 @@ class Labels {
 	private:
 	bool autogen_;
 	int lastid_;
-	std::map<int,std::string> label_idtostr_;
-	std::map<std::string,int> label_strtoid_;
+	std::map<int, std::string> label_idtostr_;
+	std::map<std::string, int> label_strtoid_;
 };
 
 extern Labels labels;
