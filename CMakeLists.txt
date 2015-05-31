@@ -20,134 +20,58 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 SET(CMAKE_USE_RELATIVE_PATHS ON)
 
-set(DHARCDSOURCE
-	daemon/src/harc.cpp
-	daemon/src/fabric.cpp
-	daemon/src/main.cpp
-	daemon/src/framer.cpp
-	daemon/src/definition.cpp
-	daemon/src/rpc.cpp
-)
-
-set(GDHARCARCH
-	arch/gtk/main.cpp
-)
-
-set(DHARCARCH
-	arch/cli/main.cpp
-	arch/cli/statement.cpp
-)
-
-set(GDHARCSTREAM
-	stream/gtk/main.cpp
-)
-
-set(DHARCSTREAM
-	stream/cli/main.cpp
-)
-
-set(GDHARCAGENT
-	agent/gtk/main.cpp
-)
-
-set(DHARCAGENT
-	agent/cli/main.cpp
-)
-
-add_library(dharccommon OBJECT
-	common/src/rpc_common.cpp
-	common/src/node.cpp
-	common/src/parse.cpp
-	common/src/labels.cpp
-)
-
-add_library(dharcarch STATIC
-	arch/lib/src/arch.cpp
-	arch/lib/src/script.cpp
-	$<TARGET_OBJECTS:dharccommon>
-)
-target_include_directories(dharcarch PUBLIC ${PROJECT_SOURCE_DIR}/arch/lib/includes)
-
-add_executable(dharcd ${DHARCDSOURCE} $<TARGET_OBJECTS:dharccommon>)
-target_include_directories(dharcd PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
-target_link_libraries(dharcd pthread zmq)
-
-add_executable(dharc-arch ${DHARCARCH})
-target_link_libraries(dharc-arch dharcarch pthread zmq ncurses)
-
-add_executable(gdharc-arch ${GDHARCARCH})
-target_link_libraries(gdharc-arch ${GTKMM_LIBRARIES})
-
-add_executable(dharc-stream ${DHARCSTREAM})
-
-add_executable(gdharc-stream ${GDHARCSTREAM})
-target_link_libraries(gdharc-stream ${GTKMM_LIBRARIES})
-
-add_executable(dharc-agent ${DHARCAGENT})
-
-add_executable(gdharc-agent ${GDHARCAGENT})
-target_link_libraries(gdharc-agent ${GTKMM_LIBRARIES})
-
-########## TESTS ###############################################################
-
-add_library(dharctest OBJECT daemon/src/test.cpp)
-
-add_executable(node-unit EXCLUDE_FROM_ALL
-	common/tests/node_test.cpp
-	common/src/node.cpp
-	common/src/parse.cpp
-)
-
-add_executable(pack-unit EXCLUDE_FROM_ALL
-	common/tests/pack_test.cpp
-)
-
-add_executable(rpc-common-unit EXCLUDE_FROM_ALL
-	common/tests/rpc_common_test.cpp
-)
-
-add_executable(parse-unit EXCLUDE_FROM_ALL
-	common/tests/parse_test.cpp
-	common/src/parse.cpp
-)
-
-add_executable(def-unit EXCLUDE_FROM_ALL
-	daemon/tests/definition_test.cpp
-	daemon/src/definition.cpp
-)
-target_include_directories(def-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
-
-add_executable(harc-unit EXCLUDE_FROM_ALL
-	daemon/tests/harc_test.cpp
-	daemon/src/harc.cpp
-)
-target_include_directories(harc-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
-target_link_libraries(harc-unit pthread)
-
-add_executable(fabric-unit EXCLUDE_FROM_ALL
-	daemon/tests/fabric_test.cpp
-	daemon/src/fabric.cpp
-)
-target_include_directories(fabric-unit PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
-
-add_executable(harc-perf EXCLUDE_FROM_ALL
-	daemon/tests/harc_perf.cpp
-	$<TARGET_OBJECTS:dharctest>
-	common/src/node.cpp
-	daemon/src/harc.cpp
-	daemon/src/fabric.cpp
-	daemon/src/definition.cpp
-)
-target_include_directories(harc-perf PUBLIC ${PROJECT_SOURCE_DIR}/daemon/includes)
-target_link_libraries(harc-perf pthread)
-
 add_custom_target(tests)
-add_dependencies(tests
-	node-unit
-	def-unit
-	harc-unit
-	fabric-unit
-	parse-unit
-	rpc-common-unit
-	pack-unit
-)
+
+ADD_SUBDIRECTORY(common)
+ADD_SUBDIRECTORY(fabric)
+ADD_SUBDIRECTORY(monitor)
+#ADD_SUBDIRECTORY(architect)
+
+#set(GDHARCARCH
+#	arch/gtk/main.cpp
+#)
+
+#set(DHARCARCH
+#	arch/cli/main.cpp
+#	arch/cli/statement.cpp
+#)
+
+#set(GDHARCSTREAM
+#	stream/gtk/main.cpp
+#)
+
+#set(DHARCSTREAM
+#	stream/cli/main.cpp
+#)
+
+#set(GDHARCAGENT
+#	agent/gtk/main.cpp
+#)
+
+#set(DHARCAGENT
+#	agent/cli/main.cpp
+#)
+
+#add_library(dharcarch STATIC
+#	arch/lib/src/arch.cpp
+#	arch/lib/src/script.cpp
+#	$<TARGET_OBJECTS:dharccommon>
+#)
+#target_include_directories(dharcarch PUBLIC ${PROJECT_SOURCE_DIR}/arch/lib/includes)
+
+#add_executable(dharc-arch ${DHARCARCH})
+#target_link_libraries(dharc-arch dharcarch pthread zmq ncurses)
+
+#add_executable(gdharc-arch ${GDHARCARCH})
+#target_link_libraries(gdharc-arch ${GTKMM_LIBRARIES})
+
+#add_executable(dharc-stream ${DHARCSTREAM})
+
+#add_executable(gdharc-stream ${GDHARCSTREAM})
+#target_link_libraries(gdharc-stream ${GTKMM_LIBRARIES})
+
+#add_executable(dharc-agent ${DHARCAGENT})
+
+#add_executable(gdharc-agent ${GDHARCAGENT})
+#target_link_libraries(gdharc-agent ${GTKMM_LIBRARIES})
+
