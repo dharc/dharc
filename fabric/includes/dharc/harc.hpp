@@ -15,6 +15,7 @@
 #include <string>
 
 #include "dharc/node.hpp"
+#include "dharc/tail.hpp"
 #include "dharc/lock.hpp"
 #include "dharc/definition.hpp"
 
@@ -24,9 +25,13 @@ using std::vector;
 using std::chrono::time_point;
 using std::chrono::system_clock;
 
+using dharc::Tail;
+
 namespace dharc {
 
 class Fabric;
+
+namespace fabric {
 
 /**
  * Hyper-arc class to represent relations between 3 nodes.
@@ -34,10 +39,10 @@ class Fabric;
  * Harc's so that they update when others are changed.
  */
 class Harc {
-	friend class Fabric;
+	friend class dharc::Fabric;
 
 	public:
-	enum struct Flag : unsigned char {
+	enum struct Flag : uint64_t {
 		none =       0b00000000,
 		log =        0b00000001,
 		meta =       0b00000010,
@@ -60,7 +65,7 @@ class Harc {
 	 * Get the pair of tail nodes that uniquely identify this Harc.
 	 * @return Tail node pair.
 	 */
-	inline const pair<Node, Node> &tail() const;
+	inline const Tail &tail() const;
 
 	/**
 	 * Does the tail of this Harc contain the given node?
@@ -118,14 +123,14 @@ class Harc {
 	float lastQuery() const;
 
 	private:
-	const pair<Node, Node>              tail_;
-	mutable std::atomic<unsigned char>  flags_;
-	mutable Node                        head_;
-	Definition*                         def_;
-	unsigned long long                  lastquery_;
-	float                               strength_;
-	mutable dharc::Lock                 lock_;
-	mutable list<const Harc*>*          dependants_;
+	const Tail                     tail_;
+	mutable std::atomic<uint64_t>  flags_;
+	mutable Node                   head_;
+	Definition*                    def_;
+	unsigned long long             lastquery_;
+	float                          strength_;
+	mutable dharc::Lock            lock_;
+	mutable list<const Harc*>*     dependants_;
 
 	// Might be moved to meta structure
 	list<Harc*>::iterator      partix_[2];
@@ -134,7 +139,7 @@ class Harc {
 	inline void clearFlag(Flag f) const;
 
 	Harc() = delete;
-	explicit Harc(const pair<Node, Node> &t);
+	explicit Harc(const Tail &t);
 	void dirty() const;  				/* Mark as out-of-date and propagate */
 	void addDependant(const Harc &);  	/* Notify given Harc on change. */
 
@@ -158,7 +163,7 @@ inline void Harc::clearFlag(Flag f) const {
 
 std::ostream &operator<<(std::ostream &os, const Harc &h);
 
-inline const pair<Node, Node> &Harc::tail() const { return tail_; }
+inline const Tail &Harc::tail() const { return tail_; }
 
 inline bool Harc::tailContains(const Node &n) const {
 	return (tail_.first == n) || (tail_.second == n);
@@ -173,6 +178,7 @@ inline const list<const Harc*> *Harc::dependants() const {
 }
 
 
+};  // namespace fabric
 };  // namespace dharc
 
 #endif  // DHARC_HARC_HPP_

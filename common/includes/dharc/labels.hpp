@@ -19,24 +19,16 @@ class Labels {
 
 	void dump(std::ostream &output);
 
-	bool autoGenerate() const { return autogen_; }
-	void autoGenerate(bool autogen) { autogen_ = autogen; }
-
-	int get(const std::string &str);
-	const std::string &get(int id);
-	Node getNode(int id);
-	Node getNode(const std::string &str);
-	const std::string &getNode(const Node &node);
+	Node get(const std::string &str);
+	const std::string &get(const Node &node);
 
 	bool exists(const std::string &str);
 
-	bool set(int id, const std::string &str);
+	bool set(const Node &node, const std::string &str);
 
 	private:
-	bool autogen_;
-	int lastid_;
-	std::map<int, std::string> label_idtostr_;
-	std::map<std::string, int> label_strtoid_;
+	std::map<Node, std::string> label_nodetostr_;
+	std::map<std::string, Node> label_strtonode_;
 };
 
 extern Labels labels;

@@ -14,16 +14,6 @@
 
 namespace dharc {
 
-static_assert(sizeof(double) <= 64, "Double is too big");
-
-/* Constants for special node types */
-enum {
-	kNullNode = 0,
-	kTrueNode = 1,
-	kFalseNode = 2,
-	kAnyNode = 3
-};
-
 /**
  * Node Identifier, Plain Old Data type.
  *     Represents a concept and point in the dharc hypergraph. Two Nodes
@@ -32,32 +22,11 @@ enum {
  *     each other.
  */
 struct Node {
-	enum struct Type : uint8_t {
-		special,
-		integer,
-		real,
-		character,
-		constant,
-		allocated,
-	};
+	uint64_t value;
 
-	Type t;
-	union {
-	uint64_t ui;
-	int64_t i;
-	double d;
-	char c;
-	};
-
-	/* Type casting to a Node */
 	Node() = default;
-	constexpr Node(Type type, int64_t value) : t(type), i(value) {}
-	explicit constexpr Node(int value) : t(Type::integer), i(value) {}
-	explicit constexpr Node(float value) : t(Type::real), d(value) {}
-	explicit constexpr Node(double value) : t(Type::real), d(value) {}
-	explicit constexpr Node(char value) : t(Type::character), i(value) {}
-	explicit constexpr Node(bool value)
-		: t(Type::special), i((value) ? kTrueNode : kFalseNode) {}
+
+	constexpr explicit Node(uint64_t v) : value(v) {}
 
 	/**
 	 * Generate a Node from a string.
@@ -73,13 +42,6 @@ struct Node {
 
 	/** Same as for Node(const std::string &str); */
 	explicit Node(const char *str);
-
-	/* Type casting from a Node */
-	explicit operator int() const;
-	explicit operator float() const;
-	explicit operator double() const;
-	explicit operator char() const;
-	explicit operator bool() const;
 
 	/**
 	 * Convert the Node to a string object.
@@ -98,54 +60,36 @@ struct Node {
  * e.g. Nid x = 1234_n;
  */
 constexpr Node operator"" _n(unsigned long long value) {
-	return Node(static_cast<int>(value));
-}
-
-/**
- * Real NID literals.
- * e.g. Nid x = 12.34_n;
- */
-constexpr Node operator"" _n(long double value) {
-	return Node(static_cast<double>(value));
-}
-
-/**
- * Character NID literals.
- * e.g. Nid x = 'a'_n;
- */
-constexpr Node operator"" _n(char value) {
-	return Node(Node::Type::character, value);
+	return Node(static_cast<uint64_t>(value));
 }
 
 /* Special node constants */
-constexpr Node null_n = Node(Node::Type::special, kNullNode);
-constexpr Node true_n = Node(Node::Type::special, kTrueNode);
-constexpr Node false_n = Node(Node::Type::special, kFalseNode);
-constexpr Node any_n = Node(Node::Type::special, kAnyNode);
+constexpr Node null_n = Node(static_cast<uint64_t>(0));
+
 
 /* Relational operators */
 constexpr bool operator==(const Node &a, const Node &b) {
-	return a.t == b.t && a.i == b.i;
+	return a.value == b.value;
 }
 
 constexpr bool operator!=(const Node &a, const Node &b) {
-	return a.t != b.t || a.i != b.i;
+	return a.value != b.value;
 }
 
 constexpr bool operator<(const Node &a, const Node &b) {
-	return a.t < b.t || (a.t == b.t && a.i < b.i);
+	return a.value < b.value;
 }
 
 constexpr bool operator>(const Node &a, const Node &b) {
-	return a.t > b.t || (a.t == b.t && a.i > b.i);
+	return a.value > b.value;
 }
 
 constexpr bool operator<=(const Node &a, const Node &b) {
-	return a.t <= b.t || (a.t == b.t && a.i <= b.i);
+	return a.value <= b.value;
 }
 
 constexpr bool operator>=(const Node &a, const Node &b) {
-	return a.t >= b.t || (a.t == b.t && a.i >= b.i);
+	return a.value >= b.value;
 }
 
 /* Stream Operators */

@@ -14,10 +14,12 @@
 using std::cout;
 using std::string;
 using dharc::Node;
-using dharc::fabric;
+using dharc::Fabric;
 
 int main(int argc, char *argv[]) {
 	int i = 1;
+
+	Fabric::initialise();
 
 	// Process command line arguments.
 	while (i < argc) {

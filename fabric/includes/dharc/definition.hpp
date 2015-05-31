@@ -15,7 +15,10 @@ using std::vector;
 using std::string;
 
 namespace dharc {
+
+namespace fabric {
 class Harc;
+};  // namespace fabric;
 
 /**
  * Represent a Harc definition and provide a means of converting it to/from
@@ -23,7 +26,7 @@ class Harc;
  * evaluated definitions. Each definition uses a lazy evaluation approach.
  */
 class Definition {
-	friend class Harc;
+	friend class fabric::Harc;
 
 	public:
 	/**
@@ -32,7 +35,7 @@ class Definition {
 	 * @param harc The hyperarc that this definition is evaluated for.
 	 * @return Result of following definition path.
 	 */
-	Node evaluate(const Harc *harc) const;
+	Node evaluate(const fabric::Harc *harc) const;
 
 
 	inline static Definition *makeDefinition(const vector<vector<Node>> &);

@@ -12,7 +12,7 @@
 #include "dharc/fabric.hpp"
 
 using dharc::Node;
-using dharc::Harc;
+using dharc::fabric::Harc;
 using dharc::Definition;
 using std::string;
 using std::vector;
@@ -30,21 +30,21 @@ Definition::Definition(const vector<vector<Node>> &definition) {
 
 
 Node Definition::evaluate(const Harc *harc) const {
-	vector<Node> aggregate = fabric.paths(path_, harc);
-	return fabric.path(aggregate, harc);
+	vector<Node> aggregate = Fabric::paths(path_, harc);
+	return Fabric::path(aggregate, harc);
 }
 
 
 
 vector<vector<Node>> Definition::instantiate(const Node &any) {
 	vector<vector<Node>> result = path_;
-	for (auto i = result.begin(); i != result.end(); ++i) {
+	/*for (auto i = result.begin(); i != result.end(); ++i) {
 		for (auto j = i->begin(); j != i->end(); ++j) {
 			if (*j == dharc::any_n) {
 				*j = any;
 			}
 		}
-	}
+	}*/
 	return result;
 }
 

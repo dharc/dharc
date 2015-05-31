@@ -16,7 +16,7 @@
 #include "dharc/fabric.hpp"
 #include "dharc/definition.hpp"
 
-using dharc::Harc;
+using dharc::fabric::Harc;
 using dharc::Fabric;
 using dharc::Node;
 using dharc::Definition;
@@ -64,8 +64,8 @@ const Node &Harc::query() {
 	// Boost significance
 	if (lastquery_ < Fabric::counter()) {
 		lastquery_ = Fabric::counter();
-		fabric.updatePartners(tail_.first, partix_[0]);
-		fabric.updatePartners(tail_.second, partix_[1]);
+		Fabric::updatePartners(tail_.first, partix_[0]);
+		Fabric::updatePartners(tail_.second, partix_[1]);
 	}
 
 	const auto *_ = this;
@@ -108,7 +108,7 @@ void Harc::dirty() const {
 
 
 void Harc::define(const Node &n) {
-	if (checkFlag(Flag::log)) fabric.logChange(this);
+	if (checkFlag(Flag::log)) Fabric::logChange(this);
 
 	lock_.lock();
 	if (checkFlag(Flag::defined)) {
@@ -134,7 +134,7 @@ void Harc::define(const vector<vector<Node>> &definition) {
 	setFlag(Flag::outofdate);
 	lock_.unlock();
 
-	if (checkFlag(Flag::log)) fabric.logChange(this);
+	if (checkFlag(Flag::log)) Fabric::logChange(this);
 
 	dirty();
 }
@@ -158,7 +158,7 @@ void Harc::definition(std::ostream &os) const {
 
 
 Harc *Harc::instantiate(const Node &any) {
-	if (checkFlag(Flag::defined)) {
+	/*if (checkFlag(Flag::defined)) {
 		Node partner = tailPartner(dharc::any_n);
 		Harc *newharc = new Harc(
 			(any < partner) ?
@@ -166,14 +166,14 @@ Harc *Harc::instantiate(const Node &any) {
 			pair<Node, Node>(partner, any));
 		newharc->define(def_->instantiate(any));
 		return newharc;
-	} else {
+	} else {*/
 		return this;
-	}
+	//}
 }
 
 
 
-std::ostream &dharc::operator<<(std::ostream &os, const Harc &h) {
+std::ostream &dharc::fabric::operator<<(std::ostream &os, const Harc &h) {
 	os << '[' << h.tail().first << ',' << h.tail().second
 		<< "->" << '?' << ']';
 	return os;

@@ -26,8 +26,8 @@ using std::string;
 using std::vector;
 using std::list;
 using dharc::Node;
-using dharc::Harc;
-using dharc::fabric;
+using dharc::fabric::Harc;
+using dharc::Fabric;
 using dharc::rpc::Command;
 using dharc::parser::Context;
 using dharc::parser::noact;
@@ -47,12 +47,12 @@ int rpc_version() {
 
 /* rpc::Command::query */
 Node rpc_query(const Node &n1, const Node &n2) {
-	return fabric.query({n1, n2});
+	return Fabric::query({n1, n2});
 }
 
 /* rpc::Command::define_const */
 bool rpc_define_const(const Node &n1, const Node &n2, const Node &h) {
-	fabric.define({n1, n2}, h);
+	Fabric::define({n1, n2}, h);
 	return true;
 }
 
@@ -61,13 +61,13 @@ bool rpc_define(
 		const Node &n1,
 		const Node &n2,
 		const vector<vector<Node>> &p) {
-	fabric.define({n1, n2}, p);
+	Fabric::define({n1, n2}, p);
 	return true;
 }
 
 /* rpc::Command::partners */
 list<Node> rpc_partners(const Node &n) {
-	const list<Harc*> &part = fabric.partners(n);
+	const list<Harc*> &part = Fabric::partners(n);
 	list<Node> res;
 	for (auto i : part) {
 		res.push_back(i->tailPartner(n));
@@ -82,19 +82,19 @@ Node rpc_unique() {
 }
 
 size_t rpc_linkcount() {
-	return fabric.linkCount();
+	return Fabric::linkCount();
 }
 
 size_t rpc_nodecount() {
-	return fabric.nodeCount();
+	return Fabric::nodeCount();
 }
 
 float rpc_changes() {
-	return fabric.changesPerSecond();
+	return Fabric::changesPerSecond();
 }
 
 float rpc_queries() {
-	return fabric.queriesPerSecond();
+	return Fabric::queriesPerSecond();
 }
 
 /* Register the handler for each rpc command */

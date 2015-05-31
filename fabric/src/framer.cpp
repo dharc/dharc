@@ -12,7 +12,7 @@
 using std::list;
 using std::vector;
 using dharc::Node;
-using dharc::Harc;
+using dharc::fabric::Harc;
 
 list<Harc*> dharc::Framer::select_partners(const vector<Node> &p, int max) {
 	vector<const list<Harc*>*> parts;
@@ -21,7 +21,7 @@ list<Harc*> dharc::Framer::select_partners(const vector<Node> &p, int max) {
 
 	int j = 0;
 	for (auto i : p) {
-		parts.push_back(&dharc::fabric.partners(i));
+		parts.push_back(&dharc::Fabric::partners(i));
 		heads[j++] = parts.back()->begin();
 	}
 

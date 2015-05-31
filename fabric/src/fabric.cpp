@@ -16,16 +16,28 @@
 #include "dharc/harc.hpp"
 
 using dharc::Fabric;
-using dharc::Harc;
+using dharc::fabric::Harc;
 using dharc::Node;
 using std::vector;
 using std::list;
 using std::atomic;
+using dharc::TailHash;
+using dharc::NidHash;
+using dharc::Tail;
 
-Fabric dharc::fabric;
 
 atomic<unsigned long long> Fabric::counter__(0);
 
+unordered_map<Tail, Harc*, TailHash>       Fabric::harcs__;
+unique_ptr<forward_list<const Harc*>>      Fabric::changes__(
+	new forward_list<const Harc*>());
+unordered_map<Node, list<Harc*>, NidHash>  Fabric::partners__;
+
+std::atomic<size_t> Fabric::linkcount__(0);
+std::atomic<size_t> Fabric::nodecount__(0);
+std::atomic<size_t> Fabric::variablelinks__(0);
+std::atomic<size_t> Fabric::changecount__(0);
+std::atomic<size_t> Fabric::querycount__(0);
 
 
 void Fabric::counterThread() {
@@ -38,15 +50,14 @@ void Fabric::counterThread() {
 
 
 
-Fabric::Fabric()
-	: changes_(new forward_list<const Harc*>()) {
+void Fabric::initialise() {
 	std::thread t(counterThread);
 	t.detach();
 }
 
 
 
-Fabric::~Fabric() {
+void Fabric::finalise() {
 }
 
 
@@ -54,33 +65,33 @@ Fabric::~Fabric() {
 unique_ptr<forward_list<const Harc*>> Fabric::changes() {
 	unique_ptr<forward_list<const Harc*>> newptr(
 		new forward_list< const Harc*>());
-	changes_.swap(newptr);
+	changes__.swap(newptr);
 	return newptr;
 }
 
 
 
 void Fabric::logChange(const Harc *h) {
-	changes_->push_front(h);
+	changes__->push_front(h);
 }
 
 const list<Harc*> &Fabric::partners(const Node &n) {
-	return partners_[n];
+	return partners__[n];
 }
 
 
 
 void Fabric::add(Harc *h) {
-	harcs_.insert({h->tail(), h});
+	harcs__.insert({h->tail(), h});
 
-	++linkcount_;
+	++linkcount__;
 
 	// Update node partners to include this harc
 	// TODO(knicos): This should be insertion sorted.
-	auto &p1 = partners_[h->tail().first];
+	auto &p1 = partners__[h->tail().first];
 	p1.push_front(h);
 	h->partix_[0] = p1.begin();
-	auto &p2 = partners_[h->tail().second];
+	auto &p2 = partners__[h->tail().second];
 	p2.push_front(h);
 	h->partix_[1] = p2.begin();
 }
@@ -92,7 +103,7 @@ Harc &Fabric::get(const Tail &key) {
 	if (get(key, h)) return *h;
 
 	// Check for an Any($) entry
-	if (get(dharc::any_n, key.first, h)) {
+	/*if (get(dharc::any_n, key.first, h)) {
 		Harc *oldh = h;
 		h = h->instantiate(key.second);
 		if (oldh == h) return *h;
@@ -100,9 +111,9 @@ Harc &Fabric::get(const Tail &key) {
 		Harc *oldh = h;
 		h = h->instantiate(key.first);
 		if (oldh == h) return *h;
-	} else {
+	} else {*/
 		h = new Harc(key);
-	}
+	//}
 
 	add(h);
 	return *h;
@@ -111,9 +122,9 @@ Harc &Fabric::get(const Tail &key) {
 
 
 bool Fabric::get(const Tail &key, Harc*& result) {
-	auto it = harcs_.find(key);
+	auto it = harcs__.find(key);
 
-	if (it != harcs_.end()) {
+	if (it != harcs__.end()) {
 		result = it->second;
 		return true;
 	}
@@ -123,23 +134,23 @@ bool Fabric::get(const Tail &key, Harc*& result) {
 
 
 Node Fabric::query(const Tail &tail) {
-	++querycount_;
+	++querycount__;
 	return get(tail).query();
 }
 
 void Fabric::define(const Tail &tail, const Node &head) {
-	++changecount_;
+	++changecount__;
 	get(tail).define(head);
 }
 
 void Fabric::define(const Tail &tail, const vector<vector<Node>> &def) {
-	++changecount_;
+	++changecount__;
 	get(tail).define(def);
 }
 
 Node Fabric::unique() {
-	size_t curcount = nodecount_++;
-	return Node(Node::Type::allocated, curcount);
+	size_t curcount = nodecount__++;
+	return Node(static_cast<uint64_t>(curcount));
 }
 
 
@@ -174,7 +185,7 @@ std::atomic<int> pool_count(std::thread::hardware_concurrency());
 bool Fabric::path_r(const vector<vector<Node>> &p, Node *res,
 	int s, int e, const Harc *dep) {
 	for (auto i = s; i < e; ++i) {
-		res[i] = fabric.path(p[i], dep);
+		res[i] = path(p[i], dep);
 	}
 	return true;
 }
@@ -229,7 +240,7 @@ void Fabric::reposition(const list<Harc*> &p, list<Harc*>::iterator &it) {
 }
 
 void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
-	auto &partners = partners_[n];
+	auto &partners = partners__[n];
 
 	Harc *h = *it;
 	partners.erase(it);
@@ -256,10 +267,10 @@ void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
 		if (i == h) continue;  // Ignore self.
 
 		if (i->tail().first == n) {
-			auto &p = partners_[i->tail().second];
+			auto &p = partners__[i->tail().second];
 			reposition(p, i->partix_[1]);
 		} else {
-			auto &p = partners_[i->tail().first];
+			auto &p = partners__[i->tail().first];
 			reposition(p, i->partix_[0]);
 		}
 	}

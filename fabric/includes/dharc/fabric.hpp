@@ -16,6 +16,8 @@
 #include <unordered_map>
 
 #include "dharc/node.hpp"
+#include "dharc/tail.hpp"
+#include "dharc/harc.hpp"
 
 using std::forward_list;
 using std::unique_ptr;
@@ -26,54 +28,56 @@ using std::pair;
 using std::list;
 using std::size_t;
 
+using dharc::fabric::Harc;
+
 namespace dharc {
-
-class Harc;
-
-typedef std::pair<Node, Node> Tail;
 
 struct TailHash {
 	public:
-	size_t operator()(const pair<Node, Node> &x) const {
-		return x.first.i*3 + x.second.i;
+	constexpr size_t operator()(const Tail &x) const {
+		return x.first.value*3 + x.second.value;
 	}
 };
 
 struct NidHash {
 	public:
-	size_t operator()(const Node &x) const {
-		return x.i;
+	constexpr size_t operator()(const Node &x) const {
+		return x.value;
 	}
 };
 
 class Fabric {
-	friend Harc;
+	friend dharc::fabric::Harc;
 
 	public:
-	Fabric();
-	~Fabric();
+	Fabric()=delete;
+
+	static void initialise();
+	static void finalise();
+
 	/**
 	 * A list of Harc changes since this function was last called. The change
 	 * log is reset when this function is called.
 	 */
-	unique_ptr<forward_list<const Harc*>> changes();
+	static unique_ptr<forward_list<const Harc*>> changes();
 
 	/**
 	 * Array of all Harcs that the given Node is involved in.
 	 * This array is intended to be sorted by significance, but since
 	 * significance always changes there is no guarentee that it is up-to-date.
 	 */
-	const list<Harc*> &partners(const Node &);
+	static const list<Harc*> &partners(const Node &);
 
 
 
-	Node query(const Tail &tail);
+	static Node query(const Tail &tail);
 
-	void define(const Tail &tail, const Node &head);
+	static void set(const Tail &tail, const Node &head) { define(tail, head); }
+	static void define(const Tail &tail, const Node &head);
 
-	void define(const Tail &tail, const vector<vector<Node>> &def);
+	static void define(const Tail &tail, const vector<vector<Node>> &def);
 
-	Node unique();
+	static Node unique();
 
 
 	/**
@@ -84,7 +88,7 @@ class Fabric {
 	 * @param dep The Harc to add as dependant on this path.
 	 * @return Result of following the normalised path p.
 	 */
-	Node path(const vector<Node> &p, const Harc *dep = nullptr);
+	static Node path(const vector<Node> &p, const Harc *dep = nullptr);
 
 	/**
 	 * Evaluate several simple paths in parallel. If dep is given then it is
@@ -93,32 +97,27 @@ class Fabric {
 	 * @param res Vector to put each result into.
 	 * @param dep Harc to add as dependant on each path.
 	 */
-	vector<Node> paths(
+	static vector<Node> paths(
 		const vector<vector<Node>> &p,
 		const Harc *dep = nullptr);
 
 
 
-	size_t linkCount()        const { return linkcount_; }
-	size_t nodeCount()        const { return nodecount_; }
-	size_t definedLinks()     const { return variablelinks_; }
-	float  queriesPerSecond() const {
-		return (static_cast<float>(querycount_) /
+	static size_t linkCount()        { return linkcount__; }
+	static size_t nodeCount()        { return nodecount__; }
+	static size_t definedLinks()     { return variablelinks__; }
+	static float  queriesPerSecond() {
+		return (static_cast<float>(querycount__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
-	float  changesPerSecond() const {
-		return (static_cast<float>(changecount_) /
+	static float  changesPerSecond() {
+		return (static_cast<float>(changecount__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
 
 
-
-	/**
-	 * Get the fabric singleton.
-	 */
-	static Fabric &singleton();
 
 	/**
 	 * Number of ticks since program start. Used to record when a relation
@@ -134,53 +133,51 @@ class Fabric {
 	// constexpr static int sig_prop_max() { return 20; }
 
 	private:
-	unordered_map<Tail, Harc*, TailHash>       harcs_;
-	unique_ptr<forward_list<const Harc*>>      changes_;
-	unordered_map<Node, list<Harc*>, NidHash>  partners_;
+	static unordered_map<Tail, Harc*, TailHash>       harcs__;
+	static unique_ptr<forward_list<const Harc*>>      changes__;
+	static unordered_map<Node, list<Harc*>, NidHash>  partners__;
 
-	std::atomic<size_t> linkcount_;
-	std::atomic<size_t> nodecount_;
-	std::atomic<size_t> variablelinks_;
-	std::atomic<size_t> changecount_;
-	std::atomic<size_t> querycount_;
+	static std::atomic<size_t> linkcount__;
+	static std::atomic<size_t> nodecount__;
+	static std::atomic<size_t> variablelinks__;
+	static std::atomic<size_t> changecount__;
+	static std::atomic<size_t> querycount__;
 
 	static std::atomic<unsigned long long> counter__;
 
 
 
-	Harc &get(const Node &a, const Node &b) {
+	static Harc &get(const Node &a, const Node &b) {
 		return get((a < b) ? pair<Node, Node>(a, b) : pair<Node, Node>(b, a));
 	}
-	Harc &get(const Tail &key);
-	bool get(const Tail &key, Harc*& result);
-	bool get(const Node &a, const Node &b, Harc*& result) {
+	static Harc &get(const Tail &key);
+	static bool get(const Tail &key, Harc*& result);
+	static bool get(const Node &a, const Node &b, Harc*& result) {
 		return get((a < b) ? pair<Node,
 			Node>(a, b) : pair<Node, Node>(b, a),
 			result);
 	}
 
-	Node path_s(const vector<Node> &, const Harc *dep = nullptr);
+	static Node path_s(const vector<Node> &, const Harc *dep = nullptr);
 	static bool path_r(
 			const vector<vector<Node>> &p,
 			Node *res,
 			int s, int e,
 			const Harc *dep);
-	void logChange(const Harc *h);
+	static void logChange(const Harc *h);
 	static void counterThread();
 
-	void updatePartners(const Node &n, list<Harc*>::iterator &it);
-	void reposition(const list<Harc*> &p, list<Harc*>::iterator &it);
-	void add(Harc *h);
+	static void updatePartners(const Node &n, list<fabric::Harc*>::iterator &it);
+	static void reposition(const list<Harc*> &p, list<fabric::Harc*>::iterator &it);
+	static void add(Harc *h);
 };
 
-extern Fabric fabric;
-
 inline auto begin(const Node &n) {
-	return fabric.partners(n).begin();
+	return Fabric::partners(n).begin();
 }
 
 inline auto end(const Node &n) {
-	return fabric.partners(n).end();
+	return Fabric::partners(n).end();
 }
 
 };  // namespace dharc

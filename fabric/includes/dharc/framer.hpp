@@ -13,7 +13,7 @@
 namespace dharc {
 class Framer {
 	public:
-	static std::list<Harc*> select_partners(
+	static std::list<fabric::Harc*> select_partners(
 				const std::vector<Node> &p, int max = 10);
 
 	private:
