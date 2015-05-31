@@ -9,6 +9,7 @@ include_directories(${PROJECT_SOURCE_DIR}/common/includes)
 include_directories(${PROJECT_BINARY_DIR})
 include_directories(${GTKMM_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/tools/includes)
+include_directories(${PROJECT_SOURCE_DIR}/modules/cppzmq)
 
 set(dharc_VERSION_MAJOR "0")
 set(dharc_VERSION_MINOR "1")
