@@ -30,9 +30,10 @@ enum struct Command : int {
 	define,
 	partners,
 	unique,
-	// details,
-	// path,
-	// paths,
+	linkcount,
+	nodecount,
+	changes,
+	queries,
 	end
 };
 
@@ -47,7 +48,11 @@ typedef tuple<
 	bool(*)(const Node&, const Node&, const Node&),
 	bool(*)(const Node&, const Node&, const vector<vector<Node>>&),
 	list<Node>(*)(const Node&),
-	Node(*)()
+	Node(*)(),
+	size_t(*)(),
+	size_t(*)(),
+	float(*)(),
+	float(*)()
 > commands_t;
 
 };  // namespace rpc

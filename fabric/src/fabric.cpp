@@ -26,6 +26,8 @@ Fabric dharc::fabric;
 
 atomic<unsigned long long> Fabric::counter__(0);
 
+
+
 void Fabric::counterThread() {
 	while (true) {
 		++counter__;
@@ -34,14 +36,20 @@ void Fabric::counterThread() {
 	}
 }
 
+
+
 Fabric::Fabric()
 	: changes_(new forward_list<const Harc*>()) {
 	std::thread t(counterThread);
 	t.detach();
 }
 
+
+
 Fabric::~Fabric() {
 }
+
+
 
 unique_ptr<forward_list<const Harc*>> Fabric::changes() {
 	unique_ptr<forward_list<const Harc*>> newptr(
@@ -49,6 +57,8 @@ unique_ptr<forward_list<const Harc*>> Fabric::changes() {
 	changes_.swap(newptr);
 	return newptr;
 }
+
+
 
 void Fabric::logChange(const Harc *h) {
 	changes_->push_front(h);
@@ -58,8 +68,12 @@ const list<Harc*> &Fabric::partners(const Node &n) {
 	return partners_[n];
 }
 
+
+
 void Fabric::add(Harc *h) {
 	harcs_.insert({h->tail(), h});
+
+	++linkcount_;
 
 	// Update node partners to include this harc
 	// TODO(knicos): This should be insertion sorted.
@@ -71,7 +85,9 @@ void Fabric::add(Harc *h) {
 	h->partix_[1] = p2.begin();
 }
 
-Harc &Fabric::get(const pair<Node, Node> &key) {
+
+
+Harc &Fabric::get(const Tail &key) {
 	Harc *h;
 	if (get(key, h)) return *h;
 
@@ -92,7 +108,9 @@ Harc &Fabric::get(const pair<Node, Node> &key) {
 	return *h;
 }
 
-bool Fabric::get(const pair<Node, Node> &key, Harc*& result) {
+
+
+bool Fabric::get(const Tail &key, Harc*& result) {
 	auto it = harcs_.find(key);
 
 	if (it != harcs_.end()) {
@@ -101,6 +119,30 @@ bool Fabric::get(const pair<Node, Node> &key, Harc*& result) {
 	}
 	return false;
 }
+
+
+
+Node Fabric::query(const Tail &tail) {
+	++querycount_;
+	return get(tail).query();
+}
+
+void Fabric::define(const Tail &tail, const Node &head) {
+	++changecount_;
+	get(tail).define(head);
+}
+
+void Fabric::define(const Tail &tail, const vector<vector<Node>> &def) {
+	++changecount_;
+	get(tail).define(def);
+}
+
+Node Fabric::unique() {
+	size_t curcount = nodecount_++;
+	return Node(Node::Type::allocated, curcount);
+}
+
+
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
 	if (p.size() > 1) {

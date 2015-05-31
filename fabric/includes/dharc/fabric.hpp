@@ -30,6 +30,8 @@ namespace dharc {
 
 class Harc;
 
+typedef std::pair<Node, Node> Tail;
+
 struct TailHash {
 	public:
 	size_t operator()(const pair<Node, Node> &x) const {
@@ -63,31 +65,16 @@ class Fabric {
 	 */
 	const list<Harc*> &partners(const Node &);
 
-	/**
-	 * Lookup a Harc using a pair of tail nodes.
-	 */
-	Harc &get(const Node &a, const Node &b) {
-		return get((a < b) ? pair<Node, Node>(a, b) : pair<Node, Node>(b, a));
-	}
 
-	Harc &get(const pair<Node, Node> &key);
 
-	/**
-	 * Get a Harc without constructing it if it doesn't exist.
-	 *     If the Harc is found its pointer is put into result and this
-	 *     function returns true. Otherwise nullptr is put into result and
-	 *     the function returns false. Used internally for paths over virtual
-	 *     harcs.
-	 * @param result Reference to a Harc pointer filled with result.
-	 * @return True if found, false otherwise.
-	 */
-	bool get(const pair<Node, Node> &key, Harc*& result);
+	Node query(const Tail &tail);
 
-	bool get(const Node &a, const Node &b, Harc*& result) {
-		return get((a < b) ? pair<Node,
-			Node>(a, b) : pair<Node, Node>(b, a),
-			result);
-	}
+	void define(const Tail &tail, const Node &head);
+
+	void define(const Tail &tail, const vector<vector<Node>> &def);
+
+	Node unique();
+
 
 	/**
 	 * Evaluate a normalised path through the fabric. If a dependant Harc is
@@ -110,6 +97,24 @@ class Fabric {
 		const vector<vector<Node>> &p,
 		const Harc *dep = nullptr);
 
+
+
+	size_t linkCount()        const { return linkcount_; }
+	size_t nodeCount()        const { return nodecount_; }
+	size_t definedLinks()     const { return variablelinks_; }
+	float  queriesPerSecond() const {
+		return (static_cast<float>(querycount_) /
+				static_cast<float>(counter__)) *
+				static_cast<float>(counterResolution());
+	}
+	float  changesPerSecond() const {
+		return (static_cast<float>(changecount_) /
+				static_cast<float>(counter__)) *
+				static_cast<float>(counterResolution());
+	}
+
+
+
 	/**
 	 * Get the fabric singleton.
 	 */
@@ -129,6 +134,31 @@ class Fabric {
 	// constexpr static int sig_prop_max() { return 20; }
 
 	private:
+	unordered_map<Tail, Harc*, TailHash>       harcs_;
+	unique_ptr<forward_list<const Harc*>>      changes_;
+	unordered_map<Node, list<Harc*>, NidHash>  partners_;
+
+	std::atomic<size_t> linkcount_;
+	std::atomic<size_t> nodecount_;
+	std::atomic<size_t> variablelinks_;
+	std::atomic<size_t> changecount_;
+	std::atomic<size_t> querycount_;
+
+	static std::atomic<unsigned long long> counter__;
+
+
+
+	Harc &get(const Node &a, const Node &b) {
+		return get((a < b) ? pair<Node, Node>(a, b) : pair<Node, Node>(b, a));
+	}
+	Harc &get(const Tail &key);
+	bool get(const Tail &key, Harc*& result);
+	bool get(const Node &a, const Node &b, Harc*& result) {
+		return get((a < b) ? pair<Node,
+			Node>(a, b) : pair<Node, Node>(b, a),
+			result);
+	}
+
 	Node path_s(const vector<Node> &, const Harc *dep = nullptr);
 	static bool path_r(
 			const vector<vector<Node>> &p,
@@ -141,12 +171,6 @@ class Fabric {
 	void updatePartners(const Node &n, list<Harc*>::iterator &it);
 	void reposition(const list<Harc*> &p, list<Harc*>::iterator &it);
 	void add(Harc *h);
-
-	unordered_map<pair<Node, Node>, Harc*, TailHash>  harcs_;
-	unique_ptr<forward_list<const Harc*>>             changes_;
-	unordered_map<Node, list<Harc*>, NidHash>         partners_;
-
-	static std::atomic<unsigned long long> counter__;
 };
 
 extern Fabric fabric;

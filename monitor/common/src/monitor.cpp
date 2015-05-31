@@ -25,7 +25,7 @@ Monitor::Monitor(const char *host, int port) {
 	uri_ = "tcp://";
 	uri_ += host;
 	uri_ += ':';
-	uri_ += port;
+	uri_ += std::to_string(port);
 	dharc::rpc::connect(uri_.c_str());
 
 	// Do a version check!
@@ -71,5 +71,29 @@ void Monitor::define(const Node &a,
 
 list<Node> Monitor::partners(const Node &n) {
 	return send<Command::partners>(n);
+}
+
+
+
+size_t Monitor::linkCount() {
+	return send<Command::linkcount>();
+}
+
+
+
+size_t Monitor::nodeCount() {
+	return send<Command::linkcount>();
+}
+
+
+
+float Monitor::queriesPerSecond() {
+	return send<Command::queries>();
+}
+
+
+
+float Monitor::changesPerSecond() {
+	return send<Command::changes>();
 }
 

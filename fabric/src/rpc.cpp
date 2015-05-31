@@ -47,12 +47,12 @@ int rpc_version() {
 
 /* rpc::Command::query */
 Node rpc_query(const Node &n1, const Node &n2) {
-	return fabric.get(n1, n2).query();
+	return fabric.query({n1, n2});
 }
 
 /* rpc::Command::define_const */
 bool rpc_define_const(const Node &n1, const Node &n2, const Node &h) {
-	fabric.get(n1, n2).define(h);
+	fabric.define({n1, n2}, h);
 	return true;
 }
 
@@ -61,7 +61,7 @@ bool rpc_define(
 		const Node &n1,
 		const Node &n2,
 		const vector<vector<Node>> &p) {
-	fabric.get(n1, n2).define(p);
+	fabric.define({n1, n2}, p);
 	return true;
 }
 
@@ -81,6 +81,22 @@ Node rpc_unique() {
 	return dharc::null_n;
 }
 
+size_t rpc_linkcount() {
+	return fabric.linkCount();
+}
+
+size_t rpc_nodecount() {
+	return fabric.nodeCount();
+}
+
+float rpc_changes() {
+	return fabric.changesPerSecond();
+}
+
+float rpc_queries() {
+	return fabric.queriesPerSecond();
+}
+
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
@@ -89,7 +105,11 @@ dharc::rpc::commands_t commands {
 	rpc_define_const,
 	rpc_define,
 	rpc_partners,
-	rpc_unique
+	rpc_unique,
+	rpc_linkcount,
+	rpc_nodecount,
+	rpc_changes,
+	rpc_queries
 };
 };  // namespace
 

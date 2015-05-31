@@ -27,6 +27,11 @@ class Monitor {
 	void define(const Node &a, const Node &b, const vector<vector<Node>> &p);
 	list<Node> partners(const Node &a);
 
+	size_t linkCount();
+	size_t nodeCount();
+	float queriesPerSecond();
+	float changesPerSecond();
+
 	/* Statistics functions */
 	/* Stream functions */
 	private:

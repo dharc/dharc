@@ -24,6 +24,7 @@ using std::string;
 using std::vector;
 using std::stringstream;
 using std::cout;
+using std::pair;
 
 
 namespace {
@@ -50,15 +51,11 @@ void signal_handler(int param) {
 
 
 option opts[] = {
+	{"set", 1, nullptr, 1001},
 	{"interactive", 0, &config.interactive, 1},
-	{"noinfo", 0, &config.no_info, 1},
-	{"cmd", 1, nullptr, 'c'},
 	{"port", 1, nullptr, 'p'},
 	{"host", 1, nullptr, 'h'},
 	{"help", 0, nullptr, 1000},
-	{"file", 1, nullptr, 'f'},
-	{"param", 1, nullptr, '*'},
-	{"nolabels", 0, &config.no_labels, 1},
 	{nullptr, 0, nullptr, 0}
 };
 
@@ -82,6 +79,8 @@ int main(int argc, char *argv[]) {
 	const char *host = "localhost";
 	int port = 7878;
 
+	vector<pair<int, string>> delayed;
+
 	signal(SIGINT, signal_handler);
 
 	while ((o = getopt_long(argc, argv, "f:ic:h:p:", opts, nullptr)) != -1) {
@@ -90,7 +89,7 @@ int main(int argc, char *argv[]) {
 		case 'h': host = optarg; break;
 		case 'p': port = std::stoi(optarg); break;
 		case 1000: std::cout << helpmsg; break;
-		case '*': config.params.push_back(Node(optarg)); break;
+		case 1001: delayed.push_back({0, string(optarg)}); break;
 		case ':': cout << "Option '" << optopt << "' requires an argument\n";
 					break;
 		default: break;
@@ -98,6 +97,18 @@ int main(int argc, char *argv[]) {
 	}
 
 	dharc::Monitor monitor(host, port);
+
+	for (auto i : delayed) {
+		switch (i.first) {
+		case 0: monitor.define(Node(44),Node(55),Node(555)); break;
+		default: break;
+		}
+	}
+
+	cout << "Node Count: " << monitor.nodeCount() << std::endl;
+	cout << "Link Count: " << monitor.linkCount() << std::endl;
+	cout << "Queries (s): " << monitor.queriesPerSecond() << std::endl;
+	cout << "Changes (s): " << monitor.changesPerSecond() << std::endl;
 
 	if (config.interactive) {
 		// interactive();
