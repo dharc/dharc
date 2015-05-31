@@ -1,3 +1,15 @@
-# f-dsb [![Build Status](https://secure.travis-ci.org/dharc/f-dsb.png?branch=master)](https://travis-ci.org/dharc/f-dsb)
+# DHarc [![Build Status](https://secure.travis-ci.org/dharc/f-dsb.png?branch=master)](https://travis-ci.org/dharc/dharc)
 
-Framed Dynamic Structure Base.
+Framed Dynamic HyperGraph for AGI
+
+mkdir build
+cd build
+cmake ..
+make
+make tests
+
+To run the test:
+
+../tools/unit-tests.py
+../tools/system-tests.py
+
