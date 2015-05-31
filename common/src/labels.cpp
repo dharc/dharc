@@ -16,7 +16,7 @@ using dharc::Labels;
 Labels dharc::labels;
 
 namespace {
-const char *not_a_label = "NAL";
+string not_a_label = "NAL";
 };  // namespace
 
 Labels::Labels() : autogen_(true), lastid_(10000) {
