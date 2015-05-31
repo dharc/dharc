@@ -148,9 +148,17 @@ void Fabric::define(const Tail &tail, const vector<vector<Node>> &def) {
 	get(tail).define(def);
 }
 
+
+
 Node Fabric::unique() {
-	size_t curcount = nodecount__++;
-	return Node(static_cast<uint64_t>(curcount));
+	return Node(nodecount__.fetch_add(1));
+}
+
+
+
+void Fabric::unique(int count, Node &first, Node &last) {
+	first.value = nodecount__.fetch_add(count);
+	last.value = first.value + count - 1;
 }
 
 

@@ -10,13 +10,13 @@
 #include <string>
 
 #include "dharc/node.hpp"
-#include "dharc/rpc_common.hpp"
+#include "dharc/rpc.hpp"
 
 using std::vector;
 using std::list;
 
 namespace dharc {
-class Monitor {
+class Monitor : public dharc::Rpc {
 	public:
 	Monitor(const char *host, int port);
 	~Monitor();
@@ -34,8 +34,6 @@ class Monitor {
 
 	/* Statistics functions */
 	/* Stream functions */
-	private:
-	std::string uri_;
 };
 };  // namespace dharc
 

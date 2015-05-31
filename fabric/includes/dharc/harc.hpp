@@ -124,16 +124,19 @@ class Harc {
 
 	private:
 	const Tail                     tail_;
-	mutable std::atomic<uint64_t>  flags_;
 	mutable Node                   head_;
+	mutable std::atomic<uint64_t>  flags_;
 	Definition*                    def_;
+
 	unsigned long long             lastquery_;
 	float                          strength_;
 	mutable dharc::Lock            lock_;
-	mutable list<const Harc*>*     dependants_;
 
 	// Might be moved to meta structure
-	list<Harc*>::iterator      partix_[2];
+	mutable list<const Harc*>*     dependants_;
+	list<Harc*>::iterator          partix_[2];
+
+
 
 	inline void setFlag(Flag f) const;
 	inline void clearFlag(Flag f) const;

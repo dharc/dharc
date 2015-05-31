@@ -12,8 +12,7 @@
 #include "dharc/node.hpp"
 
 using dharc::Node;
-using dharc::rpc::Command;
-using dharc::rpc::send;
+using dharc::Rpc;
 using dharc::Monitor;
 using std::string;
 using std::cout;
@@ -21,18 +20,8 @@ using std::vector;
 using std::list;
 
 
-Monitor::Monitor(const char *host, int port) {
-	uri_ = "tcp://";
-	uri_ += host;
-	uri_ += ':';
-	uri_ += std::to_string(port);
-	dharc::rpc::connect(uri_.c_str());
-
-	// Do a version check!
-	if (send<Command::version>() != static_cast<int>(Command::end)) {
-		cout << "!!! dharcd uses different version of rpc protocol !!!";
-		cout << std::endl;
-	}
+Monitor::Monitor(const char *host, int port) : Rpc(host, port) {
+	
 }
 
 

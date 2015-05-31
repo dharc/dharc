@@ -79,6 +79,8 @@ class Fabric {
 
 	static Node unique();
 
+	static void unique(int count, Node &first, Node &last);
+
 
 	/**
 	 * Evaluate a normalised path through the fabric. If a dependant Harc is

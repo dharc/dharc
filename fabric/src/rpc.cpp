@@ -17,6 +17,7 @@
 #include "dharc/harc.hpp"
 #include "dharc/parse.hpp"
 #include "dharc/rpc_packer.hpp"
+#include "dharc/rpc_server.hpp"
 
 using dharc::rpc::Packer;
 using std::cout;
@@ -123,14 +124,20 @@ Ret unpack(std::istream &is) {
 	return res;
 }
 
+
+
 template<int...> struct seq {};
 template<int N, int... S> struct gens : gens<N-1, N-1, S...> {};
 template<int... S> struct gens<0, S...>{ typedef seq<S...> type; };
+
+
 
 template<typename Ret, typename T, typename F, int... S>
 Ret callFunc(seq<S...>, T &params, F f) {
 	return f(std::get<S>(params)...);
 }
+
+
 
 template <typename Ret, typename... Args>
 void execute(std::istream &is, std::ostream &os, Ret(*f)(Args ...args)) {
@@ -139,6 +146,8 @@ void execute(std::istream &is, std::ostream &os, Ret(*f)(Args ...args)) {
 	 Packer<Ret>::pack(os,
 		callFunc<Ret>(typename gens<sizeof...(Args)>::type(), params, f));
 }
+
+
 
 /*
  * Template nested if to find correct function to call for the received
@@ -153,6 +162,8 @@ void callCmd(istream &is, ostream &os, int cmd) {
 	}
 }
 
+
+
 /* Base case, do nothing */
 template<>
 inline void callCmd<static_cast<int>(Command::end)>(
@@ -163,6 +174,8 @@ inline void callCmd<static_cast<int>(Command::end)>(
 };  // namespace
 
 /* ========================================================================== */
+
+
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
 	Context parse(is);

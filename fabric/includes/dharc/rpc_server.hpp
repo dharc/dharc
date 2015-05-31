@@ -2,8 +2,8 @@
  * Copyright 2015 Nicolas Pope
  */
 
-#ifndef DHARC_RPC_H_
-#define DHARC_RPC_H_
+#ifndef DHARC_RPC_SERVER_HPP_
+#define DHARC_RPC_SERVER_HPP_
 
 #include <iostream>
 
@@ -22,5 +22,5 @@ void process_msg(std::istream &is, std::ostream &os);
 };  // namespace rpc
 };  // namespace dharc
 
-#endif  /* DHARC_RPC_H_ */
+#endif  /* DHARC_RPC_SERVER_HPP_ */
 

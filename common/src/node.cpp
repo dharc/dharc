@@ -22,11 +22,7 @@ using std::ostream;
 using dharc::parser::value;
 using dharc::parser::word;
 
-/* std::atomic<unsigned long long> last_nid(0);
 
-Nid Nid::unique() {
-	return {Nid::Type::allocated, last_nid++};
-}*/ 
 
 Node::Node(const string &str) {
 	stringstream ss(str);

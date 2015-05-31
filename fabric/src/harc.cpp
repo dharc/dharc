@@ -26,8 +26,8 @@ using std::stringstream;
 
 Harc::Harc(const pair<Node, Node> &t) :
 	tail_(t),
-	flags_(static_cast<unsigned char>(Flag::none)),
 	head_(null_n),
+	flags_(static_cast<unsigned char>(Flag::none)),
 	lastquery_(Fabric::counter()),
 	strength_(0.0),
 	dependants_(nullptr) {}

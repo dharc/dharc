@@ -7,7 +7,7 @@
 #include <string>
 
 #include "zmq.hpp"
-#include "dharc/rpc.hpp"
+#include "dharc/rpc_server.hpp"
 #include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
 
