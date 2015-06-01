@@ -55,7 +55,7 @@ class Fabric {
 	friend dharc::fabric::Harc;
 
 	public:
-	Fabric()=delete;
+	Fabric() = delete;
 
 	static void initialise();
 	static void finalise();
@@ -97,14 +97,14 @@ class Fabric {
 	 * @param count Number of partners to return into the vector.
 	 * @param start Offset to this position in overal partners list.
 	 */
-	static void partners(	const Node&   node,
+	static void partners(const Node&   node,
 							vector<Node>& vec,
 							size_t        count,
 							size_t        start = 0);
 
 
 
-	static vector<Node> partners(	const Node& node,
+	static vector<Node> partners(const Node& node,
 									size_t      count,
 									size_t      start = 0) {
 		vector<Node> result;
@@ -271,14 +271,12 @@ class Fabric {
 
 	private:
 	struct TailHash {
-		public:
 		constexpr size_t operator()(const Tail &x) const {
 			return x.first.value*3 + x.second.value;
 		}
 	};
 
 	struct NidHash {
-		public:
 		constexpr size_t operator()(const Node &x) const {
 			return x.value;
 		}
@@ -320,7 +318,7 @@ class Fabric {
 	static void counterThread();
 
 	static void updatePartners(const Harc *h);
-	
+
 	static void add(Harc *h);
 };
 

@@ -18,7 +18,7 @@ namespace dharc {
 
 namespace fabric {
 class Harc;
-};  // namespace fabric;
+};  // namespace fabric
 
 /**
  * Represent a Harc definition and provide a means of converting it to/from

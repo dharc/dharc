@@ -28,11 +28,9 @@ Rpc::Rpc(const char *addr, int port) : sock_(context, ZMQ_REQ) {
 		cout << "!!! dharcd uses different version of rpc protocol !!!";
 		cout << std::endl;
 	}
-
 }
 
 Rpc::~Rpc() {
-
 }
 
 std::string Rpc::send(const std::string &s) {

@@ -51,7 +51,7 @@ istream &dharc::operator>>(istream &is, Node &n) {
 	is >> n.value;
 
 	if (is.get() != '>') {
-		is.clear(istream::failbit);		
+		is.clear(istream::failbit);
 	}
 	return is;
 }

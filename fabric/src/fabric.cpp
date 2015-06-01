@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
+#include <map>
 
 #include "dharc/harc.hpp"
 
@@ -71,7 +72,7 @@ void Fabric::changes(vector<Tail>& vec, size_t count) {
 
 
 void Fabric::logChange(const Harc *h) {
-	//Todo(knicos): Use lifo buffer and sort changes by significance.
+	// Todo(knicos): Use lifo buffer ?
 	changes__.insert(pair<float, const Harc*>(h->significance(), h));
 }
 

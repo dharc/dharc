@@ -21,7 +21,6 @@ using std::list;
 
 
 Monitor::Monitor(const char *host, int port) : Rpc(host, port) {
-	
 }
 
 

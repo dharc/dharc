@@ -5,9 +5,9 @@
 #ifndef DHARC_TAIL_HPP_
 #define DHARC_TAIL_HPP_
 
-#include "dharc/node.hpp"
-
 #include <utility>
+
+#include "dharc/node.hpp"
 
 namespace dharc {
 typedef std::pair<dharc::Node, dharc::Node> Tail;
