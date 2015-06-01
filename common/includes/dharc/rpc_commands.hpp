@@ -47,7 +47,7 @@ typedef tuple<
 	Node(*)(const Node&, const Node&),
 	bool(*)(const Node&, const Node&, const Node&),
 	bool(*)(const Node&, const Node&, const vector<vector<Node>>&),
-	list<Node>(*)(const Node&),
+	vector<Node>(*)(const Node&, const int&),
 	Node(*)(),
 	size_t(*)(),
 	size_t(*)(),

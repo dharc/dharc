@@ -14,38 +14,39 @@
 #include <iterator>
 #include <atomic>
 #include <unordered_map>
+#include <map>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
 #include "dharc/harc.hpp"
+// #include "dharc/lifobuffer.hpp"
 
 using std::forward_list;
-using std::unique_ptr;
 using std::vector;
 using std::unordered_map;
 using std::chrono::time_point;
 using std::pair;
 using std::list;
+using std::multimap;
 using std::size_t;
 
 using dharc::fabric::Harc;
+// using dharc::LIFOBuffer;
 
 namespace dharc {
 
-struct TailHash {
-	public:
-	constexpr size_t operator()(const Tail &x) const {
-		return x.first.value*3 + x.second.value;
-	}
-};
-
-struct NidHash {
-	public:
-	constexpr size_t operator()(const Node &x) const {
-		return x.value;
-	}
-};
-
+/**
+ * The Dharc Fabric: a dynamic hypergraph.
+ *     Stores all the nodes and hyperarcs relating the nodes together. Each
+ *     hyperarc (harc) has metrics about its significance and activation to
+ *     improve pattern searching and suggestion. A harc can also be given a
+ *     definition that frames it in-terms of other nodes and harcs. Low-level
+ *     search and access functions are provided, usually to significance sorted
+ *     data, that can then be manipulated by higher-level pattern matching and
+ *     search algorithms. This class hides any storage concerns and is
+ *     threadsafe. The class is entirely static, only one fabric is possible
+ *     per instance of the fabric server.
+ */
 class Fabric {
 	friend dharc::fabric::Harc;
 
@@ -55,26 +56,97 @@ class Fabric {
 	static void initialise();
 	static void finalise();
 
-	/**
-	 * A list of Harc changes since this function was last called. The change
-	 * log is reset when this function is called.
-	 */
-	static unique_ptr<forward_list<const Harc*>> changes();
+
 
 	/**
-	 * Array of all Harcs that the given Node is involved in.
-	 * This array is intended to be sorted by significance, but since
-	 * significance always changes there is no guarentee that it is up-to-date.
+	 * Fill a vector with a given number of the most significant recent changes.
+	 *     The changes returned are sorted by activation significance which is
+	 *     a combination of how significant the change is and how recently it
+	 *     it was changed.  Use maxChanges() to get the maximum number of
+	 *     available changes. If more changes are requested than are available
+	 *     then only the available number are put into the vector.
+	 * @param vec Vector to fill with requested changes.
+	 * @param count How many changes to request.
 	 */
-	static const list<Harc*> &partners(const Node &);
+	static void changes(vector<Tail>& vec, size_t count);
 
 
 
+	/**
+	 * Maximum number of harc changes in the change log.
+	 * @return Number of changes available.
+	 */
+	static size_t maxChanges();
+
+
+
+	/**
+	 * Fill a vector with 'count' number of partner nodes.
+	 *     A partner node is a node involved in some tail of a hyperarc with
+	 *     a given node. This function fills a vector the the requested number
+	 *     of the most significant partner nodes, by default starting at the
+	 *     most significant unless 'start' is given. If the requested number of
+	 *     of nodes is greater than those available then the vector is resized
+	 *     to the number available.
+	 * @param node The node to get partners of.
+	 * @param vec Vector to fill with results.
+	 * @param count Number of partners to return into the vector.
+	 * @param start Offset to this position in overal partners list.
+	 */
+	static void partners(	const Node&   node,
+							vector<Node>& vec,
+							size_t        count,
+							size_t        start = 0);
+
+
+
+	/**
+	 * Query the head node of a hyperarc.
+	 *     Given the tail nodes of a hyperarc, lookup the hyperarc and ask for
+	 *     its head node. This may involve the evaluation of the hyperarcs
+	 *     definition if it is out-of-date. If the requested hyperarc does not
+	 *     exist then it is created and the head node null is returned. A query
+	 *     will also activate a hyperarch and modify is significance and
+	 *     activation status.
+	 * @param tail Pair of tail nodes to identify the hyperarc.
+	 * @return Head node of hyperarch.
+	 */
 	static Node query(const Tail &tail);
 
+
+
+	/**
+	 * Give a harc a constant head node.
+	 *     Removes any existing definition and sets the head of the harc to
+	 *     the given node. This will cause an activation of the harc and will
+	 *     log this harc as having changed if the harcs log flag is set. If the
+	 *     harc does not exist, it is created.
+	 * @see define
+	 * @param tail A set of tail nodes to identify the harcs.
+	 * @param head The new head node for the harc.
+	 */
 	static void set(const Tail &tail, const Node &head) { define(tail, head); }
+
+
+
+	/**
+	 * Give a harc a constant head node.
+	 * @see set
+	 */
 	static void define(const Tail &tail, const Node &head);
 
+
+
+	/**
+	 * Give the harc a path definition instead of a constant head.
+	 *     Will replace any existing definition and any constant head node.
+	 *     The definition will only be evaluated is the harc is queried for the
+	 *     head node. If any path used by the definition after it is evaluated
+	 *     changes then the harc is marked out-of-date and will be re-evaluated
+	 *     upon the next query. If the harc does not exist it is created.
+	 * @param tail Tail nodes to uniquely idenfify the harc.
+	 * @param def Path for the definition the harc should have.
+	 */
 	static void define(const Tail &tail, const vector<vector<Node>> &def);
 
 	static Node unique();
@@ -135,9 +207,24 @@ class Fabric {
 	// constexpr static int sig_prop_max() { return 20; }
 
 	private:
-	static unordered_map<Tail, Harc*, TailHash>       harcs__;
-	static unique_ptr<forward_list<const Harc*>>      changes__;
-	static unordered_map<Node, list<Harc*>, NidHash>  partners__;
+	struct TailHash {
+		public:
+		constexpr size_t operator()(const Tail &x) const {
+			return x.first.value*3 + x.second.value;
+		}
+	};
+
+	struct NidHash {
+		public:
+		constexpr size_t operator()(const Node &x) const {
+			return x.value;
+		}
+	};
+
+
+	static unordered_map<Tail, Harc*, TailHash>                 harcs__;
+	static multimap<float, const Harc*>                         changes__;
+	static unordered_map<Node, multimap<float, Node>, NidHash>  partners__;
 
 	static std::atomic<size_t> linkcount__;
 	static std::atomic<size_t> nodecount__;
@@ -169,18 +256,18 @@ class Fabric {
 	static void logChange(const Harc *h);
 	static void counterThread();
 
-	static void updatePartners(const Node &n, list<fabric::Harc*>::iterator &it);
-	static void reposition(const list<Harc*> &p, list<fabric::Harc*>::iterator &it);
+	static void updatePartners(const Harc *h);
+	
 	static void add(Harc *h);
 };
 
-inline auto begin(const Node &n) {
+/*inline auto begin(const Node &n) {
 	return Fabric::partners(n).begin();
 }
 
 inline auto end(const Node &n) {
 	return Fabric::partners(n).end();
-}
+}*/
 
 };  // namespace dharc
 

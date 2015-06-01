@@ -67,12 +67,9 @@ bool rpc_define(
 }
 
 /* rpc::Command::partners */
-list<Node> rpc_partners(const Node &n) {
-	const list<Harc*> &part = Fabric::partners(n);
-	list<Node> res;
-	for (auto i : part) {
-		res.push_back(i->tailPartner(n));
-	}
+vector<Node> rpc_partners(const Node &n, const int &count) {
+	vector<Node> res;
+	Fabric::partners(n, res, count);
 	return res;
 }
 

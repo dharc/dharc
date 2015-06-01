@@ -60,21 +60,12 @@ float Harc::lastQuery() const {
 
 
 
-const Node &Harc::query() {
-	// Boost significance
+const Node &Harc::query() const {
 	if (lastquery_ < Fabric::counter()) {
 		lastquery_ = Fabric::counter();
-		Fabric::updatePartners(tail_.first, partix_[0]);
-		Fabric::updatePartners(tail_.second, partix_[1]);
+		Fabric::updatePartners(this);
 	}
 
-	const auto *_ = this;
-	return _->query();
-}
-
-
-
-const Node &Harc::query() const {
 	lock_.lock();
 	if (checkFlag(Flag::defined) && checkFlag(Flag::outofdate)) {
 		head_ = def_->evaluate(this);

@@ -25,7 +25,7 @@ class Monitor : public dharc::Rpc {
 	Node query(const Node &a, const Node &b);
 	void define(const Node &a, const Node &b, const Node &h);
 	void define(const Node &a, const Node &b, const vector<vector<Node>> &p);
-	list<Node> partners(const Node &a);
+	vector<Node> partners(const Node &a, int count);
 
 	size_t linkCount();
 	size_t nodeCount();

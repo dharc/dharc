@@ -259,6 +259,6 @@ CASE( "Complex test parser" ) {
 };
 
 int main(int argc, char *argv[]) {
-	return lest::run(specification);
+	return lest::run(specification, argc, argv);
 }
 

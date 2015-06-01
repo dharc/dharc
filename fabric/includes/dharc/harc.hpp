@@ -5,6 +5,7 @@
 #ifndef DHARC_HARC_HPP_
 #define DHARC_HARC_HPP_
 
+#include <map>
 #include <list>
 #include <vector>
 #include <unordered_map>
@@ -20,6 +21,7 @@
 #include "dharc/definition.hpp"
 
 using std::pair;
+using std::multimap;
 using std::list;
 using std::vector;
 using std::chrono::time_point;
@@ -57,8 +59,6 @@ class Harc {
 	 * all partner Harcs, possibly involving a resort of partners.
 	 * @return Head node of Harc
 	 */
-	const Node &query();
-
 	const Node &query() const;
 
 	/**
@@ -128,13 +128,13 @@ class Harc {
 	mutable std::atomic<uint64_t>  flags_;
 	Definition*                    def_;
 
-	unsigned long long             lastquery_;
+	mutable unsigned long long     lastquery_;
 	float                          strength_;
 	mutable dharc::Lock            lock_;
 
 	// Might be moved to meta structure
-	mutable list<const Harc*>*     dependants_;
-	list<Harc*>::iterator          partix_[2];
+	mutable list<const Harc*>*               dependants_;
+	mutable multimap<float, Node>::iterator  partix_[2];
 
 
 

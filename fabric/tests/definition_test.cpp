@@ -11,13 +11,6 @@ using namespace std;
 
 /* ==== MOCKS ==== */
 
-Fabric dharc::fabric;
-
-Fabric::Fabric() {
-}
-
-Fabric::~Fabric() {
-}
 
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
@@ -34,19 +27,7 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 }
 
 ostream &dharc::operator<<(ostream &os, const Node &n) {
-	switch(n.t) {
-	case Node::Type::special    :
-		switch(n.i) {
-		case kNullNode   : os << "null";   break;
-		case kTrueNode   : os << "true";   break;
-		case kFalseNode  : os << "false";  break;
-		}
-		break;
-	case Node::Type::integer    : os << n.i;                 break;
-	case Node::Type::real       : os << n.d;                 break;
-	case Node::Type::character  : os << '\'' << n.c << '\''; break;
-	default : os << static_cast<int>(n.t) << ':' << n.i;
-	}
+	os << '<' << n.value << '>';
 	return os;
 }
 
@@ -67,12 +48,12 @@ CASE( "Writing a definition to stream" ) {
 
 	ss << *def;
 
-	EXPECT( ss.str() == "{(978 888) (44 45)}" );
+	EXPECT( ss.str() == "{(<978> <888>) (<44> <45>)}" );
 }
 
 };
 
 int main(int argc, char *argv[]) {
-	return lest::run(specification);
+	return lest::run(specification, argc, argv);
 }
 

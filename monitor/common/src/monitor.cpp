@@ -58,8 +58,8 @@ void Monitor::define(const Node &a,
 
 
 
-list<Node> Monitor::partners(const Node &n) {
-	return send<Command::partners>(n);
+vector<Node> Monitor::partners(const Node &n, int count) {
+	return send<Command::partners>(n, count);
 }
 
 

@@ -80,6 +80,6 @@ CASE( "Pack and unpack a list" ) {
 };
 
 int main(int argc, char *argv[]) {
-	return lest::run(specification);
+	return lest::run(specification, argc, argv);
 }
 

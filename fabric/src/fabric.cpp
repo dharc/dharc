@@ -12,6 +12,7 @@
 #include <atomic>
 #include <algorithm>
 #include <chrono>
+#include <cstring>
 
 #include "dharc/harc.hpp"
 
@@ -21,17 +22,14 @@ using dharc::Node;
 using std::vector;
 using std::list;
 using std::atomic;
-using dharc::TailHash;
-using dharc::NidHash;
 using dharc::Tail;
 
 
 atomic<unsigned long long> Fabric::counter__(0);
 
-unordered_map<Tail, Harc*, TailHash>       Fabric::harcs__;
-unique_ptr<forward_list<const Harc*>>      Fabric::changes__(
-	new forward_list<const Harc*>());
-unordered_map<Node, list<Harc*>, NidHash>  Fabric::partners__;
+unordered_map<Tail, Harc*, Fabric::TailHash>                 Fabric::harcs__;
+multimap<float, const Harc*>                                 Fabric::changes__;
+unordered_map<Node, multimap<float, Node>, Fabric::NidHash>  Fabric::partners__;
 
 std::atomic<size_t> Fabric::linkcount__(0);
 std::atomic<size_t> Fabric::nodecount__(0);
@@ -62,21 +60,33 @@ void Fabric::finalise() {
 
 
 
-unique_ptr<forward_list<const Harc*>> Fabric::changes() {
-	unique_ptr<forward_list<const Harc*>> newptr(
-		new forward_list< const Harc*>());
-	changes__.swap(newptr);
-	return newptr;
+void Fabric::changes(vector<Tail>& vec, size_t count) {
+	size_t ix = 0;
+	for (auto i : changes__) {
+		if (ix == count) break;
+		vec[ix] = i.second->tail();
+	}
 }
 
 
 
 void Fabric::logChange(const Harc *h) {
-	changes__->push_front(h);
+	//Todo(knicos): Use lifo buffer and sort changes by significance.
+	changes__.insert(pair<float, const Harc*>(h->significance(), h));
 }
 
-const list<Harc*> &Fabric::partners(const Node &n) {
-	return partners__[n];
+
+
+void Fabric::partners(const Node& node, vector<Node>& vec,
+							size_t count, size_t start) {
+	multimap<float, Node> &part = partners__[node];
+	count = (part.size() > count) ? count : part.size();
+	vec.resize(count);
+	size_t ix = 0;
+	for (auto i : part) {
+		if (ix == count) break;
+		vec[ix++] = i.second;
+	}
 }
 
 
@@ -87,13 +97,11 @@ void Fabric::add(Harc *h) {
 	++linkcount__;
 
 	// Update node partners to include this harc
-	// TODO(knicos): This should be insertion sorted.
 	auto &p1 = partners__[h->tail().first];
-	p1.push_front(h);
-	h->partix_[0] = p1.begin();
+	h->partix_[0] = p1.insert({h->significance(), h->tail().second});
+
 	auto &p2 = partners__[h->tail().second];
-	p2.push_front(h);
-	h->partix_[1] = p2.begin();
+	h->partix_[1] = p2.insert({h->significance(), h->tail().first});
 }
 
 
@@ -229,59 +237,18 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 }
 
 
-void Fabric::reposition(const list<Harc*> &p, list<Harc*>::iterator &it) {
-	if (p.begin() == it) return;
-	auto it2 = it--;
-	std::swap(*it, *it2);
 
-	// Brute force if IX not in meta data for harc.
-	/* if (p.front() == this) return;
-	for (auto i = ++p.begin(); i != p.end(); ++i) {
-		if (*i == this) {
-			// Move one place
-			//auto i2 = i--;
-			//std::swap(*i, *i2);
-			//p.insert(--(p.erase(i)), this);
-			return;
-		}
-	} */
-}
+void Fabric::updatePartners(const Harc *h) {
+	auto &p1 = partners__[h->tail().first];
+	auto &p2 = partners__[h->tail().second];
 
-void Fabric::updatePartners(const Node &n, list<Harc*>::iterator &it) {
-	auto &partners = partners__[n];
+	p1.erase(h->partix_[0]);
+	p2.erase(h->partix_[1]);
 
-	Harc *h = *it;
-	partners.erase(it);
+	p1.insert({h->significance(), h->tail().first});
+	p2.insert({h->significance(), h->tail().second});
 
-	// Insertion sort this harc by significance value
-	// Most likely very near the front of the list
-	auto j = partners.begin();
-	while (j != partners.end()) {
-		if ((*j)->significance() <= h->significance()) {
-			it = partners.insert(j, h);
-			break;
-		}
-		++j;
-	}
-
-	if (j == partners.end()) {
-		partners.push_back(h);
-		it = --partners.end();
-	}
-
-	// Shift all other partners up one place
-	// TODO(knicos): In another thread.
-	for (auto i : partners) {
-		if (i == h) continue;  // Ignore self.
-
-		if (i->tail().first == n) {
-			auto &p = partners__[i->tail().second];
-			reposition(p, i->partix_[1]);
-		} else {
-			auto &p = partners__[i->tail().first];
-			reposition(p, i->partix_[0]);
-		}
-	}
+	//TODO(knicos): Propagate to partners of partners...
 }
 
 

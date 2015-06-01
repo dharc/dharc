@@ -15,9 +15,9 @@ using dharc::Node;
 using dharc::fabric::Harc;
 
 list<Harc*> dharc::Framer::select_partners(const vector<Node> &p, int max) {
-	vector<const list<Harc*>*> parts;
+	//vector<const list<Harc*>*> parts;
 	list<Harc*> res;
-	auto *heads = new list<Harc*>::const_iterator[p.size()];
+	/*auto *heads = new list<Harc*>::const_iterator[p.size()];
 
 	int j = 0;
 	for (auto i : p) {
@@ -49,7 +49,7 @@ list<Harc*> dharc::Framer::select_partners(const vector<Node> &p, int max) {
 		res.push_back(largest);
 	}
 
-	delete [] heads;
+	delete [] heads;*/
 
 	return res;
 }
