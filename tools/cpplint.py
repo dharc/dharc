@@ -1641,7 +1641,7 @@ def GetIndentLevel(line):
   Returns:
     An integer count of leading spaces, possibly zero.
   """
-  indent = Match(r'^( *)\S', line)
+  indent = Match(r'^(\t*)\S', line)		# NICK POPE: Using TABS
   if indent:
     return len(indent.group(1))
   else:
