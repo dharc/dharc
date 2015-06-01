@@ -1,4 +1,4 @@
-# DHarc [![Build Status](https://secure.travis-ci.org/dharc/f-dsb.png?branch=master)](https://travis-ci.org/dharc/dharc)
+# DHarc [![Build Status](https://secure.travis-ci.org/dharc/dharc.png?branch=master)](https://travis-ci.org/dharc/dharc)
 
 Framed Dynamic HyperGraph for AGI
 
