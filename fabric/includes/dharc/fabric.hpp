@@ -18,7 +18,6 @@
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
-#include "dharc/harc.hpp"
 // #include "dharc/lifobuffer.hpp"
 
 using std::forward_list;
@@ -30,6 +29,11 @@ using std::list;
 using std::multimap;
 using std::size_t;
 
+namespace dharc {
+namespace fabric {
+class Harc;
+};  // namespace fabric
+};  // namespace dharc
 using dharc::fabric::Harc;
 // using dharc::LIFOBuffer;
 

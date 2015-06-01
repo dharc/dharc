@@ -19,6 +19,7 @@
 #include "dharc/tail.hpp"
 #include "dharc/lock.hpp"
 #include "dharc/definition.hpp"
+#include "dharc/significance.hpp"
 
 using std::pair;
 using std::multimap;
@@ -114,13 +115,13 @@ class Harc {
 	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.
 	 * @return Signficance of Harc between 0.0 and 1.0.
 	 */
-	float significance() const;
+	inline float significance() const { return sig_.significance(); }
 
 	/**
 	 * Time in seconds since this Harc was last queried.
 	 * @return Seconds since last query.
 	 */
-	float lastQuery() const;
+	inline float lastQuery() const { return sig_.lastBoost(); }
 
 	private:
 	const Tail                     tail_;
@@ -128,8 +129,7 @@ class Harc {
 	mutable std::atomic<uint64_t>  flags_;
 	Definition*                    def_;
 
-	mutable unsigned long long     lastquery_;
-	float                          strength_;
+	mutable Significance           sig_;
 	mutable dharc::Lock            lock_;
 
 	// Might be moved to meta structure

@@ -28,8 +28,6 @@ Harc::Harc(const pair<Node, Node> &t) :
 	tail_(t),
 	head_(null_n),
 	flags_(static_cast<unsigned char>(Flag::none)),
-	lastquery_(Fabric::counter()),
-	strength_(0.0),
 	dependants_(nullptr) {}
 
 
@@ -43,26 +41,8 @@ void Harc::addDependant(const Harc &h) {
 
 
 
-float Harc::significance() const {
-	float delta = static_cast<float>(Fabric::counter()) -
-					static_cast<float>(lastquery_);
-	if (delta == 0) delta = 1.0;
-	return 1.0 / delta;
-}
-
-
-
-float Harc::lastQuery() const {
-	float delta = static_cast<float>(Fabric::counter()) -
-					static_cast<float>(lastquery_);
-	return (delta * Fabric::counterResolution()) / 1000.0f;
-}
-
-
-
 const Node &Harc::query() const {
-	if (lastquery_ < Fabric::counter()) {
-		lastquery_ = Fabric::counter();
+	if (sig_.boost(1.0)) {
 		Fabric::updatePartners(this);
 	}
 

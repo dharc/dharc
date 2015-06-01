@@ -248,7 +248,8 @@ void Fabric::updatePartners(const Harc *h) {
 	p1.insert({h->significance(), h->tail().first});
 	p2.insert({h->significance(), h->tail().second});
 
-	//TODO(knicos): Propagate to partners of partners...
+	// TODO(knicos): Propagate to partners of partners...
+	// This could be done slowly in another thread.
 }
 
 
