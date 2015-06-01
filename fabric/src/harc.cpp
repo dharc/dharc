@@ -79,8 +79,6 @@ void Harc::dirty() const {
 
 
 void Harc::define(const Node &n) {
-	if (checkFlag(Flag::log)) Fabric::logChange(this);
-
 	lock_.lock();
 	if (checkFlag(Flag::defined)) {
 		delete def_;
@@ -104,8 +102,6 @@ void Harc::define(const vector<vector<Node>> &definition) {
 	def_ = new Definition(definition);
 	setFlag(Flag::outofdate);
 	lock_.unlock();
-
-	if (checkFlag(Flag::log)) Fabric::logChange(this);
 
 	dirty();
 }

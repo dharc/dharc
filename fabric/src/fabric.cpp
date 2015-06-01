@@ -120,7 +120,8 @@ Harc &Fabric::get(const Tail &key) {
 		h = h->instantiate(key.first);
 		if (oldh == h) return *h;
 	} else {*/
-		h = new Harc(key);
+		h = new Harc((key.second < key.first) ?
+						Tail{key.second, key.first} : key);
 	//}
 
 	add(h);
@@ -130,7 +131,8 @@ Harc &Fabric::get(const Tail &key) {
 
 
 bool Fabric::get(const Tail &key, Harc*& result) {
-	auto it = harcs__.find(key);
+	auto it = harcs__.find(
+		(key.second < key.first) ? Tail{key.second, key.first} : key);
 
 	if (it != harcs__.end()) {
 		result = it->second;

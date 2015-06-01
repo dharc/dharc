@@ -104,6 +104,16 @@ class Fabric {
 
 
 
+	static vector<Node> partners(	const Node& node,
+									size_t      count,
+									size_t      start = 0) {
+		vector<Node> result;
+		partners(node, result, count, start);
+		return result;
+	}
+
+
+
 	/**
 	 * Query the head node of a hyperarc.
 	 *     Given the tail nodes of a hyperarc, lookup the hyperarc and ask for
@@ -116,6 +126,10 @@ class Fabric {
 	 * @return Head node of hyperarch.
 	 */
 	static Node query(const Tail &tail);
+
+	static Node query(const Node &a, const Node &b) {
+		return query({a, b});
+	}
 
 
 
@@ -153,8 +167,21 @@ class Fabric {
 	 */
 	static void define(const Tail &tail, const vector<vector<Node>> &def);
 
+
+
+	/**
+	 * Generate a unique node number.
+	 */
 	static Node unique();
 
+
+
+	/**
+	 * Generate a sequential block of unique nodes.
+	 * @param count Number of nodes to allocate.
+	 * @param first Filled with first node id.
+	 * @param last Filled with last (first+count).
+	 */
 	static void unique(int count, Node &first, Node &last);
 
 
@@ -181,14 +208,44 @@ class Fabric {
 
 
 
+	/**
+	 * Statistic: Number of hyperarcs.
+	 * @return Total hyperarcs in the fabric
+	 */
 	static size_t linkCount()        { return linkcount__; }
+
+
+
+	/**
+	 * Statistic: Number of nodes.
+	 *     Some of these nodes may not be involved in a hyperarc.
+	 * @return Total number of allocated nodes.
+	 */
 	static size_t nodeCount()        { return nodecount__; }
+
+
+
+	/**
+	 * Statistic: Number of hyperarcs with definitions.
+	 */
 	static size_t definedLinks()     { return variablelinks__; }
+
+
+
+	/**
+	 * Statistic: Approximate number of queries per second.
+	 */
 	static float  queriesPerSecond() {
 		return (static_cast<float>(querycount__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
+
+
+
+	/**
+	 * Statistic: Approximate number of hyperarc modifications per second.
+	 */
 	static float  changesPerSecond() {
 		return (static_cast<float>(changecount__) /
 				static_cast<float>(counter__)) *
@@ -201,14 +258,16 @@ class Fabric {
 	 * Number of ticks since program start. Used to record when a relation
 	 * was last accessed or changed.
 	 */
-	static unsigned long long counter() { return counter__; }
+	inline static unsigned long long counter() { return counter__; }
+
+
 
 	/**
 	 * Number of milliseconds per tick.
 	 */
 	constexpr static unsigned long long counterResolution() { return 100; }
 
-	// constexpr static int sig_prop_max() { return 20; }
+
 
 	private:
 	struct TailHash {
