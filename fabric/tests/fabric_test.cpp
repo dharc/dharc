@@ -112,7 +112,12 @@ CASE( "Follow a set of paths in parallel" ) {
 
 
 CASE( "Check the change log is filled correctly" ) {
-	//TODO(knicos):
+	Fabric::clearChanges();
+	Fabric::define({100_n, 200_n}, 300_n);
+	vector<Tail> changes;
+	Fabric::changes(changes, 10);
+	EXPECT( changes.size() == 1U );
+	EXPECT( changes[0].first == 100_n );
 },
 
 CASE( "Check that partners are inserted to partner lists") {

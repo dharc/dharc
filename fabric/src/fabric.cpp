@@ -24,13 +24,14 @@ using std::vector;
 using std::list;
 using std::atomic;
 using dharc::Tail;
+using dharc::fabric::HarcMap;
 
 
 atomic<unsigned long long> Fabric::counter__(0);
 
-unordered_map<Tail, Harc*, Fabric::TailHash>                 Fabric::harcs__;
+HarcMap                 Fabric::harcs__;
 multimap<float, const Harc*>                                 Fabric::changes__;
-unordered_map<Node, multimap<float, Node>, Fabric::NidHash>  Fabric::partners__;
+unordered_map<Node, multimap<float, const Harc*>, Fabric::NidHash> Fabric::partners__;
 
 std::atomic<size_t> Fabric::linkcount__(0);
 std::atomic<size_t> Fabric::nodecount__(0);
@@ -80,29 +81,31 @@ void Fabric::logChange(const Harc *h) {
 
 void Fabric::partners(const Node& node, vector<Node>& vec,
 							size_t count, size_t start) {
-	multimap<float, Node> &part = partners__[node];
+	multimap<float, const Harc*> &part = partners__[node];
 	count = (part.size() > count) ? count : part.size();
 	vec.resize(count);
-	size_t ix = 0;
-	for (auto i : part) {
+	// size_t ix = 0;
+	// TODO(knicos): To return Harcs or nodes. If nodes, which ones??
+	// if harcs then need harc ids instead of pointers.
+	/*for (auto i : part) {
 		if (ix == count) break;
 		vec[ix++] = i.second;
-	}
+	}*/
 }
 
 
 
-void Fabric::add(Harc *h) {
-	harcs__.insert({h->tail(), h});
+void Fabric::add(Harc *h, const Tail &key) {
+	h->setIterator(harcs__.insert({key, h}).first);
 
 	++linkcount__;
 
 	// Update node partners to include this harc
-	auto &p1 = partners__[h->tail().first];
-	h->partix_[0] = p1.insert({h->significance(), h->tail().second});
-
-	auto &p2 = partners__[h->tail().second];
-	h->partix_[1] = p2.insert({h->significance(), h->tail().first});
+	for (auto i : h->tail()) {
+		auto &p = partners__[i];
+		// h->partix_[0] =
+		p.insert({h->significance(), h});
+	}
 }
 
 
@@ -110,6 +113,11 @@ void Fabric::add(Harc *h) {
 Harc &Fabric::get(const Tail &key) {
 	Harc *h;
 	if (get(key, h)) return *h;
+
+	Tail key_sorted = key;
+	std::sort(key_sorted.begin(),key_sorted.end());
+
+	if (get(key_sorted, h)) return *h;
 
 	// Check for an Any($) entry
 	/*if (get(dharc::any_n, key.first, h)) {
@@ -121,19 +129,17 @@ Harc &Fabric::get(const Tail &key) {
 		h = h->instantiate(key.first);
 		if (oldh == h) return *h;
 	} else {*/
-		h = new Harc((key.second < key.first) ?
-						Tail{key.second, key.first} : key);
+		h = new Harc();
 	//}
 
-	add(h);
+	add(h, key_sorted);
 	return *h;
 }
 
 
 
 bool Fabric::get(const Tail &key, Harc*& result) {
-	auto it = harcs__.find(
-		(key.second < key.first) ? Tail{key.second, key.first} : key);
+	auto it = harcs__.find(key);
 
 	if (it != harcs__.end()) {
 		result = it->second;
@@ -151,12 +157,16 @@ Node Fabric::query(const Tail &tail) {
 
 void Fabric::define(const Tail &tail, const Node &head) {
 	++changecount__;
-	get(tail).define(head);
+	Harc &h = get(tail);
+	h.define(head);
+	logChange(&h);
 }
 
 void Fabric::define(const Tail &tail, const vector<vector<Node>> &def) {
 	++changecount__;
-	get(tail).define(def);
+	Harc &h = get(tail);
+	h.define(def);
+	logChange(&h);
 }
 
 
@@ -242,14 +252,12 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 
 
 void Fabric::updatePartners(const Harc *h) {
-	auto &p1 = partners__[h->tail().first];
-	auto &p2 = partners__[h->tail().second];
-
-	p1.erase(h->partix_[0]);
-	p2.erase(h->partix_[1]);
-
-	p1.insert({h->significance(), h->tail().first});
-	p2.insert({h->significance(), h->tail().second});
+	for (auto i : h->tail()) {
+		auto &p = partners__[i];
+		//TODO(knicos): REPLACE EXISTING SOMEHOW.
+		// p.erase(h->partix_[0]);
+		p.insert({h->significance(), h});
+	}
 
 	// TODO(knicos): Propagate to partners of partners...
 	// This could be done slowly in another thread.

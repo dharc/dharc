@@ -14,6 +14,7 @@
 #include <chrono>
 #include <iostream>
 #include <string>
+#include <algorithm>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -124,7 +125,7 @@ class Harc {
 	inline float lastQuery() const { return sig_.lastBoost(); }
 
 	private:
-	const Tail                     tail_;
+	HarcMap::iterator              tail_;
 	mutable Node                   head_;
 	mutable std::atomic<uint64_t>  flags_;
 	Definition*                    def_;
@@ -134,15 +135,15 @@ class Harc {
 
 	// Might be moved to meta structure
 	mutable list<const Harc*>*               dependants_;
-	mutable multimap<float, Node>::iterator  partix_[2];
+	// mutable multimap<float, Node>::iterator  partix_[2];
 
 
 
 	inline void setFlag(Flag f) const;
 	inline void clearFlag(Flag f) const;
 
-	Harc() = delete;
-	explicit Harc(const Tail &t);
+	Harc();
+	void setIterator(const HarcMap::iterator &it) { tail_ = it; }
 	void dirty() const;  				/* Mark as out-of-date and propagate */
 	void addDependant(const Harc &);  	/* Notify given Harc on change. */
 
@@ -166,15 +167,16 @@ inline void Harc::clearFlag(Flag f) const {
 
 std::ostream &operator<<(std::ostream &os, const Harc &h);
 
-inline const Tail &Harc::tail() const { return tail_; }
+inline const Tail &Harc::tail() const { return (*tail_).first; }
 
 inline bool Harc::tailContains(const Node &n) const {
-	return (tail_.first == n) || (tail_.second == n);
+	return std::binary_search(tail().begin(),tail().end(), n);
 }
 
-inline const Node &Harc::tailPartner(const Node &n) const {
+/*inline const Node &Harc::tailPartner(const Node &n) const {
 	return (tail_.first == n) ? tail_.second : tail_.first;
 }
+*/
 
 inline const list<const Harc*> *Harc::dependants() const {
 	return dependants_;

@@ -6,11 +6,21 @@
 #define DHARC_TAIL_HPP_
 
 #include <utility>
+#include <unordered_map>
 
 #include "dharc/node.hpp"
 
 namespace dharc {
-typedef std::pair<dharc::Node, dharc::Node> Tail;
+typedef std::vector<dharc::Node> Tail;
+namespace fabric {
+struct TailHash {
+	inline size_t operator()(const dharc::Tail &x) const {
+		return x[0].value*3 + x[1].value;
+	}
+};
+class Harc;
+typedef std::unordered_map<Tail, Harc*, TailHash> HarcMap;
+};  // namespace fabric
 };  // namespace dharc
 
 #endif  // DHARC_TAIL_HPP_

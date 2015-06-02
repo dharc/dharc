@@ -24,8 +24,7 @@ using std::stringstream;
 
 
 
-Harc::Harc(const pair<Node, Node> &t) :
-	tail_(t),
+Harc::Harc() :
 	head_(null_n),
 	flags_(static_cast<unsigned char>(Flag::none)),
 	dependants_(nullptr) {}
@@ -141,8 +140,11 @@ Harc *Harc::instantiate(const Node &any) {
 
 
 std::ostream &dharc::fabric::operator<<(std::ostream &os, const Harc &h) {
-	os << '[' << h.tail().first << ',' << h.tail().second
-		<< "->" << '?' << ']';
+	os << '[';
+	for (auto i : h.tail()) {
+		os << i;
+	}
+	os << "->" << '?' << ']';
 	return os;
 }
 

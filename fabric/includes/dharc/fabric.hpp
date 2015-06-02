@@ -35,6 +35,7 @@ class Harc;
 };  // namespace fabric
 };  // namespace dharc
 using dharc::fabric::Harc;
+using dharc::fabric::TailHash;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
@@ -73,6 +74,11 @@ class Fabric {
 	 * @param count How many changes to request.
 	 */
 	static void changes(vector<Tail>& vec, size_t count);
+
+
+
+	/* Used for testing */
+	static void clearChanges() { changes__.clear(); }
 
 
 
@@ -270,12 +276,6 @@ class Fabric {
 
 
 	private:
-	struct TailHash {
-		constexpr size_t operator()(const Tail &x) const {
-			return x.first.value*3 + x.second.value;
-		}
-	};
-
 	struct NidHash {
 		constexpr size_t operator()(const Node &x) const {
 			return x.value;
@@ -283,9 +283,9 @@ class Fabric {
 	};
 
 
-	static unordered_map<Tail, Harc*, TailHash>                 harcs__;
+	static fabric::HarcMap                 harcs__;
 	static multimap<float, const Harc*>                         changes__;
-	static unordered_map<Node, multimap<float, Node>, NidHash>  partners__;
+	static unordered_map<Node, multimap<float, const Harc*>, NidHash>  partners__;
 
 	static std::atomic<size_t> linkcount__;
 	static std::atomic<size_t> nodecount__;
@@ -298,13 +298,12 @@ class Fabric {
 
 
 	static Harc &get(const Node &a, const Node &b) {
-		return get((a < b) ? pair<Node, Node>(a, b) : pair<Node, Node>(b, a));
+		return get((a < b) ? vector<Node>{a, b} : vector<Node>{b, a});
 	}
 	static Harc &get(const Tail &key);
 	static bool get(const Tail &key, Harc*& result);
 	static bool get(const Node &a, const Node &b, Harc*& result) {
-		return get((a < b) ? pair<Node,
-			Node>(a, b) : pair<Node, Node>(b, a),
+		return get((a < b) ? vector<Node>{a, b} : vector<Node>{b, a},
 			result);
 	}
 
@@ -319,7 +318,7 @@ class Fabric {
 
 	static void updatePartners(const Harc *h);
 
-	static void add(Harc *h);
+	static void add(Harc *h, const Tail &key);
 };
 
 /*inline auto begin(const Node &n) {

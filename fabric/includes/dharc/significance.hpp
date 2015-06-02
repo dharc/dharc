@@ -11,6 +11,8 @@ using dharc::Fabric;
 
 namespace dharc {
 namespace fabric {
+class Harc;
+
 class Significance {
  public:
 	Significance() :
@@ -50,10 +52,12 @@ class Significance {
 
 
 
- private:
+	private:
 	unsigned long long lastboost_;
 	float sts_;
 	float lts_;
+
+	friend class dharc::fabric::Harc;
 };
 };  // namespace fabric
 };  // namespace dharc
