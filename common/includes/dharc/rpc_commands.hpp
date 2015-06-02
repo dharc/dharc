@@ -10,11 +10,13 @@
 #include <list>
 
 #include "dharc/node.hpp"
+#include "dharc/tail.hpp"
 
 using std::vector;
 using std::list;
 using std::tuple;
 using dharc::Node;
+using dharc::Tail;
 
 namespace dharc {
 namespace rpc {
@@ -47,7 +49,7 @@ typedef tuple<
 	Node(*)(const Node&, const Node&),
 	bool(*)(const Node&, const Node&, const Node&),
 	bool(*)(const Node&, const Node&, const vector<vector<Node>>&),
-	vector<Node>(*)(const Node&, const int&),
+	vector<Tail>(*)(const Node&, const int&),
 	Node(*)(),
 	size_t(*)(),
 	size_t(*)(),

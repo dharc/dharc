@@ -15,6 +15,7 @@
 #include <atomic>
 #include <unordered_map>
 #include <map>
+#include <functional>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -39,6 +40,9 @@ using dharc::fabric::TailHash;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
+namespace fabric {
+typedef multimap<float, const Harc*, std::greater<float>> SortedHarcs;
+};  // namespace fabric
 
 /**
  * The Dharc Fabric: a dynamic hypergraph.
@@ -104,16 +108,16 @@ class Fabric {
 	 * @param start Offset to this position in overal partners list.
 	 */
 	static void partners(const Node&   node,
-							vector<Node>& vec,
+							vector<const Tail*>& vec,
 							size_t        count,
 							size_t        start = 0);
 
 
 
-	static vector<Node> partners(const Node& node,
-									size_t      count,
-									size_t      start = 0) {
-		vector<Node> result;
+	static vector<const Tail*> partners(const Node& node,
+										size_t      count,
+										size_t      start = 0) {
+		vector<const Tail*> result;
 		partners(node, result, count, start);
 		return result;
 	}
@@ -284,8 +288,8 @@ class Fabric {
 
 
 	static fabric::HarcMap                 harcs__;
-	static multimap<float, const Harc*>                         changes__;
-	static unordered_map<Node, multimap<float, const Harc*>, NidHash>  partners__;
+	static fabric::SortedHarcs changes__;
+	static unordered_map<Node, fabric::SortedHarcs, NidHash> partners__;
 
 	static std::atomic<size_t> linkcount__;
 	static std::atomic<size_t> nodecount__;

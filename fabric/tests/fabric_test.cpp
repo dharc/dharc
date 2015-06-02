@@ -130,9 +130,9 @@ CASE( "Check that partners are inserted to partner lists") {
 	EXPECT( static_cast<int>(partners.size()) == 3 );
 	
 	for (auto i : partners) {
-		EXPECT( (i == 34_n
-			|| i == 35_n
-			|| i == 36_n) );
+		EXPECT( ((i->at(0) == 34_n || i->at(1) == 34_n)
+			|| (i->at(0) == 35_n || i->at(1) == 35_n)
+			|| (i->at(0) == 36_n || i->at(1) == 36_n)) );
 	}
 }
 };

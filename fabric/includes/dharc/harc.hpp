@@ -118,6 +118,14 @@ class Harc {
 	 */
 	inline float significance() const { return sig_.significance(); }
 
+	inline float changeSignificance(float prev) const {
+		return sig_.change(prev);
+	}
+
+	inline float partnerSignificance(float prev) const {
+		return sig_.partner(prev);
+	}
+
 	/**
 	 * Time in seconds since this Harc was last queried.
 	 * @return Seconds since last query.

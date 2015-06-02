@@ -11,6 +11,7 @@
 
 #include "dharc/node.hpp"
 #include "dharc/rpc.hpp"
+#include "dharc/tail.hpp"
 
 using std::vector;
 using std::list;
@@ -25,7 +26,7 @@ class Monitor : public dharc::Rpc {
 	Node query(const Node &a, const Node &b);
 	void define(const Node &a, const Node &b, const Node &h);
 	void define(const Node &a, const Node &b, const vector<vector<Node>> &p);
-	vector<Node> partners(const Node &a, int count);
+	vector<dharc::Tail> partners(const Node &a, int count);
 
 	size_t linkCount();
 	size_t nodeCount();

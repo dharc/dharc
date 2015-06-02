@@ -80,7 +80,7 @@ class TestRpc : public dharc::Rpc {
 		return send<Command::define>(n1, n2, def);
 	}
 
-	vector<Node> partners(const Node &n, const int &count) {
+	vector<vector<Node>> partners(const Node &n, const int &count) {
 		return send<Command::partners>(n, count);
 	}
 };
@@ -115,11 +115,11 @@ CASE( "Define with vector argument" ) {
 
 CASE( "Returning a vector" ) {
 	TestRpc testrpc;
-	dummy_result = "[\"133\",\"344\"]";
+	dummy_result = "[[\"133\",\"344\"]]";
 	int count = 10;
-	vector<Node> result = testrpc.partners(10_n, count);
-	EXPECT( result.front() == 133_n );
-	EXPECT( result.back() == 344_n );
+	vector<vector<Node>> result = testrpc.partners(10_n, count);
+	EXPECT( result.front().front() == 133_n );
+	EXPECT( result.front().back() == 344_n );
 }
 
 /*

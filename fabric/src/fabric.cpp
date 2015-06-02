@@ -14,6 +14,7 @@
 #include <chrono>
 #include <cstring>
 #include <map>
+#include <functional>
 
 #include "dharc/harc.hpp"
 
@@ -25,14 +26,14 @@ using std::list;
 using std::atomic;
 using dharc::Tail;
 using dharc::fabric::HarcMap;
+using dharc::fabric::SortedHarcs;
 
 
 atomic<unsigned long long> Fabric::counter__(0);
 
-HarcMap                 Fabric::harcs__;
-multimap<float, const Harc*>                                 Fabric::changes__;
-unordered_map<Node, multimap<float,
-		const Harc*>, Fabric::NidHash> Fabric::partners__;
+HarcMap Fabric::harcs__;
+SortedHarcs Fabric::changes__;
+unordered_map<Node, SortedHarcs, Fabric::NidHash> Fabric::partners__;
 
 std::atomic<size_t> Fabric::linkcount__(0);
 std::atomic<size_t> Fabric::nodecount__(0);
@@ -64,6 +65,8 @@ void Fabric::finalise() {
 
 
 void Fabric::changes(vector<const Tail*>& vec, size_t count) {
+	count = (changes__.size() > count) ? count : changes__.size();
+	vec.resize(count);
 	size_t ix = 0;
 	for (auto i : changes__) {
 		if (ix == count) break;
@@ -74,24 +77,23 @@ void Fabric::changes(vector<const Tail*>& vec, size_t count) {
 
 
 void Fabric::logChange(const Harc *h) {
-	// Todo(knicos): Use lifo buffer ?
-	changes__.insert(pair<float, const Harc*>(h->significance(), h));
+	// TODO(knicos): Make sure change significance always increases?
+	// makes sure most recent changes are at top.
+	changes__.insert(pair<float, const Harc*>(h->changeSignificance(0.0), h));
 }
 
 
 
-void Fabric::partners(const Node& node, vector<Node>& vec,
+void Fabric::partners(const Node& node, vector<const Tail *>& vec,
 							size_t count, size_t start) {
-	multimap<float, const Harc*> &part = partners__[node];
+	SortedHarcs &part = partners__[node];
 	count = (part.size() > count) ? count : part.size();
 	vec.resize(count);
-	// size_t ix = 0;
-	// TODO(knicos): To return Harcs or nodes. If nodes, which ones??
-	// if harcs then need harc ids instead of pointers.
-	/*for (auto i : part) {
+	size_t ix = 0;
+	for (auto i : part) {
 		if (ix == count) break;
-		vec[ix++] = i.second;
-	}*/
+		vec[ix++] = &i.second->tail();
+	}
 }
 
 
@@ -257,7 +259,7 @@ void Fabric::updatePartners(const Harc *h) {
 		auto &p = partners__[i];
 		// TODO(knicos): REPLACE EXISTING SOMEHOW.
 		// p.erase(h->partix_[0]);
-		p.insert({h->significance(), h});
+		p.insert({h->partnerSignificance(0.0), h});
 	}
 
 	// TODO(knicos): Propagate to partners of partners...

@@ -67,9 +67,13 @@ bool rpc_define(
 }
 
 /* rpc::Command::partners */
-vector<Node> rpc_partners(const Node &n, const int &count) {
-	vector<Node> res;
-	Fabric::partners(n, res, count);
+vector<Tail> rpc_partners(const Node &n, const int &count) {
+	vector<Tail> res;
+	vector<const Tail*> rest;
+	Fabric::partners(n, rest, count);
+	for (auto i : rest) {
+		res.push_back(*i);
+	}
 	return res;
 }
 

@@ -10,8 +10,10 @@
 #include <string>
 
 #include "dharc/node.hpp"
+#include "dharc/tail.hpp"
 
 using dharc::Node;
+using dharc::Tail;
 using dharc::Rpc;
 using dharc::Monitor;
 using std::string;
@@ -57,7 +59,7 @@ void Monitor::define(const Node &a,
 
 
 
-vector<Node> Monitor::partners(const Node &n, int count) {
+vector<Tail> Monitor::partners(const Node &n, int count) {
 	return send<Command::partners>(n, count);
 }
 

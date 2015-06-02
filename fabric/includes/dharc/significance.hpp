@@ -31,6 +31,18 @@ class Significance {
 
 
 
+	float change(float prev) const {
+		return significance();
+	}
+
+
+
+	float partner(float prev) const {
+		return significance();
+	}
+
+
+
 	bool boost(float factor) {
 		if (lastboost_ < Fabric::counter()) {
 			return true;
