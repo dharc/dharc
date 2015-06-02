@@ -50,11 +50,12 @@ void Fabric::counterThread() {
 		if (changes__.size() >= 2 * maxChanges()) {
 			auto i = changes__.begin();
 			size_t count = 0;
-			while (count++ < maxChanges()) {
-				++i;
-			}
+			// Really no better way??
+			while (count++ < maxChanges()) ++i;
 			changes__.erase(i, changes__.end());
 		}
+
+		// TODO(knicos): Reduce sleep time by processing time.
 
 		std::this_thread::sleep_for(
 				std::chrono::milliseconds(counterResolution()));

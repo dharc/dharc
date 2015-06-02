@@ -48,7 +48,7 @@ class Harc {
 	public:
 	enum struct Flag : uint64_t {
 		none =       0b00000000,
-		log =        0b00000001,
+		// log =        0b00000001,
 		meta =       0b00000010,
 		defined =    0b00000100,
 		outofdate =  0b00001000,
@@ -84,9 +84,6 @@ class Harc {
 	inline const Node &tailPartner(const Node &n) const;
 
 	inline bool checkFlag(Flag f) const;
-
-	inline void startRecording() const { setFlag(Flag::log); }
-	inline void stopRecording() const { clearFlag(Flag::log); }
 
 	/**
 	 * Define the Harc as having a constant head node. If there is an

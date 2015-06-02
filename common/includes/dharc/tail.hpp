@@ -13,13 +13,16 @@
 
 namespace dharc {
 typedef std::vector<dharc::Node> Tail;
+
 namespace fabric {
 struct TailHash {
 	inline size_t operator()(const dharc::Tail &x) const {
 		return x[0].value*3 + x[1].value;
 	}
 };
+
 class Harc;
+
 typedef std::unordered_map<Tail, Harc*, TailHash> HarcMap;
 };  // namespace fabric
 };  // namespace dharc
