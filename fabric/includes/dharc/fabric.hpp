@@ -73,7 +73,7 @@ class Fabric {
 	 * @param vec Vector to fill with requested changes.
 	 * @param count How many changes to request.
 	 */
-	static void changes(vector<Tail>& vec, size_t count);
+	static void changes(vector<const Tail*>& vec, size_t count);
 
 
 

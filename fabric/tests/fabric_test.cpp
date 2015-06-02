@@ -7,8 +7,7 @@ using namespace dharc;
 
 /* ==== MOCKS =============================================================== */
 
-Harc::Harc(const pair<Node, Node> &t) :
-	tail_(t),
+Harc::Harc() :
 	head_(null_n),
 	flags_(static_cast<unsigned char>(Flag::none)),
 	dependants_(nullptr) {}
@@ -114,10 +113,10 @@ CASE( "Follow a set of paths in parallel" ) {
 CASE( "Check the change log is filled correctly" ) {
 	Fabric::clearChanges();
 	Fabric::define({100_n, 200_n}, 300_n);
-	vector<Tail> changes;
+	vector<const Tail*> changes;
 	Fabric::changes(changes, 10);
 	EXPECT( changes.size() == 1U );
-	EXPECT( changes[0].first == 100_n );
+	EXPECT( changes[0]->at(0) == 100_n );
 },
 
 CASE( "Check that partners are inserted to partner lists") {

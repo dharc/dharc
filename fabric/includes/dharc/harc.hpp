@@ -170,7 +170,7 @@ std::ostream &operator<<(std::ostream &os, const Harc &h);
 inline const Tail &Harc::tail() const { return (*tail_).first; }
 
 inline bool Harc::tailContains(const Node &n) const {
-	return std::binary_search(tail().begin(),tail().end(), n);
+	return std::binary_search(tail().begin(), tail().end(), n);
 }
 
 /*inline const Node &Harc::tailPartner(const Node &n) const {

@@ -16,7 +16,7 @@ using std::vector;
 /* ==== MOCKS ==== */
 
 std::atomic<unsigned long long> Fabric::counter__(0);
-unordered_map<Tail, Harc*, Fabric::TailHash> Fabric::harcs__;
+fabric::HarcMap Fabric::harcs__;
 
 void Fabric::counterThread() {
 	while (true) {
@@ -64,14 +64,14 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 const Harc *last_log = nullptr;
 
 
-Harc &Fabric::get(const pair<Node, Node> &key) {
+Harc &Fabric::get(const Tail &key) {
 	auto it = harcs__.find(key);
 
 	if (it != harcs__.end()) {
 		return *(it->second);
 	} else {
-		auto h = new Harc(key);
-		harcs__.insert({key, h});
+		auto h = new Harc();
+		h->setIterator(harcs__.insert({key, h}).first);
 		return *h;
 	}
 }

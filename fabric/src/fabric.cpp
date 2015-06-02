@@ -31,7 +31,8 @@ atomic<unsigned long long> Fabric::counter__(0);
 
 HarcMap                 Fabric::harcs__;
 multimap<float, const Harc*>                                 Fabric::changes__;
-unordered_map<Node, multimap<float, const Harc*>, Fabric::NidHash> Fabric::partners__;
+unordered_map<Node, multimap<float,
+		const Harc*>, Fabric::NidHash> Fabric::partners__;
 
 std::atomic<size_t> Fabric::linkcount__(0);
 std::atomic<size_t> Fabric::nodecount__(0);
@@ -62,11 +63,11 @@ void Fabric::finalise() {
 
 
 
-void Fabric::changes(vector<Tail>& vec, size_t count) {
+void Fabric::changes(vector<const Tail*>& vec, size_t count) {
 	size_t ix = 0;
 	for (auto i : changes__) {
 		if (ix == count) break;
-		vec[ix] = i.second->tail();
+		vec[ix] = &i.second->tail();
 	}
 }
 
@@ -115,7 +116,7 @@ Harc &Fabric::get(const Tail &key) {
 	if (get(key, h)) return *h;
 
 	Tail key_sorted = key;
-	std::sort(key_sorted.begin(),key_sorted.end());
+	std::sort(key_sorted.begin(), key_sorted.end());
 
 	if (get(key_sorted, h)) return *h;
 
@@ -254,7 +255,7 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 void Fabric::updatePartners(const Harc *h) {
 	for (auto i : h->tail()) {
 		auto &p = partners__[i];
-		//TODO(knicos): REPLACE EXISTING SOMEHOW.
+		// TODO(knicos): REPLACE EXISTING SOMEHOW.
 		// p.erase(h->partix_[0]);
 		p.insert({h->significance(), h});
 	}
