@@ -45,6 +45,17 @@ std::atomic<size_t> Fabric::querycount__(0);
 void Fabric::counterThread() {
 	while (true) {
 		++counter__;
+
+		// Cull the change log if it needs it.
+		if (changes__.size() >= 2 * maxChanges()) {
+			auto i = changes__.begin();
+			size_t count = 0;
+			while (count++ < maxChanges()) {
+				++i;
+			}
+			changes__.erase(i, changes__.end());
+		}
+
 		std::this_thread::sleep_for(
 				std::chrono::milliseconds(counterResolution()));
 	}

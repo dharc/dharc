@@ -88,9 +88,11 @@ class Fabric {
 
 	/**
 	 * Maximum number of harc changes in the change log.
+	 *     The change log may not actually contain this many, and at any
+	 *     given instant it may contain more (until garbage collector runs).
 	 * @return Number of changes available.
 	 */
-	static size_t maxChanges();
+	constexpr static size_t maxChanges() { return 1000; }
 
 
 

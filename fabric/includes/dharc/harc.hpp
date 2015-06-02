@@ -133,7 +133,7 @@ class Harc {
 	inline float lastQuery() const { return sig_.lastBoost(); }
 
 	private:
-	HarcMap::iterator              tail_;
+	HarcMap::const_iterator        tail_;
 	mutable Node                   head_;
 	mutable std::atomic<uint64_t>  flags_;
 	Definition*                    def_;
