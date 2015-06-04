@@ -47,19 +47,17 @@ void Fabric::updatePartners(const Harc *h) {
 
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
+	Tail tail(p.size());
+	tail.insert(p[0]);
+	tail.insert(p[1]);
+	if (dep) {
+		Harc &h = get(tail);
+		h.addDependant(*dep);
+		return dummy_result;
+	}
 	return dummy_result;
 }
 
-vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
-	vector<Node> results;
-
-	Harc &h = get(p[0][0],p[0][1]);
-	if (dep) {
-		h.addDependant(*dep);
-	}
-	results.push_back(dummy_result);
-	return results;
-}
 
 const Harc *last_log = nullptr;
 
