@@ -16,7 +16,7 @@ class Tail {
 	public:
 	Tail();
 	explicit Tail(size_t n);
-	explicit Tail(std::initializer_list<dharc::Node> il);
+	explicit Tail(std::initializer_list<dharc::Node> il, bool prefixed = false);
 
 	inline bool operator==(const Tail &o) const { return nodes_ == o.nodes_; }
 

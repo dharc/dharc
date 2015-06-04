@@ -1,3 +1,2 @@
 ADD_SUBDIRECTORY(common)
-ADD_SUBDIRECTORY(command-line)
 #ADD_SUBDIRECTORY(tests)

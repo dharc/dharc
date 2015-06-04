@@ -15,9 +15,9 @@ dharc::Tail::Tail(size_t n) {
 	nodes_.reserve(n);
 }
 
-dharc::Tail::Tail(std::initializer_list<dharc::Node> il) :
+dharc::Tail::Tail(std::initializer_list<dharc::Node> il, bool prefixed) :
 	nodes_(il) {
-	fixup();
+	if (!prefixed) fixup();
 }
 
 void dharc::Tail::fixup() {

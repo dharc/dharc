@@ -36,11 +36,12 @@ enum struct Command : int {
 	nodecount,
 	changes,
 	queries,
-	// write_one_one,  // same as define_const
 	// write_many_one,
 	// write_many_many,
 	// write_range_one,
 	// write_range_many
+	write_rangerange_many,
+	unique_block,
 	end
 };
 
@@ -59,7 +60,11 @@ typedef tuple<
 	size_t(*)(),                                // linkcount
 	size_t(*)(),                                // nodecount
 	float(*)(),                                 // changes
-	float(*)()                                  // queries
+	float(*)(),                                 // queries
+	bool(*)(const vector<Node>&, const Node&,   // write_rangerange_many
+			const Node&,
+			const vector<vector<Node>>&),
+	vector<Node>(*)(const int &)                // unique_block
 > commands_t;
 
 };  // namespace rpc

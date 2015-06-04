@@ -78,8 +78,13 @@ vector<Tail> rpc_partners(const Node &n, const int &count) {
 
 /* rpc::Command::unique */
 Node rpc_unique() {
-	// return Node::unique();
-	return dharc::null_n;
+	return Fabric::unique();
+}
+
+vector<Node> rpc_unique_block(const int &count) {
+	vector<Node> res;
+	Fabric::unique(count, res[0], res[1]);
+	return res;
 }
 
 size_t rpc_linkcount() {
@@ -98,6 +103,30 @@ float rpc_queries() {
 	return Fabric::queriesPerSecond();
 }
 
+bool rpc_rangerange_many(const vector<Node>& common,
+							const Node& r1,
+							const Node& r2,
+							const vector<vector<Node>> &values) {
+	if (common.size() == 0) {
+		if (r1 < r2) {
+			for (auto i = 0U; i < values.size(); ++i) {
+				for (auto j = 0U; j < values[i].size(); ++j) {
+					Tail tail({Node(r1.value + i), Node(r2.value + j)}, true);
+					Fabric::define(tail, values[i][j]);
+				}
+			}
+		} else {
+			for (auto i = 0U; i < values.size(); ++i) {
+				for (auto j = 0U; j < values[i].size(); ++j) {
+					Tail tail({Node(r2.value + j), Node(r1.value + i)}, true);
+					Fabric::define(tail, values[i][j]);
+				}
+			}
+		}
+	}
+	return true;
+}
+
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
@@ -110,7 +139,9 @@ dharc::rpc::commands_t commands {
 	rpc_linkcount,
 	rpc_nodecount,
 	rpc_changes,
-	rpc_queries
+	rpc_queries,
+	rpc_rangerange_many,
+	rpc_unique_block
 };
 };  // namespace
 

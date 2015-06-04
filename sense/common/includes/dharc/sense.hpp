@@ -17,8 +17,10 @@ class Sense : public dharc::Rpc {
 	Node unique();
 	void unique(int count, Node &first, Node &last);
 
-	void write(const Node &n1, const Node &n2, const Node &h);
-	void write(const Node &n, const Node &first, const Node *data, int count);
+	void write(const vector<Node> &common,
+				const Node &r1,
+				const Node &r2,
+				const vector<vector<Node>> &values);
 };
 
 };
