@@ -13,6 +13,7 @@ namespace zmq {
 
 #include "dharc/rpc.hpp"
 #include "dharc/node.hpp"
+#include "dharc/tail.hpp"
 
 #include <string>
 #include <vector>
@@ -59,14 +60,13 @@ class TestRpc : public dharc::Rpc {
 		return send<Command::version>();
 	}
 
-	Node query(const Node &n1, const Node &n2) {
-		return send<Command::query>(n1, n2);
+	Node query(const Tail &tail) {
+		return send<Command::query>(tail);
 	}
 
-	bool define(const Node &n1,
-				const Node &n2,
+	bool define(const Tail &tail,
 				const vector<Node> &def) {
-		return send<Command::define>(n1, n2, def);
+		return send<Command::define>(tail, def);
 	}
 
 	vector<Tail> partners(const Node &n, const int &count) {
@@ -89,17 +89,17 @@ CASE( "Version no arguments command send" ) {
 CASE( "Query two Node argument command send" ) {
 	TestRpc testrpc;
 	dummy_result = "\"0:0\"";
-	EXPECT( testrpc.query(55_n, 66_n) == null_n );
-	EXPECT( gen_string == "{\"c\": 2, \"args\": [\"55\",\"66\"]}" );
+	EXPECT( testrpc.query(Tail{55_n, 66_n}) == null_n );
+	EXPECT( gen_string == "{\"c\": 2, \"args\": [[\"55\",\"66\"]]}" );
 },
 
 CASE( "Define with vector argument" ) {
 	TestRpc testrpc;
 	dummy_result = "1";
 	vector<Node> def = {100_n, 200_n, 300_n};
-	EXPECT( testrpc.define(12_n, 13_n, def) == true );
+	EXPECT( testrpc.define(Tail{12_n, 13_n}, def) == true );
 	EXPECT( gen_string ==
-		"{\"c\": 4, \"args\": [\"12\",\"13\",[\"100\",\"200\",\"300\"]]}" );
+		"{\"c\": 4, \"args\": [[\"12\",\"13\"],[\"100\",\"200\",\"300\"]]}" );
 },
 
 CASE( "Returning a vector" ) {

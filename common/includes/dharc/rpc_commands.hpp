@@ -49,17 +49,17 @@ enum struct Command : int {
  * specified in the Command enum struct).
  */
 typedef tuple<
-	bool(*)(),
-	int(*)(),
-	Node(*)(const Node&, const Node&),
-	bool(*)(const Node&, const Node&, const Node&),
-	bool(*)(const Node&, const Node&, const vector<Node>&),
-	vector<Tail>(*)(const Node&, const int&),
-	Node(*)(),
-	size_t(*)(),
-	size_t(*)(),
-	float(*)(),
-	float(*)()
+	bool(*)(),                                  // nop
+	int(*)(),                                   // version
+	Node(*)(const Tail&),                       // query
+	bool(*)(const Tail&, const Node&),          // define_const
+	bool(*)(const Tail&, const vector<Node>&),  // define
+	vector<Tail>(*)(const Node&, const int&),   // partners
+	Node(*)(),                                  // unique
+	size_t(*)(),                                // linkcount
+	size_t(*)(),                                // nodecount
+	float(*)(),                                 // changes
+	float(*)()                                  // queries
 > commands_t;
 
 };  // namespace rpc

@@ -39,22 +39,21 @@ Node Monitor::unique() {
 
 
 
-Node Monitor::query(const Node &a, const Node &b) {
-	return send<Command::query>(a, b);
+Node Monitor::query(const Tail &tail) {
+	return send<Command::query>(tail);
 }
 
 
 
-void Monitor::define(const Node &a, const Node &b, const Node &h) {
-	send<Command::define_const>(a, b, h);
+void Monitor::define(const Tail &tail, const Node &h) {
+	send<Command::define_const>(tail, h);
 }
 
 
 
-void Monitor::define(const Node &a,
-					const Node &b,
+void Monitor::define(const Tail &tail,
 					const vector<Node> &p) {
-	send<Command::define>(a, b, p);
+	send<Command::define>(tail, p);
 }
 
 

@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
 	for (auto i : delayed) {
 		switch (i.first) {
-		case 0: monitor.define(Node(44),Node(55),Node(555)); break;
+		case 0: monitor.define(Tail{Node(44),Node(55)},Node(555)); break;
 		default: break;
 		}
 	}
