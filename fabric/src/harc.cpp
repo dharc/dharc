@@ -148,3 +148,22 @@ std::ostream &dharc::fabric::operator<<(std::ostream &os, const Harc &h) {
 	return os;
 }
 
+
+constexpr int HARC_POOL_SIZE = 100000;
+Harc *harc_pool = nullptr;
+size_t harc_count = 0;
+
+
+void *Harc::operator new(size_t count) {
+	if (harc_pool == nullptr || harc_count >= HARC_POOL_SIZE) {
+		harc_pool = (Harc*)::new char[sizeof(Harc)*HARC_POOL_SIZE];
+		harc_count = 0;
+	}
+	return &harc_pool[harc_count++];
+}
+
+void Harc::operator delete(void *addr) {
+
+}
+
+

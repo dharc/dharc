@@ -129,6 +129,11 @@ class Harc {
 	 */
 	inline float lastQuery() const { return sig_.lastBoost(); }
 
+
+	static void *operator new(size_t count);
+	static void operator delete(void *addr);
+
+
 	private:
 	HarcMap::const_iterator        tail_;
 	mutable Node                   head_;
