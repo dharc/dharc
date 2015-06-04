@@ -202,7 +202,8 @@ void Fabric::unique(int count, Node &first, Node &last) {
 
 
 
-Node Fabric::path(const vector<Node> &p, size_t &index, size_t count, const Harc *dep) {
+Node Fabric::path(const vector<Node> &p, size_t &index,
+					size_t count, const Harc *dep) {
 	Tail tail(count);
 	while ((count--) && (index < p.size())) {
 		if (p[index].isReserved()) {
