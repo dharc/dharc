@@ -36,6 +36,11 @@ enum struct Command : int {
 	nodecount,
 	changes,
 	queries,
+	// write_one_one,  // same as define_const
+	// write_many_one,
+	// write_many_many,
+	// write_range_one,
+	// write_range_many
 	end
 };
 

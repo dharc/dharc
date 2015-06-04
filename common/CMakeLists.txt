@@ -3,6 +3,7 @@ add_library(dharccommon OBJECT
 	src/node.cpp
 	src/parse.cpp
 	src/labels.cpp
+	src/tail.cpp
 )
 
 ADD_SUBDIRECTORY(tests)

@@ -10,8 +10,6 @@
 #include <string>
 #include <cstdint>
 
-#include "dharc/rpc_packer.hpp"
-
 namespace dharc {
 
 /**
@@ -96,14 +94,6 @@ constexpr bool operator>=(const Node &a, const Node &b) {
 std::ostream &operator<<(std::ostream &os, const Node &n);
 std::istream &operator>>(std::istream &is, Node &n);
 
-/* Pack and unpack for remote procedure call */
-namespace rpc {
-template <>
-struct Packer<Node> {
-	static void pack(std::ostream &os, const Node &n);
-	static Node unpack(std::istream &is);
-};
-};  // namespace rpc
 };  // namespace dharc
 
 #endif  // DHARC_NODE_HPP_

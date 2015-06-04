@@ -31,7 +31,7 @@ using dharc::fabric::SortedHarcs;
 
 atomic<unsigned long long> Fabric::counter__(0);
 
-HarcMap Fabric::harcs__;
+HarcMap Fabric::harcs__(100000);
 SortedHarcs Fabric::changes__;
 unordered_map<Node, SortedHarcs, Fabric::NidHash> Fabric::partners__;
 
@@ -119,7 +119,7 @@ void Fabric::add(Harc *h, const Tail &key) {
 	for (auto i : h->tail()) {
 		auto &p = partners__[i];
 		// h->partix_[0] =
-		p.insert({h->significance(), h});
+		p.insert({h->partnerSignificance(0.0), h});
 	}
 }
 
@@ -128,11 +128,6 @@ void Fabric::add(Harc *h, const Tail &key) {
 Harc &Fabric::get(const Tail &key) {
 	Harc *h;
 	if (get(key, h)) return *h;
-
-	Tail key_sorted = key;
-	std::sort(key_sorted.begin(), key_sorted.end());
-
-	if (get(key_sorted, h)) return *h;
 
 	// Check for an Any($) entry
 	/*if (get(dharc::any_n, key.first, h)) {
@@ -147,7 +142,7 @@ Harc &Fabric::get(const Tail &key) {
 		h = new Harc();
 	//}
 
-	add(h, key_sorted);
+	add(h, key);
 	return *h;
 }
 
@@ -158,9 +153,17 @@ bool Fabric::get(const Tail &key, Harc*& result) {
 
 	if (it != harcs__.end()) {
 		result = it->second;
+		// TODO(knicos): If harc ptr == nullptr, load from disk
 		return true;
 	}
 	return false;
+}
+
+
+
+inline Node Fabric::queryFast(const Tail &tail) {
+	Harc *h;
+	return get(tail, h) ? h->query() : dharc::null_n;
 }
 
 

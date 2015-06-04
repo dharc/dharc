@@ -36,7 +36,7 @@ class Harc;
 };  // namespace fabric
 };  // namespace dharc
 using dharc::fabric::Harc;
-using dharc::fabric::TailHash;
+using dharc::Tail;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
@@ -302,15 +302,14 @@ class Fabric {
 	static std::atomic<unsigned long long> counter__;
 
 
-
+	static inline Node queryFast(const Tail &tail);
 	static Harc &get(const Node &a, const Node &b) {
-		return get((a < b) ? vector<Node>{a, b} : vector<Node>{b, a});
+		return get(Tail{a, b});
 	}
 	static Harc &get(const Tail &key);
 	static bool get(const Tail &key, Harc*& result);
 	static bool get(const Node &a, const Node &b, Harc*& result) {
-		return get((a < b) ? vector<Node>{a, b} : vector<Node>{b, a},
-			result);
+		return get(Tail{a, b}, result);
 	}
 
 	static Node path_s(const vector<Node> &, const Harc *dep = nullptr);

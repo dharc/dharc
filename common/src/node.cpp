@@ -61,15 +61,3 @@ ostream &dharc::operator<<(ostream &os, const Node &n) {
 	return os;
 }
 
-void dharc::rpc::Packer<Node>::pack(ostream &os, const Node &n) {
-	os << '"' << n.value << '"';
-}
-
-Node dharc::rpc::Packer<Node>::unpack(istream &is) {
-	Node res;
-	if (is.get() != '"') return null_n;
-	is >> res.value;
-	if (is.get() != '"') return null_n;
-	return res;
-}
-

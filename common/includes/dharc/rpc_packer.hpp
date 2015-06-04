@@ -9,6 +9,9 @@
 #include <vector>
 #include <list>
 
+#include "dharc/node.hpp"
+#include "dharc/tail.hpp"
+
 namespace dharc {
 namespace rpc {
 
@@ -23,6 +26,20 @@ struct Packer {
 	static T unpack(std::istream &is) {
 		T res;
 		is >> res;
+		return res;
+	}
+};
+
+template <>
+struct Packer<dharc::Node> {
+	static void pack(std::ostream &os, const dharc::Node &n) {
+		os << '"' << n.value << '"';
+	}
+	static dharc::Node unpack(std::istream &is) {
+		dharc::Node res;
+		if (is.get() != '"') return null_n;
+		is >> res.value;
+		if (is.get() != '"') return null_n;
 		return res;
 	}
 };
@@ -48,6 +65,33 @@ struct Packer<std::vector<R>> {
 		if (is.get() != '[') return res;
 		while (is.peek() != ']') {
 			res.push_back(Packer<R>::unpack(is));
+			if (is.peek() == ',') is.ignore();
+		}
+		is.ignore();  // Remove trailing ']'
+		return res;
+	}
+};
+
+/**
+ * RPC packer for Tails.
+ */
+template<>
+struct Packer<dharc::Tail> {
+	static void pack(std::ostream &os, const dharc::Tail &tail) {
+		auto x = tail.size();
+		os << '[';
+		for (auto i : tail) {
+			--x;
+			Packer<Node>::pack(os, i);
+			if (x != 0) os << ',';
+		}
+		os << ']';
+	}
+	static dharc::Tail unpack(std::istream &is) {
+		dharc::Tail res;
+		if (is.get() != '[') return res;
+		while (is.peek() != ']') {
+			res.insert(Packer<Node>::unpack(is));
 			if (is.peek() == ',') is.ignore();
 		}
 		is.ignore();  // Remove trailing ']'

@@ -58,6 +58,12 @@ CASE( "Tails are symetric when looking up a harc" ) {
 	EXPECT( Fabric::query(11_n,10_n) == 66_n );
 },
 
+CASE( "Tails greater than 2" ) {
+	Fabric::define({33_n, 34_n, 35_n, 36_n}, 78_n);
+	EXPECT( Fabric::query({33_n, 34_n, 35_n, 36_n}) == 78_n );
+	EXPECT( Fabric::query({33_n, 35_n, 34_n, 36_n}) == 78_n );
+},
+
 CASE( "Following a single path, all cases" ) {
 	Fabric::define({1_n, 2_n}, 1000_n);
 	Fabric::define({1000_n, 3_n}, 1001_n);
