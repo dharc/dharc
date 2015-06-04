@@ -35,6 +35,8 @@ class Tail {
 	 */
 	void insert(const dharc::Node &node);
 
+	inline void insertRaw(const dharc::Node &node) { nodes_.push_back(node); }
+
 
 	auto begin() const { return nodes_.begin(); }
 	auto end() const { return nodes_.end(); }

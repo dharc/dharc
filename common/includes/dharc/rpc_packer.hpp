@@ -33,13 +33,11 @@ struct Packer {
 template <>
 struct Packer<dharc::Node> {
 	static void pack(std::ostream &os, const dharc::Node &n) {
-		os << '"' << n.value << '"';
+		os << n.value;
 	}
 	static dharc::Node unpack(std::istream &is) {
 		dharc::Node res;
-		if (is.get() != '"') return null_n;
 		is >> res.value;
-		if (is.get() != '"') return null_n;
 		return res;
 	}
 };
@@ -91,7 +89,7 @@ struct Packer<dharc::Tail> {
 		dharc::Tail res;
 		if (is.get() != '[') return res;
 		while (is.peek() != ']') {
-			res.insert(Packer<Node>::unpack(is));
+			res.insertRaw(Packer<Node>::unpack(is));
 			if (is.peek() == ',') is.ignore();
 		}
 		is.ignore();  // Remove trailing ']'

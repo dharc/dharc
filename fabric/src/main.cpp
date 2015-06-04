@@ -69,6 +69,7 @@ int main(int argc, char *argv[]) {
 				} catch (zmq::error_t err) {}
 			}
 
+
 			std::stringstream is((const char*)msg.data());
 			std::stringstream os;
 
