@@ -53,7 +53,7 @@ void Monitor::define(const Node &a, const Node &b, const Node &h) {
 
 void Monitor::define(const Node &a,
 					const Node &b,
-					const vector<vector<Node>> &p) {
+					const vector<Node> &p) {
 	send<Command::define>(a, b, p);
 }
 

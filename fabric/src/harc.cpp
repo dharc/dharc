@@ -91,7 +91,7 @@ void Harc::define(const Node &n) {
 
 
 
-void Harc::define(const vector<vector<Node>> &definition) {
+void Harc::define(const vector<Node> &definition) {
 	lock_.lock();
 	if (checkFlag(Flag::defined)) {
 		delete def_;

@@ -46,17 +46,6 @@ std::ostream &dharc::operator<<(std::ostream &os, const Node &n) {
 	return os;
 }
 
-void dharc::rpc::Packer<Node>::pack(std::ostream &os, const Node &n) {
-	os << '"' << static_cast<int>(n.value) << '"';
-}
-
-Node dharc::rpc::Packer<Node>::unpack(std::istream &is) {
-	Node res;
-	if (is.get() != '"') return null_n;
-	is >> res.value;
-	if (is.get() != '"') return null_n;
-	return res;
-}
 
 /* ========================================================================== */
 
@@ -76,11 +65,11 @@ class TestRpc : public dharc::Rpc {
 
 	bool define(const Node &n1,
 				const Node &n2,
-				const vector<vector<Node>> &def) {
+				const vector<Node> &def) {
 		return send<Command::define>(n1, n2, def);
 	}
 
-	vector<vector<Node>> partners(const Node &n, const int &count) {
+	vector<Tail> partners(const Node &n, const int &count) {
 		return send<Command::partners>(n, count);
 	}
 };
@@ -107,19 +96,19 @@ CASE( "Query two Node argument command send" ) {
 CASE( "Define with vector argument" ) {
 	TestRpc testrpc;
 	dummy_result = "1";
-	vector<vector<Node>> def = {{100_n, 200_n, 300_n}};
+	vector<Node> def = {100_n, 200_n, 300_n};
 	EXPECT( testrpc.define(12_n, 13_n, def) == true );
 	EXPECT( gen_string ==
-		"{\"c\": 4, \"args\": [\"12\",\"13\",[[\"100\",\"200\",\"300\"]]]}" );
+		"{\"c\": 4, \"args\": [\"12\",\"13\",[\"100\",\"200\",\"300\"]]}" );
 },
 
 CASE( "Returning a vector" ) {
 	TestRpc testrpc;
 	dummy_result = "[[\"133\",\"344\"]]";
 	int count = 10;
-	vector<vector<Node>> result = testrpc.partners(10_n, count);
-	EXPECT( result.front().front() == 133_n );
-	EXPECT( result.front().back() == 344_n );
+	vector<Tail> result = testrpc.partners(10_n, count);
+	EXPECT( result.front().at(0) == 133_n );
+	EXPECT( result.front().at(result.front().size() - 1) == 344_n );
 }
 
 /*

@@ -10,6 +10,7 @@ add_executable(pack-unit EXCLUDE_FROM_ALL
 
 add_executable(rpc-unit EXCLUDE_FROM_ALL
 	rpc_test.cpp
+	../src/tail.cpp
 )
 
 add_executable(parse-unit EXCLUDE_FROM_ALL

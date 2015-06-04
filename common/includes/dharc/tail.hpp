@@ -15,7 +15,8 @@ namespace dharc {
 class Tail {
 	public:
 	Tail();
-	Tail(std::initializer_list<dharc::Node> il);
+	explicit Tail(size_t n);
+	explicit Tail(std::initializer_list<dharc::Node> il);
 
 	inline bool operator==(const Tail &o) const { return nodes_ == o.nodes_; }
 
@@ -41,6 +42,8 @@ class Tail {
 	auto cend() const { return nodes_.cend(); }
 
 	inline auto size() const { return nodes_.size(); }
+
+	inline auto at(size_t index) const { return nodes_.at(index); }
 
 	inline size_t hash() const {
 		// FNV-1a Hash of entire tail.

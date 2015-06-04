@@ -38,15 +38,15 @@ class Definition {
 	Node evaluate(const fabric::Harc *harc) const;
 
 
-	inline static Definition *makeDefinition(const vector<vector<Node>> &);
+	inline static Definition *makeDefinition(const vector<Node> &);
 
 	private:
-	vector<vector<Node>> path_;
+	vector<Node> path_;
 
 	Definition() = delete;
-	explicit Definition(const vector<vector<Node>> &);
+	explicit Definition(const vector<Node> &);
 
-	vector<vector<Node>> instantiate(const Node &any);
+	vector<Node> instantiate(const Node &any);
 
 	friend std::ostream &operator<<(std::ostream &os, const Definition &d);
 };
@@ -55,7 +55,7 @@ class Definition {
 std::ostream &operator<<(std::ostream &os, const Definition &d);
 
 
-inline Definition *Definition::makeDefinition(const vector<vector<Node>> &def) {
+inline Definition *Definition::makeDefinition(const vector<Node> &def) {
 	return new Definition(def);
 }
 

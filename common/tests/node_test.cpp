@@ -46,30 +46,6 @@ CASE( "Node from string" ) {
 
 CASE( "Node to string" ) {
 	EXPECT( (string)100_n == "<100>" );
-},
-
-CASE( "Node packer pack" ) {
-	std::stringstream ss;
-	rpc::Packer<Node>::pack(ss, 1_n);
-	EXPECT( ss.str() == "\"1\"" );
-},
-
-CASE( "Node packer unpack" ) {
-	std::stringstream ss;
-	ss.str("\"2\"");
-	EXPECT( rpc::Packer<Node>::unpack(ss) == 2_n );
-	ss.str("\"99\"");
-	EXPECT( rpc::Packer<Node>::unpack(ss) == 99_n );
-},
-
-CASE( "Node packer unpack missing quotes (fail)" ) {
-	std::stringstream ss;
-	ss.str("200\"");
-	EXPECT( rpc::Packer<Node>::unpack(ss) == null_n );
-	ss.str("\"200");
-	EXPECT( rpc::Packer<Node>::unpack(ss) == null_n );
-	ss.str("200");
-	EXPECT( rpc::Packer<Node>::unpack(ss) == null_n );
 }
 
 };

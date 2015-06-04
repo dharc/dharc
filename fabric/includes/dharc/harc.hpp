@@ -96,7 +96,7 @@ class Harc {
 	 * Define the Harc as having a normalised path definition to work out
 	 * its head node.
 	 */
-	void define(const vector<vector<Node>> &definition);
+	void define(const vector<Node> &definition);
 
 	std::string definition() const;
 

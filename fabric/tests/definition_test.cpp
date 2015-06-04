@@ -37,18 +37,18 @@ const lest::test specification[] = {
 
 CASE( "Generates expected paths on evaluation" ) {
 	Definition *def = Definition::makeDefinition(
-			{{978_n, 888_n}, {44_n, 45_n}});
+			{978_n, 888_n, 44_n, 45_n});
 	EXPECT( def->evaluate(nullptr) == 978_n );
 },
 
 CASE( "Writing a definition to stream" ) {
 	std::stringstream ss;
 	Definition *def = Definition::makeDefinition(
-			{{978_n, 888_n}, {44_n, 45_n}});
+			{978_n, 888_n, 44_n, 45_n});
 
 	ss << *def;
 
-	EXPECT( ss.str() == "{(<978> <888>) (<44> <45>)}" );
+	EXPECT( ss.str() == "{<978> <888> <44> <45>}" );
 }
 
 };

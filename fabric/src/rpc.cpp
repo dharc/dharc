@@ -48,12 +48,12 @@ int rpc_version() {
 
 /* rpc::Command::query */
 Node rpc_query(const Node &n1, const Node &n2) {
-	return Fabric::query({n1, n2});
+	return Fabric::query(Tail{n1, n2});
 }
 
 /* rpc::Command::define_const */
 bool rpc_define_const(const Node &n1, const Node &n2, const Node &h) {
-	Fabric::define({n1, n2}, h);
+	Fabric::define(Tail{n1, n2}, h);
 	return true;
 }
 
@@ -61,8 +61,8 @@ bool rpc_define_const(const Node &n1, const Node &n2, const Node &h) {
 bool rpc_define(
 		const Node &n1,
 		const Node &n2,
-		const vector<vector<Node>> &p) {
-	Fabric::define({n1, n2}, p);
+		const vector<Node> &p) {
+	Fabric::define(Tail{n1, n2}, p);
 	return true;
 }
 

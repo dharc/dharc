@@ -11,6 +11,10 @@ dharc::Tail::Tail() {
 	nodes_.reserve(10);
 }
 
+dharc::Tail::Tail(size_t n) {
+	nodes_.reserve(n);
+}
+
 dharc::Tail::Tail(std::initializer_list<dharc::Node> il) :
 	nodes_(il) {
 	fixup();

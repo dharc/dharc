@@ -180,7 +180,7 @@ void Fabric::define(const Tail &tail, const Node &head) {
 	logChange(&h);
 }
 
-void Fabric::define(const Tail &tail, const vector<vector<Node>> &def) {
+void Fabric::define(const Tail &tail, const vector<Node> &def) {
 	++changecount__;
 	Harc &h = get(tail);
 	h.define(def);
@@ -202,40 +202,50 @@ void Fabric::unique(int count, Node &first, Node &last) {
 
 
 
-Node Fabric::path(const vector<Node> &p, const Harc *dep) {
-	if (p.size() > 1) {
-		Node cur = p[0];
-
-		if (dep) {
-			for (auto i = ++p.begin(); i != p.end(); ++i) {
-				Harc &h = get(cur, *i);
-				h.addDependant(*dep);
-				cur = h.query();
-			}
+Node Fabric::path(const vector<Node> &p, size_t &index, size_t count, const Harc *dep) {
+	Tail tail(count);
+	while ((count--) && (index < p.size())) {
+		if (p[index].isReserved()) {
+			size_t tcount = p[index].reservedValue();
+			tail.insert(path(p, ++index, tcount, dep));
 		} else {
-			for (auto i = ++p.begin(); i != p.end(); ++i) {
-				cur = get(cur, *i).query();
-			}
+			tail.insert(p[index++]);
 		}
-		return cur;
-	// Base case, should never really occur
-	} else if (p.size() == 1) {
-		return p[0];
-	// Pointless
+	}
+	if (dep) {
+		Harc &h = get(tail);
+		h.addDependant(*dep);
+		return h.query();
 	} else {
-		return null_n;
+		return queryFast(tail);
+	}
+}
+
+
+
+Node Fabric::path(const vector<Node> &p, const Harc *dep) {
+	size_t index = 0;
+	Tail tail;
+	while (index < p.size()) {
+		if (p[index].isReserved()) {
+			size_t tcount = p[index].reservedValue();
+			tail.insert(path(p, ++index, tcount, dep));
+		} else {
+			tail.insert(p[index++]);
+		}
+	}
+	if (dep) {
+		Harc &h = get(tail);
+		h.addDependant(*dep);
+		return h.query();
+	} else {
+		return queryFast(tail);
 	}
 }
 
 std::atomic<int> pool_count(std::thread::hardware_concurrency());
 
-bool Fabric::path_r(const vector<vector<Node>> &p, Node *res,
-	int s, int e, const Harc *dep) {
-	for (auto i = s; i < e; ++i) {
-		res[i] = path(p[i], dep);
-	}
-	return true;
-}
+
 
 vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 	vector<Node> result(p.size());

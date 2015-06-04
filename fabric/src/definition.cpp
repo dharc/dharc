@@ -19,25 +19,21 @@ using std::vector;
 using std::istream;
 using std::ostream;
 
-Definition::Definition(const vector<vector<Node>> &definition) {
+Definition::Definition(const vector<Node> &definition) {
 	path_ = definition;
-	for (auto i : path_) {
-		i.shrink_to_fit();
-	}
 	path_.shrink_to_fit();
 }
 
 
 
 Node Definition::evaluate(const Harc *harc) const {
-	vector<Node> aggregate = Fabric::paths(path_, harc);
-	return Fabric::path(aggregate, harc);
+	return Fabric::path(path_, harc);
 }
 
 
 
-vector<vector<Node>> Definition::instantiate(const Node &any) {
-	vector<vector<Node>> result = path_;
+vector<Node> Definition::instantiate(const Node &any) {
+	vector<Node> result = path_;
 	/*for (auto i = result.begin(); i != result.end(); ++i) {
 		for (auto j = i->begin(); j != i->end(); ++j) {
 			if (*j == dharc::any_n) {
@@ -53,12 +49,7 @@ vector<vector<Node>> Definition::instantiate(const Node &any) {
 std::ostream &dharc::operator<<(std::ostream &os, const Definition &d) {
 	os << '{';
 	for (auto i : d.path_) {
-		os << '(';
-		for (auto j : i) {
-			os << j << ' ';
-		}
-		os.seekp(-1, std::ios_base::cur);
-		os << ") ";
+		os << i << ' ';
 	}
 	os.seekp(-1, std::ios_base::cur);
 	os << '}';

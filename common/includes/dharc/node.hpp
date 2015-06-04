@@ -51,6 +51,13 @@ struct Node {
 	 * @return String representation of the node.
 	 */
 	explicit operator std::string() const;
+
+	inline bool isReserved() const { return value & 0x8000000000000000; }
+	inline uint64_t reservedValue() const { return value & 0x7FFFFFFFFFFFFFFF; }
+
+	static Node reserved(uint64_t value) {
+		return Node(value | 0x8000000000000000);
+	}
 };
 
 /**

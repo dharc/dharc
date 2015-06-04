@@ -140,7 +140,7 @@ class Fabric {
 	static Node query(const Tail &tail);
 
 	static Node query(const Node &a, const Node &b) {
-		return query({a, b});
+		return query(Tail{a, b});
 	}
 
 
@@ -177,7 +177,7 @@ class Fabric {
 	 * @param tail Tail nodes to uniquely idenfify the harc.
 	 * @param def Path for the definition the harc should have.
 	 */
-	static void define(const Tail &tail, const vector<vector<Node>> &def);
+	static void define(const Tail &tail, const vector<Node> &def);
 
 
 
@@ -312,12 +312,8 @@ class Fabric {
 		return get(Tail{a, b}, result);
 	}
 
-	static Node path_s(const vector<Node> &, const Harc *dep = nullptr);
-	static bool path_r(
-			const vector<vector<Node>> &p,
-			Node *res,
-			int s, int e,
-			const Harc *dep);
+	static Node path(const vector<Node> &p, size_t &index,
+				size_t count, const Harc *dep);
 	static void logChange(const Harc *h);
 	static void counterThread();
 

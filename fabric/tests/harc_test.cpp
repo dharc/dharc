@@ -37,7 +37,7 @@ void Fabric::define(const Tail &tail, const Node &head) {
 	get(tail).define(head);
 }
 
-void Fabric::define(const Tail &tail, const vector<vector<Node>> &path) {
+void Fabric::define(const Tail &tail, const vector<Node> &path) {
 	get(tail).define(path);
 }
 
@@ -47,7 +47,7 @@ void Fabric::updatePartners(const Harc *h) {
 
 
 Node Fabric::path(const vector<Node> &p, const Harc *dep) {
-	return p[0];
+	return dummy_result;
 }
 
 vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
@@ -76,17 +76,16 @@ Harc &Fabric::get(const Tail &key) {
 	}
 }
 
-Definition::Definition(const vector<vector<Node>> &definition) {
+Definition::Definition(const vector<Node> &definition) {
 	path_ = definition;
 }
 
 Node Definition::evaluate(const Harc *harc) const {
-	vector<Node> aggregate = Fabric::paths(path_, harc);
-	return Fabric::path(aggregate, harc);
+	return Fabric::path(path_, harc);
 }
 
-vector<vector<Node>> Definition::instantiate(const Node &any) {
-	return {{}};
+vector<Node> Definition::instantiate(const Node &any) {
+	return {};
 }
 
 
@@ -108,24 +107,24 @@ Node::operator std::string() const {
 
 /* ==== END MOCKS ==== */
 
-typedef vector<vector<Node>> path_t;
+typedef vector<Node> path_t;
 
 const lest::test specification[] = {
 
 CASE( "Define and then query same value" ) {
-	Fabric::define({123_n, 124_n}, 55_n);
+	Fabric::define(Tail{123_n, 124_n}, 55_n);
 	EXPECT( Fabric::query(123_n, 124_n) == 55_n );
-	Fabric::define({123_n, 124_n}, 77_n);
+	Fabric::define(Tail{123_n, 124_n}, 77_n);
 	EXPECT( Fabric::query(123_n, 124_n) == 77_n );
 },
 
 CASE( "A simple one path definition with out-of-date trigger" ) {
-	Fabric::define({102_n, 103_n}, path_t{{100_n,101_n}});
+	Fabric::define(Tail{102_n, 103_n}, path_t{100_n,101_n});
 	dummy_result = 49_n;
 	EXPECT( Fabric::query(102_n, 103_n) == 49_n );
 	
 	dummy_result = 50_n;
-	Fabric::define({100_n, 101_n}, 10_n);
+	Fabric::define(Tail{100_n, 101_n}, 10_n);
 	EXPECT( Fabric::query(102_n, 103_n) == 50_n );
 }
 };
