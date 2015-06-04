@@ -95,7 +95,7 @@ class Fabric {
 	 *     given instant it may contain more (until garbage collector runs).
 	 * @return Number of changes available.
 	 */
-	constexpr static size_t maxChanges() { return 100000; }
+	constexpr static int maxChanges() { return 200; }
 
 
 
@@ -293,7 +293,7 @@ class Fabric {
 
 
 	static fabric::HarcMap                 harcs__;
-	static deque<const Harc*> changes__;
+	static vector<const Harc*> changes__;
 	static unordered_map<Node, fabric::SortedHarcs, NidHash> partners__;
 
 	static std::atomic<size_t> linkcount__;
