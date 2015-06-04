@@ -83,6 +83,7 @@ Node rpc_unique() {
 
 vector<Node> rpc_unique_block(const int &count) {
 	vector<Node> res;
+	res.resize(2);
 	Fabric::unique(count, res[0], res[1]);
 	return res;
 }

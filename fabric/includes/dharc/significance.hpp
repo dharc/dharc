@@ -22,7 +22,7 @@ class Significance {
 
 
 
-	float significance() const {
+	inline float significance() const {
 		float delta = static_cast<float>(Fabric::counter()) -
 						static_cast<float>(lastboost_);
 		if (delta == 0) delta = 1.0;

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <csignal>
 
 #include "zmq.hpp"
 #include "dharc/rpc_server.hpp"
@@ -16,8 +17,17 @@ using std::string;
 using dharc::Node;
 using dharc::Fabric;
 
+void signal_handler(int param) {
+	std::cout << std::endl;
+
+	exit(0);
+}
+
+
 int main(int argc, char *argv[]) {
 	int i = 1;
+
+	signal(SIGINT, signal_handler);
 
 	Fabric::initialise();
 
@@ -44,11 +54,16 @@ int main(int argc, char *argv[]) {
 
 	while (true) {
 		zmq::message_t msg;
+
+		try {
 		zmq::poll(&items[0], 1, -1);
+		} catch (zmq::error_t ex) {
+			continue;
+		}
 
 		if (items[0].revents & ZMQ_POLLIN) {
 			rpc.recv(&msg);
-			cout << "Message: " << (const char*)msg.data() << std::endl;
+			// cout << "Message: " << (const char*)msg.data() << std::endl;
 
 			std::stringstream is((const char*)msg.data());
 			std::stringstream os;

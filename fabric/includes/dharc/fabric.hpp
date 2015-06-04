@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <map>
 #include <functional>
+#include <mutex>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -41,7 +42,7 @@ using dharc::Tail;
 
 namespace dharc {
 namespace fabric {
-typedef multimap<float, const Harc*, std::greater<float>> SortedHarcs;
+typedef vector<const Harc*> SortedHarcs;
 };  // namespace fabric
 
 /**
@@ -92,7 +93,7 @@ class Fabric {
 	 *     given instant it may contain more (until garbage collector runs).
 	 * @return Number of changes available.
 	 */
-	constexpr static size_t maxChanges() { return 1000; }
+	constexpr static size_t maxChanges() { return 100000; }
 
 
 
@@ -300,6 +301,8 @@ class Fabric {
 	static std::atomic<size_t> querycount__;
 
 	static std::atomic<unsigned long long> counter__;
+
+	static std::mutex changelock_;
 
 
 	static inline Node queryFast(const Tail &tail);

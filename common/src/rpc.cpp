@@ -36,6 +36,7 @@ Rpc::~Rpc() {
 std::string Rpc::send(const std::string &s) {
 	zmq::message_t req(s.size()+1);
 	memcpy(req.data(), s.data(), s.size()+1);
+
 	sock_.send(req);
 
 	zmq::message_t rep;

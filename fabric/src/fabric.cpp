@@ -41,6 +41,16 @@ std::atomic<size_t> Fabric::variablelinks__(0);
 std::atomic<size_t> Fabric::changecount__(0);
 std::atomic<size_t> Fabric::querycount__(0);
 
+std::mutex Fabric::changelock_;
+
+
+/*
+ * Used for sorting vectors of harcs, most significant first
+ */
+inline bool harc_sig_comp(const Harc *i, const Harc *j) {
+	return i->significance() > j->significance();
+}
+
 
 void Fabric::counterThread() {
 	while (true) {
@@ -48,11 +58,11 @@ void Fabric::counterThread() {
 
 		// Cull the change log if it needs it.
 		if (changes__.size() >= 2 * maxChanges()) {
-			auto i = changes__.begin();
-			size_t count = 0;
-			// Really no better way??
-			while (count++ < maxChanges()) ++i;
-			changes__.erase(i, changes__.end());
+			changelock_.lock();
+			// Must sort before emptying
+			std::sort(changes__.begin(), changes__.end(), harc_sig_comp);
+			changes__.resize(maxChanges());
+			changelock_.unlock();
 		}
 
 		// TODO(knicos): Reduce sleep time by processing time.
@@ -67,6 +77,8 @@ void Fabric::counterThread() {
 void Fabric::initialise() {
 	std::thread t(counterThread);
 	t.detach();
+
+	changes__.reserve(maxChanges()*3);
 }
 
 
@@ -77,12 +89,19 @@ void Fabric::finalise() {
 
 
 void Fabric::changes(vector<const Tail*>& vec, size_t count) {
+	changelock_.lock();
+	// Lazy sort on request
+	std::sort(changes__.begin(), changes__.end(), harc_sig_comp);
+
 	count = (changes__.size() > count) ? count : changes__.size();
+	// Unlock because future changes get added to end... SAFE??????
+	changelock_.unlock();
+
 	vec.resize(count);
 	size_t ix = 0;
 	for (auto i : changes__) {
 		if (ix == count) break;
-		vec[ix] = &i.second->tail();
+		vec[ix] = &i->tail();
 	}
 }
 
@@ -91,7 +110,9 @@ void Fabric::changes(vector<const Tail*>& vec, size_t count) {
 void Fabric::logChange(const Harc *h) {
 	// TODO(knicos): Make sure change significance always increases?
 	// makes sure most recent changes are at top.
-	changes__.insert(pair<float, const Harc*>(h->changeSignificance(0.0), h));
+	changelock_.lock();
+	changes__.push_back(h);
+	changelock_.unlock();
 }
 
 
@@ -99,12 +120,15 @@ void Fabric::logChange(const Harc *h) {
 void Fabric::partners(const Node& node, vector<const Tail *>& vec,
 							size_t count, size_t start) {
 	SortedHarcs &part = partners__[node];
+	// Do the sort now
+	std::sort(part.begin(), part.end(), harc_sig_comp);
+
 	count = (part.size() > count) ? count : part.size();
 	vec.resize(count);
 	size_t ix = 0;
 	for (auto i : part) {
 		if (ix == count) break;
-		vec[ix++] = &i.second->tail();
+		vec[ix++] = &i->tail();
 	}
 }
 
@@ -119,7 +143,7 @@ void Fabric::add(Harc *h, const Tail &key) {
 	for (auto i : h->tail()) {
 		auto &p = partners__[i];
 		// h->partix_[0] =
-		p.insert({h->partnerSignificance(0.0), h});
+		p.push_back(h);
 	}
 }
 
@@ -281,12 +305,16 @@ vector<Node> Fabric::paths(const vector<vector<Node>> &p, const Harc *dep) {
 
 
 void Fabric::updatePartners(const Harc *h) {
-	for (auto i : h->tail()) {
+	// NOTE(knicos): Partner sort is lazy, so this does not need updating
+
+	/*for (auto i : h->tail()) {
 		auto &p = partners__[i];
 		// TODO(knicos): REPLACE EXISTING SOMEHOW.
 		// p.erase(h->partix_[0]);
-		p.insert({h->partnerSignificance(0.0), h});
-	}
+		if (std::find(p.begin(), p.end(), h) == p.end()) {
+			p.push_back(h);
+		}
+	}*/
 
 	// TODO(knicos): Propagate to partners of partners...
 	// This could be done slowly in another thread.
