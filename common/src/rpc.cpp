@@ -33,14 +33,30 @@ Rpc::Rpc(const char *addr, int port) : sock_(context, ZMQ_REQ) {
 Rpc::~Rpc() {
 }
 
-std::string Rpc::send(const std::string &s) {
-	zmq::message_t req(s.size()+1);
-	memcpy(req.data(), s.data(), s.size()+1);
 
-	sock_.send(req);
+std::string Rpc::send(const std::string &s) {
+	zmq::message_t req(const_cast<char*>(s.c_str()), s.size()+1, 0, 0);
+
+	while (true) {
+		try {
+			sock_.send(req);
+			break;
+		} catch (zmq::error_t err) {
+			cout << "ZMQ send error: " << err.what() << "\n";
+		}
+	}
 
 	zmq::message_t rep;
-	sock_.recv(&rep);
+
+	while (true) {
+		try {
+			sock_.recv(&rep);
+			break;
+		} catch (zmq::error_t err) {
+			cout << "ZMQ receive error: " << err.what() << "\n";
+		}
+	}
+
 	return std::string((const char*)rep.data());
 }
 

@@ -26,6 +26,7 @@ void signal_handler(int param) {
 
 int main(int argc, char *argv[]) {
 	int i = 1;
+	zmq::message_t msg;
 
 	signal(SIGINT, signal_handler);
 
@@ -53,17 +54,20 @@ int main(int argc, char *argv[]) {
 	};
 
 	while (true) {
-		zmq::message_t msg;
-
 		try {
-		zmq::poll(&items[0], 1, -1);
+			zmq::poll(&items[0], 1, -1);
 		} catch (zmq::error_t ex) {
+			cout << "zmq error\n";
 			continue;
 		}
 
 		if (items[0].revents & ZMQ_POLLIN) {
-			rpc.recv(&msg);
-			// cout << "Message: " << (const char*)msg.data() << std::endl;
+			while (true) {
+				try {
+					rpc.recv(&msg);
+					break;
+				} catch (zmq::error_t err) {}
+			}
 
 			std::stringstream is((const char*)msg.data());
 			std::stringstream os;
@@ -71,9 +75,15 @@ int main(int argc, char *argv[]) {
 			dharc::rpc::process_msg(is, os);
 
 			string res = os.str();
-			zmq::message_t rep(res.size()+1);
-			memcpy(rep.data(), res.data(), res.size()+1);
-			rpc.send(rep);
+			zmq::message_t rep(const_cast<char*>(res.c_str()), res.size()+1, 0);
+
+			while (true) {
+				try {
+					rpc.send(rep);
+					break;
+				} catch (zmq::error_t err) {}
+			}
+			items[0].revents = 0;
 		}
 	}
 

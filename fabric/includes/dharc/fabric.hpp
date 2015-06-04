@@ -17,6 +17,7 @@
 #include <map>
 #include <functional>
 #include <mutex>
+#include <deque>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -29,6 +30,7 @@ using std::chrono::time_point;
 using std::pair;
 using std::list;
 using std::multimap;
+using std::deque;
 using std::size_t;
 
 namespace dharc {
@@ -291,7 +293,7 @@ class Fabric {
 
 
 	static fabric::HarcMap                 harcs__;
-	static fabric::SortedHarcs changes__;
+	static deque<const Harc*> changes__;
 	static unordered_map<Node, fabric::SortedHarcs, NidHash> partners__;
 
 	static std::atomic<size_t> linkcount__;

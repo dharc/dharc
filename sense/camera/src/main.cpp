@@ -4,8 +4,11 @@
 
 #include "dharc/sense.hpp"
 
+#include <iostream>
+
 using dharc::Sense;
 using dharc::Node;
+using std::cout;
 
 int main(int argc, char *argv[]) {
 	Sense sense("localhost", 7878);
@@ -27,11 +30,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	for (auto k = 0; k < 100; ++k) {
-		try {
+	for (auto k = 0; k < 1000; ++k) {
 		sense.write({}, x_f, y_f, data);
-		} catch (std::exception) {
-		}
 	}
 
 	return 0;

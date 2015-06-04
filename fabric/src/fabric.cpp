@@ -15,6 +15,7 @@
 #include <cstring>
 #include <map>
 #include <functional>
+#include <deque>
 
 #include "dharc/harc.hpp"
 
@@ -32,7 +33,7 @@ using dharc::fabric::SortedHarcs;
 atomic<unsigned long long> Fabric::counter__(0);
 
 HarcMap Fabric::harcs__(100000);
-SortedHarcs Fabric::changes__;
+deque<const Harc *> Fabric::changes__;
 unordered_map<Node, SortedHarcs, Fabric::NidHash> Fabric::partners__;
 
 std::atomic<size_t> Fabric::linkcount__(0);
@@ -60,7 +61,10 @@ void Fabric::counterThread() {
 		if (changes__.size() >= 2 * maxChanges()) {
 			changelock_.lock();
 			// Must sort before emptying
-			std::sort(changes__.begin(), changes__.end(), harc_sig_comp);
+			// Or not and assume things at front are more important
+			// std::partial_sort(changes__.begin(),
+			//	 	changes__.begin() + maxChanges(),
+			// 		changes__.end(), harc_sig_comp);
 			changes__.resize(maxChanges());
 			changelock_.unlock();
 		}
@@ -78,7 +82,7 @@ void Fabric::initialise() {
 	std::thread t(counterThread);
 	t.detach();
 
-	changes__.reserve(maxChanges()*3);
+	// changes__.reserve(maxChanges()*3);
 }
 
 
@@ -95,6 +99,7 @@ void Fabric::changes(vector<const Tail*>& vec, size_t count) {
 
 	count = (changes__.size() > count) ? count : changes__.size();
 	// Unlock because future changes get added to end... SAFE??????
+	// HOWEVER, counterthread may fuck this up with a resort??
 	changelock_.unlock();
 
 	vec.resize(count);
@@ -111,7 +116,7 @@ void Fabric::logChange(const Harc *h) {
 	// TODO(knicos): Make sure change significance always increases?
 	// makes sure most recent changes are at top.
 	changelock_.lock();
-	changes__.push_back(h);
+	changes__.push_front(h);
 	changelock_.unlock();
 }
 
