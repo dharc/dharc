@@ -20,6 +20,8 @@ dharc::Tail::Tail(std::initializer_list<dharc::Node> il, bool prefixed) :
 	if (!prefixed) fixup();
 }
 
+dharc::Tail::Tail(const dharc::Tail &other) : nodes_(other.nodes_) {}
+
 void dharc::Tail::fixup() {
 	std::sort(nodes_.begin(), nodes_.end());
 	auto it = std::unique(nodes_.begin(), nodes_.end());
@@ -34,5 +36,16 @@ void dharc::Tail::insert(const dharc::Node &node) {
 		if (*it == node) return;
 		nodes_.insert(it, node);
 	}
+}
+
+
+std::ostream &dharc::operator<<(std::ostream &os, const dharc::Tail &n) {
+	os << '[';
+	for (auto i : n.nodes_) {
+		os << i << ',';
+	}
+	//os.seekp(-1, std::ios_base::cur);
+	os << ']';
+	return os;
 }
 

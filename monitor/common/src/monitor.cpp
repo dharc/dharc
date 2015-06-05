@@ -71,7 +71,7 @@ size_t Monitor::linkCount() {
 
 
 size_t Monitor::nodeCount() {
-	return send<Command::linkcount>();
+	return send<Command::nodecount>();
 }
 
 
@@ -84,5 +84,9 @@ float Monitor::queriesPerSecond() {
 
 float Monitor::changesPerSecond() {
 	return send<Command::changes>();
+}
+
+vector<dharc::Tail> Monitor::changeLog(int count) {
+	return send<Command::log>(count);
 }
 

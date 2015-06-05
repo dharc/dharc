@@ -17,6 +17,7 @@ class Tail {
 	Tail();
 	explicit Tail(size_t n);
 	explicit Tail(std::initializer_list<dharc::Node> il, bool prefixed = false);
+	Tail(const Tail &);
 
 	inline bool operator==(const Tail &o) const { return nodes_ == o.nodes_; }
 
@@ -71,7 +72,12 @@ class Tail {
 
 	private:
 	std::vector<dharc::Node> nodes_;
+
+	friend std::ostream &operator<<(std::ostream &os, const Tail &n);
 };
+
+/* Stream Operators */
+std::ostream &operator<<(std::ostream &os, const Tail &n);
 
 
 namespace fabric {

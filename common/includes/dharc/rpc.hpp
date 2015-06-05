@@ -45,12 +45,13 @@ class Rpc {
 			"Incorrect RPC Arguments");
 
 		// Pack the command number and arguments
-		std::stringstream os;
+		std::ostringstream os(std::ios_base::out | std::ios_base::binary);
 		packcmd(os, C);
 		pack(os, args...);
 
 		// Send and then unpack return value
-		std::stringstream is(send(os.str()));
+		std::istringstream is(send(os.str()),
+			std::ios_base::in | std::ios_base::binary);
 		return Packer<ret_type>::unpack(is);
 	}
 
@@ -69,12 +70,13 @@ class Rpc {
 			"Incorrect RPC Arguments");
 
 		// Pack the command number and arguments
-		std::stringstream os;
+		std::ostringstream os(std::ios_base::out | std::ios_base::binary);
 		packcmd(os, C);
 		pack(os);
 
 		// Send and then unpack return value
-		std::stringstream is(send(os.str()));
+		std::istringstream is(send(os.str()),
+			std::ios_base::in | std::ios_base::binary);
 		return Packer<ret_type>::unpack(is);
 	}
 

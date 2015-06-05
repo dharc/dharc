@@ -42,6 +42,7 @@ enum struct Command : int {
 	// write_range_many
 	write_rangerange_many,
 	unique_block,
+	log,
 	end
 };
 
@@ -64,7 +65,8 @@ typedef tuple<
 	bool(*)(const vector<Node>&, const Node&,   // write_rangerange_many
 			const Node&,
 			const vector<vector<Node>>&),
-	vector<Node>(*)(const int &)                // unique_block
+	vector<Node>(*)(const int &),               // unique_block
+	vector<Tail>(*)(const int &)                // change log
 > commands_t;
 
 };  // namespace rpc

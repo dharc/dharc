@@ -128,6 +128,18 @@ bool rpc_rangerange_many(const vector<Node>& common,
 	return true;
 }
 
+vector<Tail> rpc_change_log(const int &count) {
+	vector<Tail> res;
+	vector<const Tail *> temp;
+	Fabric::changes(temp, count);
+	std::cout << "COUNT REQ: " << count << "\n";
+	std::cout << "COUNT REP: " << temp.size() << "\n";
+	for (auto i : temp) {
+		res.push_back(*i);
+	}
+	return res;
+}
+
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
@@ -142,7 +154,8 @@ dharc::rpc::commands_t commands {
 	rpc_changes,
 	rpc_queries,
 	rpc_rangerange_many,
-	rpc_unique_block
+	rpc_unique_block,
+	rpc_change_log
 };
 };  // namespace
 

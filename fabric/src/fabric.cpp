@@ -16,6 +16,7 @@
 #include <map>
 #include <functional>
 #include <deque>
+#include <iostream>
 
 #include "dharc/harc.hpp"
 
@@ -99,7 +100,7 @@ void Fabric::changes(vector<const Tail*>& vec, size_t count) {
 	size_t ix = 0;
 	for (auto i : changes__) {
 		if (ix == count) break;
-		vec[ix] = &i->tail();
+		vec[ix++] = &(i->tail());
 	}
 	changelock_.unlock();
 }

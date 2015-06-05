@@ -70,8 +70,9 @@ int main(int argc, char *argv[]) {
 			}
 
 
-			std::stringstream is((const char*)msg.data());
-			std::stringstream os;
+			std::istringstream is(string((const char*)msg.data(), msg.size()),
+									std::ios_base::in | std::ios_base::binary);
+			std::ostringstream os(std::ios_base::out | std::ios_base::binary);
 
 			dharc::rpc::process_msg(is, os);
 

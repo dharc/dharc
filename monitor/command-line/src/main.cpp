@@ -32,8 +32,12 @@ struct {
 	int interactive;
 	int no_info;
 	int no_labels;
+	int stats;
+	int changes;
 	vector<Node> params;
 } config {
+	0,
+	0,
 	0,
 	0,
 	0,
@@ -52,6 +56,8 @@ void signal_handler(int param) {
 
 option opts[] = {
 	{"set", 1, nullptr, 1001},
+	{"stats", 1, nullptr, 1002},
+	{"log", 1, nullptr, 1003},
 	{"interactive", 0, &config.interactive, 1},
 	{"port", 1, nullptr, 'p'},
 	{"host", 1, nullptr, 'h'},
@@ -90,6 +96,8 @@ int main(int argc, char *argv[]) {
 		case 'p': port = std::stoi(optarg); break;
 		case 1000: std::cout << helpmsg; break;
 		case 1001: delayed.push_back({0, string(optarg)}); break;
+		case 1002: if (string(optarg) == "all") config.stats = 0xFFFF; break;
+		case 1003: config.changes = stoi(string(optarg)); break;
 		case ':': cout << "Option '" << optopt << "' requires an argument\n";
 					break;
 		default: break;
@@ -105,10 +113,21 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	cout << "Node Count: " << monitor.nodeCount() << std::endl;
-	cout << "Link Count: " << monitor.linkCount() << std::endl;
-	cout << "Queries (s): " << monitor.queriesPerSecond() << std::endl;
-	cout << "Changes (s): " << monitor.changesPerSecond() << std::endl;
+	if (config.stats == 0xFFFF) {
+		cout << "Node Count: " << monitor.nodeCount() << std::endl;
+		cout << "Link Count: " << monitor.linkCount() << std::endl;
+		cout << "Queries (s): " << monitor.queriesPerSecond() << std::endl;
+		cout << "Changes (s): " << monitor.changesPerSecond() << std::endl;
+	}
+
+	if (config.changes > 0) {
+		vector<Tail> changes = monitor.changeLog(config.changes);
+		cout << "Changes: " << changes.size() << "\n";
+		for (auto i : changes) {
+			cout << i << "\n";
+		}
+		cout.flush();
+	}
 
 	if (config.interactive) {
 		// interactive();

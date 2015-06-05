@@ -57,6 +57,6 @@ std::string Rpc::send(const std::string &s) {
 		}
 	}
 
-	return std::string((const char*)rep.data());
+	return std::string((const char*)rep.data(), rep.size());
 }
 
