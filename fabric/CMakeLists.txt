@@ -2,8 +2,6 @@ set(FABRICSOURCE
 	src/harc.cpp
 	src/fabric.cpp
 	src/main.cpp
-	src/framer.cpp
-	src/definition.cpp
 	src/rpc.cpp
 )
 

@@ -22,17 +22,10 @@ class Monitor : public dharc::Rpc {
 	Monitor(const char *host, int port);
 	~Monitor();
 
-	Node unique();
-	Node query(const dharc::Tail &tail);
-	void define(const dharc::Tail &tail, const Node &h);
-	void define(const dharc::Tail &tail, const vector<Node> &p);
-	vector<dharc::Tail> partners(const Node &a, int count);
-	vector<dharc::Tail> changeLog(int count);
-
-	size_t linkCount();
-	size_t nodeCount();
-	float queriesPerSecond();
-	float changesPerSecond();
+	size_t harcCount();
+	size_t branchCount();
+	float followsPerSecond();
+	float activationsPerSecond();
 
 	/* Statistics functions */
 	/* Stream functions */

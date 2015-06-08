@@ -5,48 +5,28 @@
 #ifndef DHARC_FABRIC_HPP_
 #define DHARC_FABRIC_HPP_
 
-#include <memory>
-#include <forward_list>
-#include <list>
 #include <vector>
 #include <chrono>
 #include <utility>
-#include <iterator>
 #include <atomic>
 #include <unordered_map>
-#include <map>
-#include <functional>
-#include <mutex>
-#include <deque>
+#include <array>
+#include <cassert>
 
 #include "dharc/node.hpp"
+#include "dharc/harc.hpp"
 #include "dharc/tail.hpp"
-// #include "dharc/lifobuffer.hpp"
 
-using std::forward_list;
 using std::vector;
+using std::array;
 using std::unordered_map;
 using std::chrono::time_point;
-using std::pair;
-using std::list;
-using std::multimap;
-using std::deque;
 using std::size_t;
-
-namespace dharc {
-namespace fabric {
-class Harc;
-};  // namespace fabric
-};  // namespace dharc
 using dharc::fabric::Harc;
 using dharc::Tail;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
-namespace fabric {
-typedef vector<const Harc*> SortedHarcs;
-};  // namespace fabric
-
 /**
  * The Dharc Fabric: a dynamic hypergraph.
  *     Stores all the nodes and hyperarcs relating the nodes together. Each
@@ -71,65 +51,6 @@ class Fabric {
 
 
 	/**
-	 * Fill a vector with a given number of the most significant recent changes.
-	 *     The changes returned are sorted by activation significance which is
-	 *     a combination of how significant the change is and how recently it
-	 *     it was changed.  Use maxChanges() to get the maximum number of
-	 *     available changes. If more changes are requested than are available
-	 *     then only the available number are put into the vector.
-	 * @param vec Vector to fill with requested changes.
-	 * @param count How many changes to request.
-	 */
-	static void changes(vector<const Tail*>& vec, size_t count);
-
-
-
-	/* Used for testing */
-	static void clearChanges() { changes__.clear(); }
-
-
-
-	/**
-	 * Maximum number of harc changes in the change log.
-	 *     The change log may not actually contain this many, and at any
-	 *     given instant it may contain more (until garbage collector runs).
-	 * @return Number of changes available.
-	 */
-	constexpr static int maxChanges() { return 200; }
-
-
-
-	/**
-	 * Fill a vector with 'count' number of partner nodes.
-	 *     A partner node is a node involved in some tail of a hyperarc with
-	 *     a given node. This function fills a vector the the requested number
-	 *     of the most significant partner nodes, by default starting at the
-	 *     most significant unless 'start' is given. If the requested number of
-	 *     of nodes is greater than those available then the vector is resized
-	 *     to the number available.
-	 * @param node The node to get partners of.
-	 * @param vec Vector to fill with results.
-	 * @param count Number of partners to return into the vector.
-	 * @param start Offset to this position in overal partners list.
-	 */
-	static void partners(const Node&   node,
-							vector<const Tail*>& vec,
-							size_t        count,
-							size_t        start = 0);
-
-
-
-	static vector<const Tail*> partners(const Node& node,
-										size_t      count,
-										size_t      start = 0) {
-		vector<const Tail*> result;
-		partners(node, result, count, start);
-		return result;
-	}
-
-
-
-	/**
 	 * Query the head node of a hyperarc.
 	 *     Given the tail nodes of a hyperarc, lookup the hyperarc and ask for
 	 *     its head node. This may involve the evaluation of the hyperarcs
@@ -140,11 +61,11 @@ class Fabric {
 	 * @param tail Pair of tail nodes to identify the hyperarc.
 	 * @return Head node of hyperarch.
 	 */
-	static Node query(const Tail &tail);
+	// static Node follow(const Tail &tail);
 
-	static Node query(const Node &a, const Node &b) {
-		return query(Tail{a, b});
-	}
+	//static Node query(const Node &a, const Node &b) {
+	//	return query(Tail{a, b});
+	// }
 
 
 
@@ -158,76 +79,40 @@ class Fabric {
 	 * @param tail A set of tail nodes to identify the harcs.
 	 * @param head The new head node for the harc.
 	 */
-	static void set(const Tail &tail, const Node &head) { define(tail, head); }
-
-
-
-	/**
-	 * Give a harc a constant head node.
-	 * @see set
-	 */
 	static void define(const Tail &tail, const Node &head);
 
 
 
+	static void activate(const Node &n, float value);
+
+	static void activate(const Node &first,
+						const Node &last,
+						const vector<float> &amount);
+
+
+
 	/**
-	 * Give the harc a path definition instead of a constant head.
-	 *     Will replace any existing definition and any constant head node.
-	 *     The definition will only be evaluated is the harc is queried for the
-	 *     head node. If any path used by the definition after it is evaluated
-	 *     changes then the harc is marked out-of-date and will be re-evaluated
-	 *     upon the next query. If the harc does not exist it is created.
-	 * @param tail Tail nodes to uniquely idenfify the harc.
-	 * @param def Path for the definition the harc should have.
+	 * Make a single harc with no tail.
+	 * @return Node to identify the harc.
 	 */
-	static void define(const Tail &tail, const vector<Node> &def);
+	static Node makeHarc();
 
 
 
 	/**
-	 * Generate a unique node number.
-	 */
-	static Node unique();
-
-
-
-	/**
-	 * Generate a sequential block of unique nodes.
-	 * @param count Number of nodes to allocate.
-	 * @param first Filled with first node id.
+	 * Make block of harcs that have no tails or heads.
+	 * @param count Number of harcs to create.
+	 * @param first Filled with first harc node.
 	 * @param last Filled with last (first+count).
 	 */
-	static void unique(int count, Node &first, Node &last);
-
-
-	/**
-	 * Evaluate a normalised path through the fabric. If a dependant Harc is
-	 * given then it will be added as a dependant to all visited Harcs in the
-	 * path.
-	 * @param p Normalised nested path through fabric.
-	 * @param dep The Harc to add as dependant on this path.
-	 * @return Result of following the normalised path p.
-	 */
-	static Node path(const vector<Node> &p, const Harc *dep = nullptr);
-
-	/**
-	 * Evaluate several simple paths in parallel. If dep is given then it is
-	 * added as a dependant on each of the paths.
-	 * @param p Set of simple paths to evaluate separately.
-	 * @param res Vector to put each result into.
-	 * @param dep Harc to add as dependant on each path.
-	 */
-	static vector<Node> paths(
-		const vector<vector<Node>> &p,
-		const Harc *dep = nullptr);
-
+	static void makeHarcs(int count, Node &first, Node &last);
 
 
 	/**
 	 * Statistic: Number of hyperarcs.
 	 * @return Total hyperarcs in the fabric
 	 */
-	static size_t linkCount()        { return linkcount__; }
+	static size_t branchCount()        { return branchcount__; }
 
 
 
@@ -236,22 +121,16 @@ class Fabric {
 	 *     Some of these nodes may not be involved in a hyperarc.
 	 * @return Total number of allocated nodes.
 	 */
-	static size_t nodeCount()        { return nodecount__; }
+	static size_t harcCount()        { return harccount__; }
 
-
-
-	/**
-	 * Statistic: Number of hyperarcs with definitions.
-	 */
-	static size_t definedLinks()     { return variablelinks__; }
 
 
 
 	/**
 	 * Statistic: Approximate number of queries per second.
 	 */
-	static float  queriesPerSecond() {
-		return (static_cast<float>(querycount__) /
+	static float  followsPerSecond() {
+		return (static_cast<float>(followcount__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
@@ -261,8 +140,8 @@ class Fabric {
 	/**
 	 * Statistic: Approximate number of hyperarc modifications per second.
 	 */
-	static float  changesPerSecond() {
-		return (static_cast<float>(changecount__) /
+	static float  activationsPerSecond() {
+		return (static_cast<float>(activatecount__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
@@ -285,56 +164,29 @@ class Fabric {
 
 
 	private:
-	struct NidHash {
-		constexpr size_t operator()(const Node &x) const {
-			return x.value;
-		}
-	};
+	static constexpr size_t HARC_BLOCK_SIZE = 4096;
 
+	static unordered_map<Tail, Node> tails__;
+	static vector<array<Harc, HARC_BLOCK_SIZE>*> harcs__;
 
-	static fabric::HarcMap                 harcs__;
-	static vector<const Harc*> changes__;
-	static unordered_map<Node, fabric::SortedHarcs, NidHash> partners__;
-
-	static std::atomic<size_t> linkcount__;
-	static std::atomic<size_t> nodecount__;
-	static std::atomic<size_t> variablelinks__;
-	static std::atomic<size_t> changecount__;
-	static std::atomic<size_t> querycount__;
+	static std::atomic<size_t> branchcount__;
+	static std::atomic<size_t> harccount__;
+	static std::atomic<size_t> activatecount__;
+	static std::atomic<size_t> followcount__;
 
 	static std::atomic<unsigned long long> counter__;
 
-	static std::mutex changelock_;
+	static Node get(const Tail &key);
 
-
-	static inline Node queryFast(const Tail &tail);
-	static Harc &get(const Node &a, const Node &b) {
-		return get(Tail{a, b});
-	}
-	static Harc &get(const Tail &key);
-	static bool get(const Tail &key, Harc*& result);
-	static bool get(const Node &a, const Node &b, Harc*& result) {
-		return get(Tail{a, b}, result);
+	inline static Harc *get(const Node &node) {
+		const auto x = node.value / HARC_BLOCK_SIZE;
+		const auto y = node.value % HARC_BLOCK_SIZE;
+		assert(x < harcs__.size());
+		return &harcs__[x]->at(y);
 	}
 
-	static Node path(const vector<Node> &p, size_t &index,
-				size_t count, const Harc *dep);
-	static void logChange(const Harc *h);
 	static void counterThread();
-
-	static void updatePartners(const Harc *h);
-
-	static void add(Harc *h, const Tail &key);
 };
-
-/*inline auto begin(const Node &n) {
-	return Fabric::partners(n).begin();
-}
-
-inline auto end(const Node &n) {
-	return Fabric::partners(n).end();
-}*/
-
 };  // namespace dharc
 
 #endif  // DHARC_FABRIC_HPP_

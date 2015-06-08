@@ -27,22 +27,14 @@ namespace rpc {
 enum struct Command : int {
 	nop,
 	version,
-	query,
-	define_const,
-	define,
-	partners,
-	unique,
-	linkcount,
-	nodecount,
-	changes,
-	queries,
-	// write_many_one,
-	// write_many_many,
-	// write_range_one,
-	// write_range_many
-	write_rangerange_many,
-	unique_block,
-	log,
+	harccount,
+	branchcount,
+	followps,
+	activeps,
+	makeharc,
+	makeharcs,
+	activate,
+	activateblock,
 	end
 };
 
@@ -51,22 +43,16 @@ enum struct Command : int {
  * specified in the Command enum struct).
  */
 typedef tuple<
-	bool(*)(),                                  // nop
-	int(*)(),                                   // version
-	Node(*)(const Tail&),                       // query
-	bool(*)(const Tail&, const Node&),          // define_const
-	bool(*)(const Tail&, const vector<Node>&),  // define
-	vector<Tail>(*)(const Node&, const int&),   // partners
-	Node(*)(),                                  // unique
-	size_t(*)(),                                // linkcount
-	size_t(*)(),                                // nodecount
-	float(*)(),                                 // changes
-	float(*)(),                                 // queries
-	bool(*)(const vector<Node>&, const Node&,   // write_rangerange_many
-			const Node&,
-			const vector<vector<Node>>&),
-	vector<Node>(*)(const int &),               // unique_block
-	vector<Tail>(*)(const int &)                // change log
+	bool(*)(),  // nop
+	int(*)(),  // version
+	size_t(*)(),  // harccount
+	size_t(*)(),  // branchcount
+	float(*)(),  // followps
+	float(*)(),  // activeps
+	Node(*)(),  // makeharc
+	vector<Node>(*)(const int &),  // makeharcs
+	bool(*)(const Node &, const float &),  // activate
+	bool(*)(const Node &, const Node &, const vector<float>&)  // activateblock
 > commands_t;
 
 };  // namespace rpc

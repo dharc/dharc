@@ -80,10 +80,6 @@ class Tail {
 std::ostream &operator<<(std::ostream &os, const Tail &n);
 
 
-namespace fabric {
-class Harc;
-typedef std::unordered_map<Tail, Harc*> HarcMap;
-};  // namespace fabric
 };  // namespace dharc
 
 namespace std {

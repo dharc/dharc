@@ -13,25 +13,18 @@ using std::cout;
 int main(int argc, char *argv[]) {
 	Sense sense("localhost", 7878);
 
-	// Allocate Nodes for colour and dimensions
-	Node colour_f, colour_l;
-	sense.unique(255, colour_f, colour_l);
-	Node x_f, x_l;
-	sense.unique(320, x_f, x_l);
-	Node y_f, y_l;
-	sense.unique(240, y_f, y_l);
+	Node cam_f, cam_l;
+	sense.makeHarcs(320 * 240, cam_f, cam_l);
 
-	vector<vector<Node>> data;
-	data.resize(320);
+	vector<float> data;
+	data.resize(320 * 240);
+
 	for (auto i = 0U; i < data.size(); ++i) {
-		data[i].resize(240);
-		for (auto j = 0U; j < data[i].size(); ++j) {
-			data[i][j] = colour_f;
-		}
+		data[i] = 1.0f;
 	}
 
 	for (auto k = 0; k < 1000; ++k) {
-		sense.write({}, x_f, y_f, data);
+		sense.activate(cam_f, cam_l, data);
 	}
 
 	return 0;

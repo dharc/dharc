@@ -14,20 +14,18 @@ Sense::Sense(const char *addr, int port) : Rpc(addr, port) {}
 
 Sense::~Sense() {}
 
-Node Sense::unique() {
-	return send<Command::unique>();
+Node Sense::makeHarc() {
+	return send<Command::makeharc>();
 }
 
-void Sense::unique(int count, Node &first, Node &last) {
-	vector<Node> res = send<Command::unique_block>(count);
+void Sense::makeHarcs(int count, Node &first, Node &last) {
+	vector<Node> res = send<Command::makeharcs>(count);
 	first = res[0];
 	last = res[1];
 }
 
-void Sense::write(const vector<Node> &common,
-				const Node &r1,
-				const Node &r2,
-				const vector<vector<Node>> &values) {
-	send<Command::write_rangerange_many>(common, r1, r2, values);
+void Sense::activate(const Node &first,
+						const Node &last,
+						const vector<float> &values) {
+	send<Command::activateblock>(first, last, values);
 }
-

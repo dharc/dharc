@@ -14,13 +14,12 @@ class Sense : public dharc::Rpc {
 	Sense(const char *addr, int port);
 	~Sense();
 
-	Node unique();
-	void unique(int count, Node &first, Node &last);
+	Node makeHarc();
+	void makeHarcs(int count, Node &first, Node &last);
 
-	void write(const vector<Node> &common,
-				const Node &r1,
-				const Node &r2,
-				const vector<vector<Node>> &values);
+	void activate(const Node &first,
+					const Node &last,
+					const vector<float> &values);
 };
 
 };

@@ -32,61 +32,26 @@ Monitor::~Monitor() {
 }
 
 
-
-Node Monitor::unique() {
-	return send<Command::unique>();
+size_t Monitor::harcCount() {
+	return send<Command::harccount>();
 }
 
 
 
-Node Monitor::query(const Tail &tail) {
-	return send<Command::query>(tail);
+size_t Monitor::branchCount() {
+	return send<Command::branchcount>();
 }
 
 
 
-void Monitor::define(const Tail &tail, const Node &h) {
-	send<Command::define_const>(tail, h);
+float Monitor::followsPerSecond() {
+	return send<Command::followps>();
 }
 
 
 
-void Monitor::define(const Tail &tail,
-					const vector<Node> &p) {
-	send<Command::define>(tail, p);
+float Monitor::activationsPerSecond() {
+	return send<Command::activeps>();
 }
 
-
-
-vector<Tail> Monitor::partners(const Node &n, int count) {
-	return send<Command::partners>(n, count);
-}
-
-
-
-size_t Monitor::linkCount() {
-	return send<Command::linkcount>();
-}
-
-
-
-size_t Monitor::nodeCount() {
-	return send<Command::nodecount>();
-}
-
-
-
-float Monitor::queriesPerSecond() {
-	return send<Command::queries>();
-}
-
-
-
-float Monitor::changesPerSecond() {
-	return send<Command::changes>();
-}
-
-vector<dharc::Tail> Monitor::changeLog(int count) {
-	return send<Command::log>(count);
-}
 

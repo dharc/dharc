@@ -46,116 +46,59 @@ int rpc_version() {
 	return static_cast<int>(Command::end);
 }
 
-/* rpc::Command::query */
-Node rpc_query(const Tail &tail) {
-	return Fabric::query(tail);
-}
-
-/* rpc::Command::define_const */
-bool rpc_define_const(const Tail &tail, const Node &h) {
-	Fabric::define(tail, h);
-	return true;
-}
-
-/* rpc::Command::define */
-bool rpc_define(
-		const Tail &tail,
-		const vector<Node> &p) {
-	Fabric::define(tail, p);
-	return true;
-}
-
-/* rpc::Command::partners */
-vector<Tail> rpc_partners(const Node &n, const int &count) {
-	vector<Tail> res;
-	vector<const Tail*> rest;
-	Fabric::partners(n, rest, count);
-	for (auto i : rest) {
-		res.push_back(*i);
-	}
-	return res;
-}
-
 /* rpc::Command::unique */
-Node rpc_unique() {
-	return Fabric::unique();
+Node rpc_makeharc() {
+	return Fabric::makeHarc();
 }
 
-vector<Node> rpc_unique_block(const int &count) {
+vector<Node> rpc_makeharcs(const int &count) {
 	vector<Node> res;
 	res.resize(2);
-	Fabric::unique(count, res[0], res[1]);
+	Fabric::makeHarcs(count, res[0], res[1]);
 	return res;
 }
 
-size_t rpc_linkcount() {
-	return Fabric::linkCount();
+size_t rpc_harccount() {
+	return Fabric::harcCount();
 }
 
-size_t rpc_nodecount() {
-	return Fabric::nodeCount();
+size_t rpc_branchcount() {
+	return Fabric::branchCount();
 }
 
-float rpc_changes() {
-	return Fabric::changesPerSecond();
+float rpc_follows() {
+	return Fabric::followsPerSecond();
 }
 
-float rpc_queries() {
-	return Fabric::queriesPerSecond();
+float rpc_activations() {
+	return Fabric::activationsPerSecond();
 }
 
-bool rpc_rangerange_many(const vector<Node>& common,
-							const Node& r1,
-							const Node& r2,
-							const vector<vector<Node>> &values) {
-	if (common.size() == 0) {
-		if (r1 < r2) {
-			for (auto i = 0U; i < values.size(); ++i) {
-				for (auto j = 0U; j < values[i].size(); ++j) {
-					Tail tail({Node(r1.value + i), Node(r2.value + j)}, true);
-					Fabric::define(tail, values[i][j]);
-				}
-			}
-		} else {
-			for (auto i = 0U; i < values.size(); ++i) {
-				for (auto j = 0U; j < values[i].size(); ++j) {
-					Tail tail({Node(r2.value + j), Node(r1.value + i)}, true);
-					Fabric::define(tail, values[i][j]);
-				}
-			}
-		}
-	}
+bool rpc_activate(const Node &node, const float &value) {
+	Fabric::activate(node, value);
 	return true;
 }
 
-vector<Tail> rpc_change_log(const int &count) {
-	vector<Tail> res;
-	vector<const Tail *> temp;
-	Fabric::changes(temp, count);
-	std::cout << "COUNT REQ: " << count << "\n";
-	std::cout << "COUNT REP: " << temp.size() << "\n";
-	for (auto i : temp) {
-		res.push_back(*i);
-	}
-	return res;
+bool rpc_activateblock(const Node &first,
+						const Node &last,
+						const vector<float> &values) {
+	Fabric::activate(first, last, values);
+	return true;
 }
+
 
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
 	rpc_version,
-	rpc_query,
-	rpc_define_const,
-	rpc_define,
-	rpc_partners,
-	rpc_unique,
-	rpc_linkcount,
-	rpc_nodecount,
-	rpc_changes,
-	rpc_queries,
-	rpc_rangerange_many,
-	rpc_unique_block,
-	rpc_change_log
+	rpc_harccount,
+	rpc_branchcount,
+	rpc_follows,
+	rpc_activations,
+	rpc_makeharc,
+	rpc_makeharcs,
+	rpc_activate,
+	rpc_activateblock
 };
 };  // namespace
 

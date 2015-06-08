@@ -92,6 +92,28 @@ struct Packer<std::vector<Node>> {
 	}
 };
 
+
+/**
+ * RPC packer for vectors of floats.
+ */
+template<>
+template<>
+struct Packer<std::vector<float>> {
+	static void pack(std::ostream &os, const std::vector<float> &vec) {
+		uint32_t x = vec.size();
+		os.write((const char *)&x, sizeof(uint32_t));
+		os.write((const char *)vec.data(), x * sizeof(float));
+	}
+	static std::vector<float> unpack(std::istream &is) {
+		std::vector<float> res;
+		uint32_t x;
+		is.read((char *)&x, sizeof(uint32_t));
+		res.resize(x);
+		is.read((char *)res.data(), x * sizeof(float));
+		return res;
+	}
+};
+
 /**
  * RPC packer for Tails.
  */

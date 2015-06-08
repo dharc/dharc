@@ -106,28 +106,16 @@ int main(int argc, char *argv[]) {
 
 	dharc::Monitor monitor(host, port);
 
-	for (auto i : delayed) {
-		switch (i.first) {
-		case 0: monitor.define(Tail{Node(44),Node(55)},Node(555)); break;
-		default: break;
-		}
-	}
 
 	if (config.stats == 0xFFFF) {
-		cout << "Node Count: " << monitor.nodeCount() << std::endl;
-		cout << "Link Count: " << monitor.linkCount() << std::endl;
-		cout << "Queries (s): " << monitor.queriesPerSecond() << std::endl;
-		cout << "Changes (s): " << monitor.changesPerSecond() << std::endl;
+		cout << "Harc Count: " << monitor.harcCount() << std::endl;
+		cout << "Branch Count: " << monitor.branchCount() << std::endl;
+		cout << "Follows (s): " << (monitor.followsPerSecond() / 1000000.0f);
+		cout << "M/s" << std::endl;
+		cout << "Activations (s): " << (monitor.activationsPerSecond() / 1000000.0f);
+		cout << "M/s" << std::endl;
 	}
 
-	if (config.changes > 0) {
-		vector<Tail> changes = monitor.changeLog(config.changes);
-		cout << "Changes: " << changes.size() << "\n";
-		for (auto i : changes) {
-			cout << i << "\n";
-		}
-		cout.flush();
-	}
 
 	if (config.interactive) {
 		// interactive();
