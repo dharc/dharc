@@ -35,24 +35,28 @@ float Harc::decayedActivation() const {
 
 
 void Harc::activate(float value) {
-	delta_ = value - decayedActivation();
-	activation_ = value;
-	lastactive_ = Fabric::counter();
+	float decayed = decayedActivation();
+	if (value > decayed) {
+		delta_ = value - decayed;
+		activation_ = value;
+		lastactive_ = Fabric::counter();
+	}
 }
 
 
 void Harc::define(const Node &n) {
 	head_ = n;
-	activate(strength_);
-	Fabric::activate(n, strength_);
+	Fabric::activate(n, strength_ * (delta_ / lastActive()));
+	activate(strength_ * (delta_ / lastActive()));
 	// Build strength
-	strength_ = (1.0f - strength_) * 0.001f;
+	strength_ += (1.0f - strength_) * 0.001f;
 }
 
 
 float Harc::significance() const {
-	// Simple delta sig absoluted
-	return (delta_ < 0.0) ? 0.0f - delta_ : delta_;
+	// Simple linear decayed absolute delta
+	float decdelta = delta_ / lastActive();
+	return (decdelta < 0.0) ? 0.0f - decdelta : decdelta;
 }
 
 

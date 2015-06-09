@@ -169,7 +169,7 @@ class Fabric {
 	/**
 	 * Number of milliseconds per tick.
 	 */
-	constexpr static unsigned long long counterResolution() { return 100; }
+	constexpr static unsigned long long counterResolution() { return 20; }
 
 
 
@@ -177,7 +177,7 @@ class Fabric {
 	static constexpr size_t HARC_BLOCK_SIZE = 4096;
 	static constexpr size_t MAX_UNPROCESSED = 20;
 	static constexpr size_t SIGNIFICANT_QUEUE_SIZE = 20;
-	static constexpr float SIG_THRESHOLD = 0.1f;
+	static constexpr float SIG_THRESHOLD = 0.5f;
 
 	static unordered_map<Tail, Node> tails__;
 	static vector<array<Harc, HARC_BLOCK_SIZE>*> harcs__;

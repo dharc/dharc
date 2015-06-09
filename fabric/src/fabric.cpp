@@ -141,6 +141,7 @@ Node Fabric::get(const Tail &key) {
 
 void Fabric::activate(const Node &n, float value) {
 	Harc *h = get(n);
+	++activatecount__;
 	h->activate(value);
 	addToQueue(n, h);
 }
@@ -180,6 +181,7 @@ void Fabric::define(const Tail &tail, const Node &head) {
 
 	Harc *harc = get(hnode);
 	harc->define(head);
+	++activatecount__;
 	addToQueue(hnode, harc);
 }
 
