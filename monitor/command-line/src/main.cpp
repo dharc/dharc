@@ -114,6 +114,8 @@ int main(int argc, char *argv[]) {
 		cout << "M/s" << std::endl;
 		cout << "Activations (s): " << (monitor.activationsPerSecond() / 1000000.0f);
 		cout << "M/s" << std::endl;
+		cout << "Processed (s): " << (monitor.processedPerSecond() / 1000000.0f);
+		cout << "M/s" << std::endl;
 	}
 
 

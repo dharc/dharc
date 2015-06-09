@@ -31,6 +31,7 @@ enum struct Command : int {
 	branchcount,
 	followps,
 	activeps,
+	procps,
 	makeharc,
 	makeharcs,
 	activate,
@@ -49,6 +50,7 @@ typedef tuple<
 	size_t(*)(),  // branchcount
 	float(*)(),  // followps
 	float(*)(),  // activeps
+	float(*)(),  // procps
 	Node(*)(),  // makeharc
 	vector<Node>(*)(const int &),  // makeharcs
 	bool(*)(const Node &, const float &),  // activate

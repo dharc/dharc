@@ -54,4 +54,8 @@ float Monitor::activationsPerSecond() {
 	return send<Command::activeps>();
 }
 
+float Monitor::processedPerSecond() {
+	return send<Command::procps>();
+}
+
 

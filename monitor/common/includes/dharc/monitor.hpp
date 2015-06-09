@@ -26,6 +26,7 @@ class Monitor : public dharc::Rpc {
 	size_t branchCount();
 	float followsPerSecond();
 	float activationsPerSecond();
+	float processedPerSecond();
 
 	/* Statistics functions */
 	/* Stream functions */

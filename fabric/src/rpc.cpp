@@ -74,6 +74,10 @@ float rpc_activations() {
 	return Fabric::activationsPerSecond();
 }
 
+float rpc_processed() {
+	return Fabric::processedPerSecond();
+}
+
 bool rpc_activate(const Node &node, const float &value) {
 	Fabric::activate(node, value);
 	return true;
@@ -95,6 +99,7 @@ dharc::rpc::commands_t commands {
 	rpc_branchcount,
 	rpc_follows,
 	rpc_activations,
+	rpc_processed,
 	rpc_makeharc,
 	rpc_makeharcs,
 	rpc_activate,

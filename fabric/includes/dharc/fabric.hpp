@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <array>
 #include <cassert>
+#include <set>
+#include <mutex>
 
 #include "dharc/node.hpp"
 #include "dharc/harc.hpp"
@@ -19,6 +21,7 @@
 
 using std::vector;
 using std::array;
+using std::set;
 using std::unordered_map;
 using std::chrono::time_point;
 using std::size_t;
@@ -124,8 +127,6 @@ class Fabric {
 	static size_t harcCount()        { return harccount__; }
 
 
-
-
 	/**
 	 * Statistic: Approximate number of queries per second.
 	 */
@@ -142,6 +143,15 @@ class Fabric {
 	 */
 	static float  activationsPerSecond() {
 		return (static_cast<float>(activatecount__) /
+				static_cast<float>(counter__)) *
+				static_cast<float>(counterResolution());
+	}
+
+	/**
+	 * Statistic: Approximate number of hyperarc modifications per second.
+	 */
+	static float  processedPerSecond() {
+		return (static_cast<float>(processed__) /
 				static_cast<float>(counter__)) *
 				static_cast<float>(counterResolution());
 	}
@@ -165,14 +175,24 @@ class Fabric {
 
 	private:
 	static constexpr size_t HARC_BLOCK_SIZE = 4096;
+	static constexpr size_t MAX_UNPROCESSED = 20;
+	static constexpr size_t SIGNIFICANT_QUEUE_SIZE = 20;
+	static constexpr float SIG_THRESHOLD = 0.1f;
 
 	static unordered_map<Tail, Node> tails__;
 	static vector<array<Harc, HARC_BLOCK_SIZE>*> harcs__;
+
+	static set<Node, bool(*)(const Node &, const Node &)> unproc__;
+	static std::mutex unproc_lock__;
+
+	static array<Node, SIGNIFICANT_QUEUE_SIZE> sigharcs__;
+	static std::mutex sigharcs_lock__;
 
 	static std::atomic<size_t> branchcount__;
 	static std::atomic<size_t> harccount__;
 	static std::atomic<size_t> activatecount__;
 	static std::atomic<size_t> followcount__;
+	static std::atomic<size_t> processed__;
 
 	static std::atomic<unsigned long long> counter__;
 
@@ -186,6 +206,12 @@ class Fabric {
 	}
 
 	static void counterThread();
+	static void processThread();
+
+	static void addToQueue(const Node &node, Harc *harc);
+
+	inline static bool harcCompare(const Node &a, const Node &b);
+	inline static bool harcMin(const Node &a, const Node &b);
 };
 };  // namespace dharc
 

@@ -48,6 +48,10 @@ class Harc {
 	float       strength_;
 	uint64_t    lastactive_;
 	dharc::Lock lock_;
+
+	inline float lastActive() const;
+
+	float decayedActivation() const;
 };
 
 
