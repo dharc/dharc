@@ -60,12 +60,14 @@ int main(int argc, char *argv[]) {
 	(*title)[statscols.name] = "Performance Statistics";
 	auto stat_active = *statstore->append(title->children());
 	auto stat_processed = *statstore->append(title->children());
+	auto stat_follows = *statstore->append(title->children());
 	
 	stat_numharcs[statscols.name] = "Number of Harcs";
 	stat_numbranch[statscols.name] = "Number of Branches";
 	stat_bfactor[statscols.name] = "Branch Factor";
 	stat_active[statscols.name] = "Activations (Kps)";
-	stat_processed[statscols.name] = "Processed (Mps)";
+	stat_processed[statscols.name] = "Processed (Kps)";
+	stat_follows[statscols.name] = "Harc Follows (Kps)";
 
 	statsview->set_model(statstore);
 
@@ -76,6 +78,7 @@ int main(int argc, char *argv[]) {
 						static_cast<float>(harccount);
 		float actives = monitor.activationsPerSecond() / 1000.0f;
 		float processed = monitor.processedPerSecond() / 1000.0f;
+		float follows = monitor.followsPerSecond() / 1000.0f;
 
 		char buffer[100];
 		sprintf(buffer, "%dK", harccount / 1000);
@@ -88,6 +91,8 @@ int main(int argc, char *argv[]) {
 		stat_active[statscols.value] = buffer;
 		sprintf(buffer, "%.2f", processed);
 		stat_processed[statscols.value] = buffer;
+		sprintf(buffer, "%.2f", follows);
+		stat_follows[statscols.value] = buffer;
 		return true;
 	}, 100);
 
