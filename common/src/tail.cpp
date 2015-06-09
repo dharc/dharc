@@ -22,10 +22,11 @@ dharc::Tail::Tail(std::initializer_list<dharc::Node> il, bool prefixed) :
 
 dharc::Tail::Tail(const dharc::Tail &other) : nodes_(other.nodes_) {}
 
-void dharc::Tail::fixup() {
+int dharc::Tail::fixup() {
 	std::sort(nodes_.begin(), nodes_.end());
 	auto it = std::unique(nodes_.begin(), nodes_.end());
 	nodes_.resize(std::distance(nodes_.begin(), it));
+	return nodes_.size();
 }
 
 void dharc::Tail::insert(const dharc::Node &node) {

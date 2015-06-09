@@ -29,10 +29,13 @@ class Harc {
 	 */
 	void define(const Node &);
 
-	void activate(float value);
+	void activateConstant(float value);
+	void activatePulse(float value);
 
 	float significance() const;
 
+	inline Node head() const { return head_; }
+	inline float strength() const { return strength_; }
 
 	/**
 	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.

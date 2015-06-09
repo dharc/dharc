@@ -43,6 +43,10 @@ size_t Monitor::branchCount() {
 }
 
 
+size_t Monitor::followCount() {
+	return send<Command::followcount>();
+}
+
 
 float Monitor::followsPerSecond() {
 	return send<Command::followps>();

@@ -24,6 +24,7 @@ class Monitor : public dharc::Rpc {
 
 	size_t harcCount();
 	size_t branchCount();
+	size_t followCount();
 	float followsPerSecond();
 	float activationsPerSecond();
 	float processedPerSecond();

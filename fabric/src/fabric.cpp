@@ -79,6 +79,9 @@ condition_variable proccv;
 };
 
 void Fabric::processThread() {
+	array<Node, MAX_TAIL> signodes;
+	int count = 0;
+
 	while (true) {
 		Node node;
 		{
@@ -86,24 +89,30 @@ void Fabric::processThread() {
 			while (unproc__.size() == 0) {
 				proccv.wait(lck);
 			}
-			node = *unproc__.begin();
-			unproc__.erase(unproc__.begin());
+			count = (unproc__.size() < MAX_TAIL) ? unproc__.size() : MAX_TAIL;
+			auto it = unproc__.begin();
+			for (int i = 0; i < count; ++i) {
+				signodes[i] = *it;
+				++it;
+			}
+			unproc__.erase(unproc__.begin(), --it);
 		}
 
 		++processed__;
 
-		// Generate Tails.
-		// FOR ALL COMBINATIONS!!!!!!
-		Tail tail(SIGNIFICANT_QUEUE_SIZE);
-		for (auto i : sigharcs__) {
-			tail.insertRaw(i);
+		for (int t = 0; t < (count-2); ++t) {
+			Tail tail(count-t);
+			for (int i = 0; i < (count-t); ++i) {
+				tail.insertRaw(signodes[i]);
+			}
+			if (tail.fixup() == (count - t)) {
+				define(tail, node);
+			}
 		}
-		tail.fixup();
-		define(tail, node);
 
 		// Insert into sigharcs
-		auto it = std::min_element(sigharcs__.begin(), sigharcs__.end(), harcMin);
-		*it = node;
+		//auto it = std::min_element(sigharcs__.begin(), sigharcs__.end(), harcMin);
+		//*it = node;
 	}
 }
 
@@ -139,14 +148,14 @@ Node Fabric::get(const Tail &key) {
 }
 
 
-void Fabric::activate(const Node &n, float value) {
+void Fabric::activateConstant(const Node &n, float value) {
 	Harc *h = get(n);
 	++activatecount__;
-	h->activate(value);
+	h->activateConstant(value);
 	addToQueue(n, h);
 }
 
-void Fabric::activate(const Node &first,
+void Fabric::activateConstant(const Node &first,
 						const Node &last,
 						const vector<float> &amount) {
 	const size_t count = last.value - first.value;
@@ -155,10 +164,17 @@ void Fabric::activate(const Node &first,
 
 	for (size_t i = 0; i < count; ++i) {
 		Harc *h = get(current);
-		h->activate(amount[i]);
+		h->activateConstant(amount[i]);
 		addToQueue(current, h);
 		++current.value;
 	}
+}
+
+void Fabric::activatePulse(const Node &n, float value) {
+	Harc *h = get(n);
+	++activatecount__;
+	h->activatePulse(value);
+	addToQueue(n, h);
 }
 
 
@@ -168,7 +184,7 @@ void Fabric::activate(const Node &first,
 	return get(tail).query();
 } */
 
-void Fabric::define(const Tail &tail, const Node &head) {
+Node Fabric::define(const Tail &tail, const Node &head) {
 	Node hnode = get(tail);
 
 	if (hnode == dharc::null_n) {
@@ -181,8 +197,8 @@ void Fabric::define(const Tail &tail, const Node &head) {
 
 	Harc *harc = get(hnode);
 	harc->define(head);
-	++activatecount__;
-	addToQueue(hnode, harc);
+	activatePulse(hnode, harc->strength());
+	return hnode; 
 }
 
 

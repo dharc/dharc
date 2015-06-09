@@ -29,6 +29,7 @@ enum struct Command : int {
 	version,
 	harccount,
 	branchcount,
+	followcount,
 	followps,
 	activeps,
 	procps,
@@ -48,6 +49,7 @@ typedef tuple<
 	int(*)(),  // version
 	size_t(*)(),  // harccount
 	size_t(*)(),  // branchcount
+	size_t(*)(),  // followcount
 	float(*)(),  // followps
 	float(*)(),  // activeps
 	float(*)(),  // procps

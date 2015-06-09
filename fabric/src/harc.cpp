@@ -17,7 +17,7 @@ using dharc::Fabric;
 inline float Harc::lastActive() const {
 	float delta = static_cast<float>(Fabric::counter()) -
 					static_cast<float>(lastactive_);
-	return (delta * Fabric::counterResolution()) / 1000.0f;
+	return 1.0f + (delta);
 }
 
 
@@ -34,22 +34,30 @@ float Harc::decayedActivation() const {
 }
 
 
-void Harc::activate(float value) {
-	float decayed = decayedActivation();
-	if (value > decayed) {
-		delta_ = value - decayed;
+void Harc::activatePulse(float value) {
+	//float decayed = decayedActivation();
+	//if (value > decayed) {
+		delta_ = value - decayedActivation();
 		activation_ = value;
 		lastactive_ = Fabric::counter();
-	}
+	//}
+}
+
+void Harc::activateConstant(float value) {
+	//float decayed = decayedActivation();
+	//if (value > decayed) {
+		delta_ = value - activation_;
+		activation_ = value;
+		lastactive_ = Fabric::counter();
+	//}
 }
 
 
 void Harc::define(const Node &n) {
 	head_ = n;
-	Fabric::activate(n, strength_ * (delta_ / lastActive()));
-	activate(strength_ * (delta_ / lastActive()));
 	// Build strength
-	strength_ += (1.0f - strength_) * 0.001f;
+	strength_ += (1.0f - strength_) * 0.01f;
+	Fabric::activatePulse(n, strength_);
 }
 
 

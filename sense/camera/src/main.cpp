@@ -353,13 +353,14 @@ int main(int argc, char *argv[]) {
 
 	uint8_t *buffer_sdl;
 	SDL_Surface *data_sf;
+	SDL_Event event;
     buffer_sdl = (uint8_t*)malloc(width*height*3);
 
     SDL_SetVideoMode(width, height, 24, SDL_HWSURFACE);
 
     data_sf = SDL_CreateRGBSurfaceFrom(buffer_sdl, width, height,
                                        24, width * 3,
-                                       mask32(0), mask32(1), mask32(2), 0);
+                                       0xFF, 0xFF, 0xFF, 0);
 
     SDL_SetEventFilter(sdl_filter);
 
@@ -371,6 +372,10 @@ int main(int argc, char *argv[]) {
 	data.resize(320 * 240);
 
 	while (true) {
+		while (SDL_PollEvent(&event))
+            if (event.type == SDL_QUIT)
+                return 0;
+
 		fd_set fds;
         struct timeval tv;
         int r;

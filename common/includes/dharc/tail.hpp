@@ -26,7 +26,7 @@ class Tail {
 	 *     Performs a sort and removes duplicate elements. Not needed if the
 	 *     tail is formed correctly either manually or using insert.
 	 */
-	void fixup();
+	int fixup();
 
 	/**
 	 * Insert a node into a tail vector.

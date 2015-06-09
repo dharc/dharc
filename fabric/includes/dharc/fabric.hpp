@@ -82,15 +82,17 @@ class Fabric {
 	 * @param tail A set of tail nodes to identify the harcs.
 	 * @param head The new head node for the harc.
 	 */
-	static void define(const Tail &tail, const Node &head);
+	static Node define(const Tail &tail, const Node &head);
 
 
 
-	static void activate(const Node &n, float value);
+	static void activateConstant(const Node &n, float value);
 
-	static void activate(const Node &first,
+	static void activateConstant(const Node &first,
 						const Node &last,
 						const vector<float> &amount);
+
+	static void activatePulse(const Node &n, float value);
 
 
 
@@ -125,6 +127,8 @@ class Fabric {
 	 * @return Total number of allocated nodes.
 	 */
 	static size_t harcCount()        { return harccount__; }
+
+	static size_t followCount()        { return followcount__; }
 
 
 	/**
@@ -175,9 +179,10 @@ class Fabric {
 
 	private:
 	static constexpr size_t HARC_BLOCK_SIZE = 4096;
-	static constexpr size_t MAX_UNPROCESSED = 20;
+	static constexpr size_t MAX_UNPROCESSED = 500;
+	static constexpr size_t MAX_TAIL = 20;
 	static constexpr size_t SIGNIFICANT_QUEUE_SIZE = 20;
-	static constexpr float SIG_THRESHOLD = 0.5f;
+	static constexpr float SIG_THRESHOLD = 0.01f;
 
 	static unordered_map<Tail, Node> tails__;
 	static vector<array<Harc, HARC_BLOCK_SIZE>*> harcs__;

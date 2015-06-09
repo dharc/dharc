@@ -66,6 +66,10 @@ size_t rpc_branchcount() {
 	return Fabric::branchCount();
 }
 
+size_t rpc_followcount() {
+	return Fabric::followCount();
+}
+
 float rpc_follows() {
 	return Fabric::followsPerSecond();
 }
@@ -79,14 +83,14 @@ float rpc_processed() {
 }
 
 bool rpc_activate(const Node &node, const float &value) {
-	Fabric::activate(node, value);
+	Fabric::activateConstant(node, value);
 	return true;
 }
 
 bool rpc_activateblock(const Node &first,
 						const Node &last,
 						const vector<float> &values) {
-	Fabric::activate(first, last, values);
+	Fabric::activateConstant(first, last, values);
 	return true;
 }
 
@@ -97,6 +101,7 @@ dharc::rpc::commands_t commands {
 	rpc_version,
 	rpc_harccount,
 	rpc_branchcount,
+	rpc_followcount,
 	rpc_follows,
 	rpc_activations,
 	rpc_processed,

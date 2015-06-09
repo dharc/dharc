@@ -56,6 +56,8 @@ int main(int argc, char *argv[]) {
 	auto stat_numharcs = *statstore->append(title->children());
 	auto stat_numbranch = *statstore->append(title->children());
 	auto stat_bfactor = *statstore->append(title->children());
+	auto stat_numfollows = *statstore->append(title->children());
+	auto stat_ffactor = *statstore->append(title->children());
 	title = statstore->append();
 	(*title)[statscols.name] = "Performance Statistics";
 	auto stat_active = *statstore->append(title->children());
@@ -65,6 +67,8 @@ int main(int argc, char *argv[]) {
 	stat_numharcs[statscols.name] = "Number of Harcs";
 	stat_numbranch[statscols.name] = "Number of Branches";
 	stat_bfactor[statscols.name] = "Branch Factor";
+	stat_numfollows[statscols.name] = "Number of Queries";
+	stat_ffactor[statscols.name] = "Query Factor";
 	stat_active[statscols.name] = "Activations (Kps)";
 	stat_processed[statscols.name] = "Processed (Kps)";
 	stat_follows[statscols.name] = "Harc Follows (Kps)";
@@ -75,6 +79,9 @@ int main(int argc, char *argv[]) {
 		int harccount = monitor.harcCount();
 		int branchcount = monitor.branchCount();
 		float bfactor = static_cast<float>(branchcount) /
+						static_cast<float>(harccount);
+		int followcount = monitor.followCount();
+		float ffactor = static_cast<float>(followcount) /
 						static_cast<float>(harccount);
 		float actives = monitor.activationsPerSecond() / 1000.0f;
 		float processed = monitor.processedPerSecond() / 1000.0f;
@@ -87,6 +94,10 @@ int main(int argc, char *argv[]) {
 		stat_numbranch[statscols.value] = buffer;		
 		sprintf(buffer, "%.2f", bfactor);
 		stat_bfactor[statscols.value] = buffer;
+		sprintf(buffer, "%dK", followcount / 1000);
+		stat_numfollows[statscols.value] = buffer;		
+		sprintf(buffer, "%.2f", ffactor);
+		stat_ffactor[statscols.value] = buffer;
 		sprintf(buffer, "%.2f", actives);
 		stat_active[statscols.value] = buffer;
 		sprintf(buffer, "%.2f", processed);
