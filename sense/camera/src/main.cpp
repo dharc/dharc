@@ -16,6 +16,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
+#include <SDL/SDL.h>
+
 #include <asm/types.h>          /* for videodev2.h */
 
 #include <linux/videodev2.h>
@@ -328,11 +330,38 @@ void open_device()
     }
 }
 
+
+int sdl_filter(const SDL_Event * event)
+{
+    return event->type == SDL_QUIT;
+}
+
+#define mask32(BYTE) (*(uint32_t *)(uint8_t [4]){ [BYTE] = 0xff })
+
+
 int main(int argc, char *argv[]) {
 	Sense sense("localhost", 7878);
 
 	Node cam_f, cam_l;
 	sense.makeHarcs(320 * 240, cam_f, cam_l);
+
+	atexit(SDL_Quit);
+    if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        return 1;
+
+    SDL_WM_SetCaption("Dharc Sense Camera", NULL);
+
+	uint8_t *buffer_sdl;
+	SDL_Surface *data_sf;
+    buffer_sdl = (uint8_t*)malloc(width*height*3);
+
+    SDL_SetVideoMode(width, height, 24, SDL_HWSURFACE);
+
+    data_sf = SDL_CreateRGBSurfaceFrom(buffer_sdl, width, height,
+                                       24, width * 3,
+                                       mask32(0), mask32(1), mask32(2), 0);
+
+    SDL_SetEventFilter(sdl_filter);
 
 	open_device();
 	init_device();
@@ -372,9 +401,16 @@ int main(int argc, char *argv[]) {
 		read_frame();
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
+			buffer_sdl[i*3] = y;
+			buffer_sdl[(i*3)+1] = y;
+			buffer_sdl[(i*3)+2] = y;
 			data[i] = 1.0f / (255.0f - static_cast<float>(y));
 		}
 		sense.activate(cam_f, cam_l, data);
+
+		SDL_Surface *screen = SDL_GetVideoSurface();
+		if (SDL_BlitSurface(data_sf, NULL, screen, NULL) == 0)
+		    SDL_UpdateRect(screen, 0, 0, 0, 0);
 	}
 
 	stop_capturing();
