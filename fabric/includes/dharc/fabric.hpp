@@ -179,7 +179,7 @@ class Fabric {
 
 	private:
 	static constexpr size_t HARC_BLOCK_SIZE = 4096;
-	static constexpr size_t MAX_UNPROCESSED = 500;
+	static constexpr size_t MAX_UNPROCESSED = 5000;
 	static constexpr size_t MAX_TAIL = 20;
 	static constexpr size_t SIGNIFICANT_QUEUE_SIZE = 20;
 	static constexpr float SIG_THRESHOLD = 0.01f;
@@ -189,6 +189,7 @@ class Fabric {
 
 	static set<Node, bool(*)(const Node &, const Node &)> unproc__;
 	static std::mutex unproc_lock__;
+	static std::mutex harc_lock__;
 
 	static array<Node, SIGNIFICANT_QUEUE_SIZE> sigharcs__;
 	static std::mutex sigharcs_lock__;

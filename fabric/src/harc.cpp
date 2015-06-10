@@ -35,28 +35,32 @@ float Harc::decayedActivation() const {
 
 
 void Harc::activatePulse(float value) {
-	//float decayed = decayedActivation();
-	//if (value > decayed) {
-		delta_ = value - decayedActivation();
-		activation_ = value;
-		lastactive_ = Fabric::counter();
-	//}
+	lock_.lock();
+	delta_ = value;
+	// activation_ = value;
+	lastactive_ = Fabric::counter();
+	lock_.unlock();
 }
 
 void Harc::activateConstant(float value) {
-	//float decayed = decayedActivation();
-	//if (value > decayed) {
-		delta_ = value - activation_;
-		activation_ = value;
-		lastactive_ = Fabric::counter();
-	//}
+	lock_.lock();
+	delta_ = value - activation_;
+	activation_ = value;
+	lastactive_ = Fabric::counter();
+	lock_.unlock();
 }
 
 
 void Harc::define(const Node &n) {
-	head_ = n;
+	lock_.lock();
 	// Build strength
-	strength_ += (1.0f - strength_) * 0.01f;
+	if (head_ == n) {
+		strength_ += (1.0f - strength_) * 0.01f;
+	} else {
+		strength_ -= strength_ * 0.01f;
+	}
+	head_ = n;
+	lock_.unlock();
 	Fabric::activatePulse(n, strength_);
 }
 

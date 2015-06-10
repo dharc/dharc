@@ -49,6 +49,7 @@ atomic<unsigned long long> Fabric::counter__(0);
 
 unordered_map<Tail, Node> Fabric::tails__;
 vector<array<Harc, Fabric::HARC_BLOCK_SIZE>*> Fabric::harcs__;
+std::mutex Fabric::harc_lock__;
 
 set<Node, bool(*)(const Node &, const Node &)> Fabric::unproc__(harcCompare);
 std::mutex Fabric::unproc_lock__;
@@ -83,30 +84,42 @@ void Fabric::processThread() {
 	int count = 0;
 
 	while (true) {
-		Node node;
+		// First select MAX_TAIL significant nodes
 		{
+			// Wait for lock and condition
 			unique_lock<mutex> lck(unproc_lock__);
-			while (unproc__.size() == 0) {
+			while (unproc__.size() < 3) {
 				proccv.wait(lck);
 			}
+
+			// Find max available if less than MAX_TAIL
 			count = (unproc__.size() < MAX_TAIL) ? unproc__.size() : MAX_TAIL;
+
+			// Copy the nodes to a buffer for processing
 			auto it = unproc__.begin();
 			for (int i = 0; i < count; ++i) {
 				signodes[i] = *it;
 				++it;
 			}
+			// Erase them from process queue.
 			unproc__.erase(unproc__.begin(), --it);
 		}
 
-		++processed__;
+		processed__ += count;
 
-		for (int t = 0; t < (count-2); ++t) {
-			Tail tail(count-t);
-			for (int i = 0; i < (count-t); ++i) {
-				tail.insertRaw(signodes[i]);
-			}
-			if (tail.fixup() == (count - t)) {
-				define(tail, node);
+		// Generate all tail combinations
+		// First pick head node
+		for (int n = 0; n < count; ++n) {
+			// Vary number of tails
+			for (int t = 0; t < (count - 2); ++t) {
+				Tail tail(count-t);
+				// Now pick t most significant 
+				for (int i = 0; i < (count-t); ++i) {
+					tail.insertRaw(signodes[i]);
+				}
+				if (tail.fixup() == (count - t)) {
+					define(tail, signodes[n]);
+				}
 			}
 		}
 
@@ -125,6 +138,8 @@ void Fabric::initialise() {
 
 	std::thread p(processThread);
 	p.detach();
+	//std::thread p2(processThread);
+	//p2.detach();
 
 	for (size_t i = 0; i < SIGNIFICANT_QUEUE_SIZE; ++i) {
 		sigharcs__[i] = dharc::null_n;
@@ -188,8 +203,10 @@ Node Fabric::define(const Tail &tail, const Node &head) {
 	Node hnode = get(tail);
 
 	if (hnode == dharc::null_n) {
+		harc_lock__.lock();
 		hnode = makeHarc();
 		tails__.insert({tail, hnode});
+		harc_lock__.unlock();
 		branchcount__ += tail.size();
 	}
 
@@ -234,7 +251,7 @@ void Fabric::addToQueue(const Node &node, Harc *harc) {
 	if (unproc__.size() < MAX_UNPROCESSED) {
 		unproc__.insert(node);
 	} else {
-		if (harcCompare(node, *unproc__.rbegin())) {
+		if (harcCompare(node, *(--unproc__.end()))) {
 			unproc__.erase(--unproc__.end());
 			unproc__.insert(node);
 		}

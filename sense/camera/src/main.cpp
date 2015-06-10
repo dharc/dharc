@@ -406,10 +406,10 @@ int main(int argc, char *argv[]) {
 		read_frame();
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
-			buffer_sdl[i*3] = y;
-			buffer_sdl[(i*3)+1] = y;
-			buffer_sdl[(i*3)+2] = y;
-			data[i] = 1.0f / (255.0f - static_cast<float>(y));
+			data[i] = static_cast<float>(y) / 255.0f;
+			buffer_sdl[i*3] = static_cast<unsigned char>(data[i] * 256.0f);
+			buffer_sdl[(i*3)+1] = buffer_sdl[i*3];
+			buffer_sdl[(i*3)+2] = buffer_sdl[i*3];
 		}
 		sense.activate(cam_f, cam_l, data);
 
