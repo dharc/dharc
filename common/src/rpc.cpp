@@ -4,6 +4,8 @@
 
 #include <string>
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 #include "zmq.hpp"
 #include "dharc/rpc.hpp"
@@ -49,8 +51,19 @@ std::string Rpc::send(const std::string &s) {
 	zmq::message_t rep;
 
 	while (true) {
+		int retry = 500;
 		try {
-			sock_.recv(&rep);
+			while (retry > 0 && !sock_.recv(&rep, ZMQ_NOBLOCK)) {
+				--retry;
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
+
+			if (retry == 0) {
+				sock_.disconnect(uri_.c_str());
+				cout << "Server unreachable!\n";
+				exit(1);
+			}
+
 			break;
 		} catch (zmq::error_t err) {
 			cout << "ZMQ receive error: " << err.what() << "\n";

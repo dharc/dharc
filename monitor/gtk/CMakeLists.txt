@@ -1,4 +1,5 @@
 set(DHARCMONGTK
+	src/statsview.cpp
 	src/main.cpp
 )
 

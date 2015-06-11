@@ -82,7 +82,7 @@ class Fabric {
 	 * @param tail A set of tail nodes to identify the harcs.
 	 * @param head The new head node for the harc.
 	 */
-	static Node define(const Tail &tail, const Node &head);
+	static Node query(const Tail &tail, const Node &head);
 
 
 
@@ -92,7 +92,7 @@ class Fabric {
 						const Node &last,
 						const vector<float> &amount);
 
-	static void activatePulse(const Node &n, float value);
+	static void activatePulse(const Node &n);
 
 
 

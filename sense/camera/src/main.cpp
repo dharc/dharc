@@ -26,242 +26,173 @@ using dharc::Sense;
 using dharc::Node;
 using std::cout;
 
-int fd = -1;
-
 #define CLEAR(x) memset (&(x), 0, sizeof (x))
 
-constexpr size_t width = 320;
-constexpr size_t height = 240;
-constexpr size_t size() { return width * height; }
+namespace {
+constexpr size_t kWidth = 320;
+constexpr size_t kHeight = 240;
+constexpr size_t size() { return kWidth * kHeight; }
 
-struct buffer
-{
-    void *start;
-    size_t length;
+struct buffer {
+	void *start;
+	size_t length;
 };
 
 buffer *buffers;
-
-float fbuffer[size()];
 const char *dev_name = "/dev/video0";
+int fd = -1;
 
-static void errno_exit(const char *s)
-{
-    fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
 
-    exit(EXIT_FAILURE);
-}
 
-static int xioctl(int fd, int request, void *arg)
-{
-    int r;
-
-    do
-    {
-        r = ioctl(fd, request, arg);
-    }
-    while (-1 == r && EINTR == errno);
-
-    return r;
-}
-
-int read_frame(void)
-{
-	struct v4l2_buffer buf;
-
-    CLEAR(buf);
-
-    buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    buf.memory = V4L2_MEMORY_USERPTR;
-
-    if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf))
-    {
-        switch (errno)
-        {
-        case EAGAIN:
-            return 0;
-
-        case EIO:
-            /* Could ignore EIO, see spec. */
-
-            /* fall through */
-
-        default:
-            errno_exit("VIDIOC_DQBUF");
-        }
-    }
-
-    //for (i = 0; i < n_buffers; ++i)
-     //buf.m.userptr == (unsigned long)buffers[0].start
-     //buf.length == buffers[0].length)
-            //break;
-
-    //assert(i < n_buffers);
-
-    // process_image((void *)buf.m.userptr);
-
-    if (-1 == xioctl(fd, VIDIOC_QBUF, &buf))
-        errno_exit("VIDIOC_QBUF");
-
-	return 1;
+void errno_exit(const char *s) {
+	fprintf(stderr, "%s error %d, %s\n", s, errno, strerror(errno));
+	exit(EXIT_FAILURE);
 }
 
 
-static void init_userp(unsigned int buffer_size)
-{
-    struct v4l2_requestbuffers req;
-    unsigned int page_size;
 
-    page_size = getpagesize();
-    buffer_size = (buffer_size + page_size - 1) & ~(page_size - 1);
+int xioctl(int fd, int request, void *arg) {
+	int r;
 
-    CLEAR(req);
+	do {
+		r = ioctl(fd, request, arg);
+	} while (-1 == r && EINTR == errno);
 
-    req.count = 1;
-    req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    req.memory = V4L2_MEMORY_USERPTR;
-
-    if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req))
-    {
-        if (EINVAL == errno)
-        {
-            fprintf(stderr, "%s does not support "
-                    "user pointer i/o\n", dev_name);
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            errno_exit("VIDIOC_REQBUFS");
-        }
-    }
-
-    buffers = (buffer*)calloc(1, sizeof(*buffers));
-
-    if (!buffers)
-    {
-        fprintf(stderr, "Out of memory\n");
-        exit(EXIT_FAILURE);
-    }
-
-    //for (n_buffers = 0; n_buffers < 4; ++n_buffers)
-    //{
-        buffers[0].length = buffer_size;
-        buffers[0].start = memalign( /* boundary */ page_size,
-                                            buffer_size);
-
-        /*if (!buffers[n_buffers].start)
-        {
-            fprintf(stderr, "Out of memory\n");
-            exit(EXIT_FAILURE);
-        }*/
-    //}
+	return r;
 }
 
 
-void init_device(void)
-{
-    struct v4l2_capability cap;
-    struct v4l2_cropcap cropcap;
-    struct v4l2_crop crop;
-    struct v4l2_format fmt;
-    // unsigned int min;
 
-    if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap))
-    {
-        if (EINVAL == errno)
-        {
-            fprintf(stderr, "%s is no V4L2 device\n", dev_name);
-            exit(EXIT_FAILURE);
-        }
-        else
-        {
-            errno_exit("VIDIOC_QUERYCAP");
+bool read_frame() {
+	v4l2_buffer buf;
+	CLEAR(buf);
+
+	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	buf.memory = V4L2_MEMORY_USERPTR;
+
+	if (-1 == xioctl(fd, VIDIOC_DQBUF, &buf)) {
+		switch (errno) {
+		case EAGAIN : return false;
+		default     : errno_exit("VIDIOC_DQBUF");
         }
     }
 
-    if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
-    {
-        fprintf(stderr, "%s is no video capture device\n", dev_name);
-        exit(EXIT_FAILURE);
-    }
+	if (-1 == xioctl(fd, VIDIOC_QBUF, &buf)) {
+		errno_exit("VIDIOC_QBUF");
+	}
+
+	return true;
+}
 
 
-    if (!(cap.capabilities & V4L2_CAP_STREAMING))
-    {
-        fprintf(stderr, "%s does not support streaming i/o\n", dev_name);
-        exit(EXIT_FAILURE);
-    }
+
+void init_userp(unsigned int buffer_size) {
+	v4l2_requestbuffers req;
+	unsigned int page_size;
+
+	page_size = getpagesize();
+	buffer_size = (buffer_size + page_size - 1) & ~(page_size - 1);
+
+	CLEAR(req);
+
+	req.count = 1;
+	req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	req.memory = V4L2_MEMORY_USERPTR;
+
+	if (-1 == xioctl(fd, VIDIOC_REQBUFS, &req)) {
+		if (EINVAL == errno) {
+			fprintf(stderr, "%s does not support "
+					"user pointer i/o\n", dev_name);
+			exit(EXIT_FAILURE);
+		} else {
+			errno_exit("VIDIOC_REQBUFS");
+		}
+	}
+
+	buffers = (buffer*)calloc(1, sizeof(*buffers));
+	buffers[0].length = buffer_size;
+	buffers[0].start = memalign(page_size, buffer_size);
+}
 
 
-    /* Select video input, video standard and tune here. */
+
+void init_device() {
+	v4l2_capability cap;
+	v4l2_cropcap cropcap;
+	v4l2_crop crop;
+	v4l2_format fmt;
+
+	if (-1 == xioctl(fd, VIDIOC_QUERYCAP, &cap)) {
+		if (EINVAL == errno) {
+			fprintf(stderr, "%s is not a V4L2 device\n", dev_name);
+			exit(EXIT_FAILURE);
+		} else {
+			errno_exit("VIDIOC_QUERYCAP");
+		}
+	}
+
+	if (!(cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)) {
+		fprintf(stderr, "%s is not a video capture device\n", dev_name);
+		exit(EXIT_FAILURE);
+	}
 
 
-    CLEAR(cropcap);
-
-    cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-
-    if (0 == xioctl(fd, VIDIOC_CROPCAP, &cropcap))
-    {
-        crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-        crop.c = cropcap.defrect;   /* reset to default */
-
-        if (-1 == xioctl(fd, VIDIOC_S_CROP, &crop))
-        {
-            switch (errno)
-            {
-            case EINVAL:
-                /* Cropping not supported. */
-                break;
-            default:
-                /* Errors ignored. */
-                break;
-            }
-        }
-    }
-    else
-    {
-        /* Errors ignored. */
-    }
+	if (!(cap.capabilities & V4L2_CAP_STREAMING)) {
+ 		fprintf(stderr, "%s does not support streaming i/o\n", dev_name);
+		exit(EXIT_FAILURE);
+	}
 
 
-    CLEAR(fmt);
+	/* Select video input, video standard and tune here. */
 
-    fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    fmt.fmt.pix.width = width;
-    fmt.fmt.pix.height = height;
-    fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
-    fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+	CLEAR(cropcap);
 
-    if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt))
-        errno_exit("VIDIOC_S_FMT");
+	cropcap.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    /* Note VIDIOC_S_FMT may change width and height. */
+	if (0 == xioctl(fd, VIDIOC_CROPCAP, &cropcap)) {
+		crop.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+		crop.c = cropcap.defrect;   /* reset to default */
 
-    /* Buggy driver paranoia. */
-    /*min = fmt.fmt.pix.width * 2;
-    if (fmt.fmt.pix.bytesperline < min)
-        fmt.fmt.pix.bytesperline = min;
-    min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
-    if (fmt.fmt.pix.sizeimage < min)
-        fmt.fmt.pix.sizeimage = min;*/
+		if (-1 == xioctl(fd, VIDIOC_S_CROP, &crop)) {
+			switch (errno) {
+			case EINVAL : break;
+			default     : break;
+			}
+		}
+	} else {
+		/* Errors ignored. */
+	}
 
-    //if (fmt.fmt.pix.width != 320)
-    //    WIDTH = fmt.fmt.pix.width;
+	CLEAR(fmt);
 
-   // if (fmt.fmt.pix.height != HEIGHT)
-   //     HEIGHT = fmt.fmt.pix.height;
+	fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+	fmt.fmt.pix.width = kWidth;
+	fmt.fmt.pix.height = kHeight;
+	fmt.fmt.pix.pixelformat = V4L2_PIX_FMT_YUYV;
+	fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
+
+	if (-1 == xioctl(fd, VIDIOC_S_FMT, &fmt)) {
+		errno_exit("VIDIOC_S_FMT");
+	}
+
+	/* Note VIDIOC_S_FMT may change width and height. */
 
 	init_userp(fmt.fmt.pix.sizeimage);
 }
-void stop_capturing(void)
-{
-    enum v4l2_buf_type type;
 
-    type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
-    if (-1 == xioctl(fd, VIDIOC_STREAMOFF, &type))
-        errno_exit("VIDIOC_STREAMOFF");
+
+void stop_capturing() {
+	v4l2_buf_type type;
+
+	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
+	if (-1 == xioctl(fd, VIDIOC_STREAMOFF, &type)) {
+		errno_exit("VIDIOC_STREAMOFF");
+	}
 }
+
+
 
 void start_capturing(void)
 {
@@ -336,7 +267,7 @@ int sdl_filter(const SDL_Event * event)
     return event->type == SDL_QUIT;
 }
 
-#define mask32(BYTE) (*(uint32_t *)(uint8_t [4]){ [BYTE] = 0xff })
+};  // namespace
 
 
 int main(int argc, char *argv[]) {
@@ -351,16 +282,12 @@ int main(int argc, char *argv[]) {
 
     SDL_WM_SetCaption("Dharc Sense Camera", NULL);
 
-	uint8_t *buffer_sdl;
-	SDL_Surface *data_sf;
-	SDL_Event event;
-    buffer_sdl = (uint8_t*)malloc(width*height*3);
+	auto *buffer_sdl = new uint8_t[kWidth * kHeight * 3];
 
-    SDL_SetVideoMode(width, height, 24, SDL_HWSURFACE);
+    SDL_SetVideoMode(kWidth, kHeight, 24, SDL_HWSURFACE);
 
-    data_sf = SDL_CreateRGBSurfaceFrom(buffer_sdl, width, height,
-                                       24, width * 3,
-                                       0xFF, 0xFF, 0xFF, 0);
+    auto *data_sf = SDL_CreateRGBSurfaceFrom(buffer_sdl, kWidth, kHeight,
+                                       24, kWidth * 3, 0xFF, 0xFF, 0xFF, 0);
 
     SDL_SetEventFilter(sdl_filter);
 
@@ -371,10 +298,13 @@ int main(int argc, char *argv[]) {
 	vector<float> data;
 	data.resize(320 * 240);
 
-	while (true) {
+	SDL_Event event;
+	bool running = true;
+
+	while (running) {
 		while (SDL_PollEvent(&event))
             if (event.type == SDL_QUIT)
-                return 0;
+                running = false;
 
 		fd_set fds;
         struct timeval tv;
@@ -403,13 +333,15 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
+
 		read_frame();
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
+
 			data[i] = static_cast<float>(y) / 255.0f;
-			buffer_sdl[i*3] = static_cast<unsigned char>(data[i] * 256.0f);
-			buffer_sdl[(i*3)+1] = buffer_sdl[i*3];
-			buffer_sdl[(i*3)+2] = buffer_sdl[i*3];
+			buffer_sdl[i*3] = y;
+			buffer_sdl[(i*3)+1] = y;
+			buffer_sdl[(i*3)+2] = y;
 		}
 		sense.activate(cam_f, cam_l, data);
 

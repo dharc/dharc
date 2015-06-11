@@ -34,9 +34,21 @@ float Harc::decayedActivation() const {
 }
 
 
-void Harc::activatePulse(float value) {
+void Harc::query(const Node &node) {
+	if (node == head_) {
+		// Boost strength
+		strength_ += (1.0f - strength_) * 0.01f;
+	} else {
+		// Reduce strength
+		strength_ -= strength_ * 0.1f;
+		head_ = node;
+	}
+}
+
+
+void Harc::activatePulse() {
 	lock_.lock();
-	delta_ = value;
+	delta_ = strength_;
 	// activation_ = value;
 	lastactive_ = Fabric::counter();
 	lock_.unlock();
@@ -48,20 +60,6 @@ void Harc::activateConstant(float value) {
 	activation_ = value;
 	lastactive_ = Fabric::counter();
 	lock_.unlock();
-}
-
-
-void Harc::define(const Node &n) {
-	lock_.lock();
-	// Build strength
-	if (head_ == n) {
-		strength_ += (1.0f - strength_) * 0.01f;
-	} else {
-		strength_ -= strength_ * 0.01f;
-	}
-	head_ = n;
-	lock_.unlock();
-	Fabric::activatePulse(n, strength_);
 }
 
 

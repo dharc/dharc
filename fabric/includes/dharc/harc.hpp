@@ -22,19 +22,13 @@ class Harc {
 	public:
 	Harc();
 
-	/**
-	 * Define the Harc as having a constant head node. If there is an
-	 * existing non-constant definition, it is removed.
-	 * @param d Node the Harc points to.
-	 */
-	void define(const Node &);
+	void query(const Node &node);
 
 	void activateConstant(float value);
-	void activatePulse(float value);
+	void activatePulse();
 
 	float significance() const;
 
-	inline Node head() const { return head_; }
 	inline float strength() const { return strength_; }
 
 	/**

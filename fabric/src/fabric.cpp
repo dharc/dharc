@@ -81,6 +81,7 @@ condition_variable proccv;
 
 void Fabric::processThread() {
 	array<Node, MAX_TAIL> signodes;
+	Tail tail(MAX_TAIL);
 	int count = 0;
 
 	while (true) {
@@ -101,8 +102,8 @@ void Fabric::processThread() {
 				signodes[i] = *it;
 				++it;
 			}
-			// Erase them from process queue.
-			unproc__.erase(unproc__.begin(), --it);
+			// Erase one from process queue.
+			unproc__.erase(unproc__.begin());
 		}
 
 		processed__ += count;
@@ -112,14 +113,15 @@ void Fabric::processThread() {
 		for (int n = 0; n < count; ++n) {
 			// Vary number of tails
 			for (int t = 0; t < (count - 2); ++t) {
-				Tail tail(count-t);
+				tail.reset();
 				// Now pick t most significant 
 				for (int i = 0; i < (count-t); ++i) {
+					if (i == n) continue;
 					tail.insertRaw(signodes[i]);
 				}
-				if (tail.fixup() == (count - t)) {
-					define(tail, signodes[n]);
-				}
+				//if (tail.fixup() == (count - t)) {
+					query(tail, signodes[n]);
+				//}
 			}
 		}
 
@@ -185,10 +187,10 @@ void Fabric::activateConstant(const Node &first,
 	}
 }
 
-void Fabric::activatePulse(const Node &n, float value) {
+void Fabric::activatePulse(const Node &n) {
 	Harc *h = get(n);
 	++activatecount__;
-	h->activatePulse(value);
+	h->activatePulse();
 	addToQueue(n, h);
 }
 
@@ -199,7 +201,7 @@ void Fabric::activatePulse(const Node &n, float value) {
 	return get(tail).query();
 } */
 
-Node Fabric::define(const Tail &tail, const Node &head) {
+Node Fabric::query(const Tail &tail, const Node &head) {
 	Node hnode = get(tail);
 
 	if (hnode == dharc::null_n) {
@@ -211,10 +213,9 @@ Node Fabric::define(const Tail &tail, const Node &head) {
 	}
 
 	++followcount__;
-
-	Harc *harc = get(hnode);
-	harc->define(head);
-	activatePulse(hnode, harc->strength());
+	Harc *h = get(hnode);
+	h->query(head);
+	activatePulse(hnode);
 	return hnode; 
 }
 
