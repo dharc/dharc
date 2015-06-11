@@ -178,24 +178,28 @@ class Fabric {
 
 
 	private:
+	static constexpr size_t MAX_GARBAGE_CHUNK = 10000;
+	static constexpr size_t GARBAGE_DELAY = 100;
 	static constexpr size_t HARC_BLOCK_SIZE = 4096;
-	static constexpr size_t MAX_UNPROCESSED = 5000;
+	static constexpr size_t MAX_UNPROCESSED = 1000;
 	static constexpr size_t MAX_TAIL = 20;
-	static constexpr size_t SIGNIFICANT_QUEUE_SIZE = 20;
-	static constexpr float SIG_THRESHOLD = 0.01f;
+	static constexpr float SIG_THRESHOLD = 0.05f;
+
+	struct HarcBlock {
+		unsigned short available;
+		array<Harc, HARC_BLOCK_SIZE> harcs;
+	};
 
 	static unordered_map<Tail, Node> tails__;
-	static vector<array<Harc, HARC_BLOCK_SIZE>*> harcs__;
+	static vector<HarcBlock*> harcs__;
 
 	static set<Node, bool(*)(const Node &, const Node &)> unproc__;
 	static std::mutex unproc_lock__;
 	static std::mutex harc_lock__;
 
-	static array<Node, SIGNIFICANT_QUEUE_SIZE> sigharcs__;
-	static std::mutex sigharcs_lock__;
-
 	static std::atomic<size_t> branchcount__;
 	static std::atomic<size_t> harccount__;
+	static std::atomic<size_t> cullcount__;
 	static std::atomic<size_t> activatecount__;
 	static std::atomic<size_t> followcount__;
 	static std::atomic<size_t> processed__;
@@ -208,7 +212,7 @@ class Fabric {
 		const auto x = node.value / HARC_BLOCK_SIZE;
 		const auto y = node.value % HARC_BLOCK_SIZE;
 		assert(x < harcs__.size());
-		return &harcs__[x]->at(y);
+		return &harcs__[x]->harcs.at(y);
 	}
 
 	static void counterThread();

@@ -22,7 +22,7 @@ class Harc {
 	public:
 	Harc();
 
-	void query(const Node &node);
+	bool query(const Node &node);
 
 	void activateConstant(float value);
 	void activatePulse();
@@ -30,6 +30,13 @@ class Harc {
 	float significance() const;
 
 	inline float strength() const { return strength_; }
+
+	bool isAvailable() const { return lastactive_ == 0; }
+	void notAvailable() { lastactive_ = 1; }
+
+	bool isWeak() const { return strength_ < 0.00000001; }
+
+	void reset();
 
 	/**
 	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.

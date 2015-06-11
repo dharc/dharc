@@ -25,8 +25,15 @@ Harc::Harc() :
 	head_(dharc::null_n),
 	activation_(0.0f),
 	delta_(0.0f),
-	strength_(0.0f),
-	lastactive_(1) {}
+	strength_(0.0001f),
+	lastactive_(0) {}
+
+void Harc::reset() {
+	strength_ = 0.0001f;
+	lastactive_ = 0;
+	head_ = dharc::null_n;
+	delta_ = 0.0f;
+}
 
 float Harc::decayedActivation() const {
 	// Simple linear decay over time
@@ -34,14 +41,16 @@ float Harc::decayedActivation() const {
 }
 
 
-void Harc::query(const Node &node) {
+bool Harc::query(const Node &node) {
 	if (node == head_) {
 		// Boost strength
-		strength_ += (1.0f - strength_) * 0.01f;
+		strength_ += (1.0f - strength_) * 0.0001f;
+		return true;
 	} else {
 		// Reduce strength
 		strength_ -= strength_ * 0.1f;
 		head_ = node;
+		return false;
 	}
 }
 

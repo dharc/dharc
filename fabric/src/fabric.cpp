@@ -47,30 +47,61 @@ inline bool Fabric::harcMin(const Node &a, const Node &b) {
 
 atomic<unsigned long long> Fabric::counter__(0);
 
-unordered_map<Tail, Node> Fabric::tails__;
-vector<array<Harc, Fabric::HARC_BLOCK_SIZE>*> Fabric::harcs__;
+unordered_map<Tail, Node> Fabric::tails__(1000000);
+vector<Fabric::HarcBlock*> Fabric::harcs__;
 std::mutex Fabric::harc_lock__;
 
 set<Node, bool(*)(const Node &, const Node &)> Fabric::unproc__(harcCompare);
 std::mutex Fabric::unproc_lock__;
 
-array<Node, Fabric::SIGNIFICANT_QUEUE_SIZE> Fabric::sigharcs__;
-std::mutex Fabric::sigharcs_lock__;
-
 std::atomic<size_t> Fabric::branchcount__(0);
 std::atomic<size_t> Fabric::harccount__(1);
+std::atomic<size_t> Fabric::cullcount__(0);
 std::atomic<size_t> Fabric::activatecount__(0);
 std::atomic<size_t> Fabric::followcount__(0);
 std::atomic<size_t> Fabric::processed__(0);
 
-
+namespace {
+size_t lastclean = 0;
+unordered_map<Tail, Node>::iterator lastit;
+vector<Node> freed;
+};  // namespace
 
 void Fabric::counterThread() {
+	lastit = tails__.begin();
+
 	while (true) {
 		++counter__;
 
-		std::this_thread::sleep_for(
+		if (counter__ - lastclean > GARBAGE_DELAY) {
+			lastclean = counter__;
+
+			// Do a garbage collect!!
+			unique_lock<mutex> lck(harc_lock__);
+
+			if (lastit == tails__.end()) {
+				lastit = tails__.begin();
+			}
+
+			int maxgarbage = MAX_GARBAGE_CHUNK;
+			for (; lastit != tails__.end(); ++lastit) {
+				if (maxgarbage == 0) break;
+				--maxgarbage;
+				
+				Harc *h = get((*lastit).second);
+				if (h-> isWeak()) {
+					freed.push_back((*lastit).second);
+					(*lastit).second = dharc::null_n;
+					h->reset();
+					++cullcount__;
+				}
+			}
+
+			std::cout << "Garbage: " << cullcount__ << "\n";
+		} else {
+			std::this_thread::sleep_for(
 				std::chrono::milliseconds(counterResolution()));
+		}
 	}
 }
 
@@ -106,7 +137,7 @@ void Fabric::processThread() {
 			unproc__.erase(unproc__.begin());
 		}
 
-		processed__ += count;
+		++processed__;
 
 		// Generate all tail combinations
 		// First pick head node
@@ -119,9 +150,8 @@ void Fabric::processThread() {
 					if (i == n) continue;
 					tail.insertRaw(signodes[i]);
 				}
-				//if (tail.fixup() == (count - t)) {
-					query(tail, signodes[n]);
-				//}
+				tail.fixup();
+				query(tail, signodes[n]);
 			}
 		}
 
@@ -142,10 +172,6 @@ void Fabric::initialise() {
 	p.detach();
 	//std::thread p2(processThread);
 	//p2.detach();
-
-	for (size_t i = 0; i < SIGNIFICANT_QUEUE_SIZE; ++i) {
-		sigharcs__[i] = dharc::null_n;
-	}
 }
 
 
@@ -214,19 +240,29 @@ Node Fabric::query(const Tail &tail, const Node &head) {
 
 	++followcount__;
 	Harc *h = get(hnode);
-	h->query(head);
-	activatePulse(hnode);
+	if (h->query(head)) {
+		activatePulse(hnode);
+	}
 	return hnode; 
 }
 
 
 
 Node Fabric::makeHarc() {
-	const Node node = Node(harccount__.fetch_add(1));
+	if (freed.size() > 0) {
+		Node node = freed.back();
+		freed.pop_back();
+		get(node)->notAvailable();
+		--cullcount__;
+		return node;
+	}
+
+	Node node = Node(harccount__.fetch_add(1));
 	const auto x = node.value / HARC_BLOCK_SIZE;
 
 	if (x >= harcs__.size()) {
-		harcs__.push_back(new array<Harc, HARC_BLOCK_SIZE>);
+		harcs__.push_back(new HarcBlock);
+		harcs__[x]->harcs[0].notAvailable();
 	}
 	return node;
 }
@@ -240,8 +276,10 @@ void Fabric::makeHarcs(int count, Node &first, Node &last) {
 	for (int i = 0; i < count; i++) {
 		const auto x = (first.value + i) / HARC_BLOCK_SIZE;
 		if (x >= harcs__.size()) {
-			harcs__.push_back(new array<Harc, HARC_BLOCK_SIZE>);
+			harcs__.push_back(new HarcBlock);
 		}
+		const auto y = (first.value + i) % HARC_BLOCK_SIZE;
+		harcs__[x]->harcs.at(y).notAvailable();
 	}
 }
 
