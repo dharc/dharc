@@ -40,15 +40,15 @@ StatsView::StatsView(Gtk::TreeView *widget, dharc::Monitor &mon) :
 		float follows = mon_.followsPerSecond() / 1000.0f;
 
 		char buffer[100];
-		sprintf(buffer, "%dK", harccount / 1000);
+		sprintf(buffer, "%d", harccount);
 		stats_[kHarcCount][cols_.value] = buffer;
-		sprintf(buffer, "%dK", branchcount / 1000);
+		sprintf(buffer, "%d", branchcount);
 		stats_[kBranchCount][cols_.value] = buffer;		
-		sprintf(buffer, "%.2f", bfactor);
+		sprintf(buffer, "%.4f", bfactor);
 		stats_[kBranchFactor][cols_.value] = buffer;
-		sprintf(buffer, "%dK", followcount / 1000);
+		sprintf(buffer, "%d", followcount);
 		stats_[kFollowCount][cols_.value] = buffer;		
-		sprintf(buffer, "%.2f", ffactor);
+		sprintf(buffer, "%.4f", ffactor);
 		stats_[kFollowFactor][cols_.value] = buffer;
 		sprintf(buffer, "%.2f", actives);
 		stats_[kActivations][cols_.value] = buffer;

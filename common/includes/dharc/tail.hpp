@@ -12,46 +12,13 @@
 #include "dharc/node.hpp"
 
 namespace dharc {
-class Tail {
-	public:
-	Tail();
-	explicit Tail(size_t n);
-	explicit Tail(std::initializer_list<dharc::Node> il, bool prefixed = false);
-	Tail(const Tail &);
+struct Tail {
+	uint32_t d[8];
 
-	inline bool operator==(const Tail &o) const { return nodes_ == o.nodes_; }
-
-	/**
-	 * Fixes an arbitrary vector of nodes to be a valid tail.
-	 *     Performs a sort and removes duplicate elements. Not needed if the
-	 *     tail is formed correctly either manually or using insert.
-	 */
-	int fixup();
-
-	/**
-	 * Insert a node into a tail vector.
-	 *     This function performs an insertion sort that also makes sure there
-	 *     are no duplicate nodes in the tail. Using this function to build a
-	 *     tail ensures that tailFixup is not required.
-	 */
-	void insert(const dharc::Node &node);
-
-	inline void insertRaw(const dharc::Node &node) { nodes_.push_back(node); }
-
-	inline void reset() { nodes_.clear(); }
-
-
-	auto begin() const { return nodes_.begin(); }
-	auto end() const { return nodes_.end(); }
-	auto cbegin() const { return nodes_.cbegin(); }
-	auto cend() const { return nodes_.cend(); }
-
-	inline auto size() const { return nodes_.size(); }
-
-	inline auto at(size_t index) const { return nodes_.at(index); }
+	bool operator==(const Tail &o) const;
 
 	inline size_t hash() const {
-		// FNV-1a Hash of entire tail.
+		/*// FNV-1a Hash of entire tail.
 		// NOTE(knicos): Assumes 64-bit little-endian machine!
 		size_t h = 14695981039346656037U;
 		auto data = (const unsigned char*)nodes_.data();
@@ -69,13 +36,11 @@ class Tail {
 			// Now skip upper 32-bits that will often be empty
 			data += 4;
 		}
-		return h;
+		return h;*/
+		return d[7];
 	}
 
-	private:
-	std::vector<dharc::Node> nodes_;
-
-	friend std::ostream &operator<<(std::ostream &os, const Tail &n);
+	static void make(std::vector<Node> &t, Tail &res);
 };
 
 /* Stream Operators */

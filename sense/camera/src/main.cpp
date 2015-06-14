@@ -273,8 +273,8 @@ int sdl_filter(const SDL_Event * event)
 int main(int argc, char *argv[]) {
 	Sense sense("localhost", 7878);
 
-	Node cam_f, cam_l;
-	sense.makeHarcs(320 * 240, cam_f, cam_l);
+	Node cam;
+	sense.makeInputBlock(320, 240, cam);
 
 	atexit(SDL_Quit);
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -343,7 +343,7 @@ int main(int argc, char *argv[]) {
 			buffer_sdl[(i*3)+1] = y;
 			buffer_sdl[(i*3)+2] = y;
 		}
-		sense.activate(cam_f, cam_l, data);
+		sense.writeInput(cam, data);
 
 		SDL_Surface *screen = SDL_GetVideoSurface();
 		if (SDL_BlitSurface(data_sf, NULL, screen, NULL) == 0)

@@ -20,11 +20,20 @@ namespace dharc {
  *     each other.
  */
 struct Node {
+	static constexpr uint64_t HARC_MASK = 0xFFFF;
+	static constexpr uint64_t MACRO_X_MASK = 0xFFFF00000000;
+	static constexpr uint64_t MACRO_Y_MASK = 0xFFFF0000;
+	static constexpr uint64_t MACRO_BLOCK_MASK = 0xFFFF000000000000;
+	static constexpr uint64_t MICRO_BLOCK_MASK = 0xFFFFFFFFFFFF0000;
+
 	uint64_t value;
 
 	Node() = default;
 
 	constexpr explicit Node(uint64_t v) : value(v) {}
+
+	constexpr Node(uint64_t macro, uint64_t x, uint64_t y, uint64_t micro) :
+		value((macro << 48) | (x << 32) | (y << 16) | micro) {}
 
 	/**
 	 * Generate a Node from a string.
@@ -52,12 +61,11 @@ struct Node {
 	 */
 	explicit operator std::string() const;
 
-	inline bool isReserved() const { return value & 0x8000000000000000; }
-	inline uint64_t reservedValue() const { return value & 0x7FFFFFFFFFFFFFFF; }
-
-	static Node reserved(uint64_t value) {
-		return Node(value | 0x8000000000000000);
-	}
+	inline size_t macro() const { return value >> 48; }
+	inline size_t macroX() const { return (value & MACRO_X_MASK) >> 32; }
+	inline size_t macroY() const { return (value & MACRO_Y_MASK) >> 16; }
+	inline size_t harc() const { return value & HARC_MASK; }
+	inline size_t micro() const { return value & MICRO_BLOCK_MASK; }
 };
 
 /**
@@ -69,7 +77,7 @@ constexpr Node operator"" _n(unsigned long long value) {
 }
 
 /* Special node constants */
-constexpr Node null_n = Node(static_cast<uint64_t>(0));
+constexpr Node null_n = Node(static_cast<uint64_t>(0xFFFFFFFFFFFFFFFF));
 
 
 /* Relational operators */

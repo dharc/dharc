@@ -34,9 +34,9 @@ enum struct Command : int {
 	activeps,
 	procps,
 	makeharc,
-	makeharcs,
+	makeinputblock,
 	activate,
-	activateblock,
+	writeblock,
 	end
 };
 
@@ -54,9 +54,9 @@ typedef tuple<
 	float(*)(),  // activeps
 	float(*)(),  // procps
 	Node(*)(),  // makeharc
-	vector<Node>(*)(const int &),  // makeharcs
+	Node(*)(const size_t &, const size_t &),  // makeinputblock
 	bool(*)(const Node &, const float &),  // activate
-	bool(*)(const Node &, const Node &, const vector<float>&)  // activateblock
+	bool(*)(const Node &, const vector<float>&)  // writeblock
 > commands_t;
 
 };  // namespace rpc

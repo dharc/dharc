@@ -14,11 +14,9 @@ class Sense : public dharc::Rpc {
 	Sense(const char *addr, int port);
 	~Sense();
 
-	Node makeHarc();
-	void makeHarcs(int count, Node &first, Node &last);
+	void makeInputBlock(size_t w, size_t h, Node &b);
 
-	void activate(const Node &first,
-					const Node &last,
+	void writeInput(const Node &b,
 					const vector<float> &values);
 };
 

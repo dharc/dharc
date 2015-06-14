@@ -18,6 +18,7 @@
 #include "dharc/node.hpp"
 #include "dharc/harc.hpp"
 #include "dharc/tail.hpp"
+#include "dharc/macroblock.hpp"
 
 using std::vector;
 using std::array;
@@ -27,6 +28,7 @@ using std::chrono::time_point;
 using std::size_t;
 using dharc::fabric::Harc;
 using dharc::Tail;
+using dharc::fabric::MacroBlockBase;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
@@ -44,6 +46,7 @@ namespace dharc {
  */
 class Fabric {
 	friend dharc::fabric::Harc;
+	// friend dharc::fabric::MicroBlock;
 
 	public:
 	Fabric() = delete;
@@ -52,56 +55,10 @@ class Fabric {
 	static void finalise();
 
 
-
 	/**
-	 * Query the head node of a hyperarc.
-	 *     Given the tail nodes of a hyperarc, lookup the hyperarc and ask for
-	 *     its head node. This may involve the evaluation of the hyperarcs
-	 *     definition if it is out-of-date. If the requested hyperarc does not
-	 *     exist then it is created and the head node null is returned. A query
-	 *     will also activate a hyperarch and modify is significance and
-	 *     activation status.
-	 * @param tail Pair of tail nodes to identify the hyperarc.
-	 * @return Head node of hyperarch.
+	 * Send an activation pulse to a Harc at global level.
 	 */
-	// static Node follow(const Tail &tail);
-
-	//static Node query(const Node &a, const Node &b) {
-	//	return query(Tail{a, b});
-	// }
-
-
-
-	/**
-	 * Give a harc a constant head node.
-	 *     Removes any existing definition and sets the head of the harc to
-	 *     the given node. This will cause an activation of the harc and will
-	 *     log this harc as having changed if the harcs log flag is set. If the
-	 *     harc does not exist, it is created.
-	 * @see define
-	 * @param tail A set of tail nodes to identify the harcs.
-	 * @param head The new head node for the harc.
-	 */
-	static Node query(const Tail &tail, const Node &head);
-
-
-
-	static void activateConstant(const Node &n, float value);
-
-	static void activateConstant(const Node &first,
-						const Node &last,
-						const vector<float> &amount);
-
-	static void activatePulse(const Node &n);
-
-
-
-	/**
-	 * Make a single harc with no tail.
-	 * @return Node to identify the harc.
-	 */
-	static Node makeHarc();
-
+	static void pulse(const Node &n);
 
 
 	/**
@@ -110,7 +67,13 @@ class Fabric {
 	 * @param first Filled with first harc node.
 	 * @param last Filled with last (first+count).
 	 */
-	static void makeHarcs(int count, Node &first, Node &last);
+	static void createInputBlock(size_t w, size_t h, Node &base);
+
+	static void writeInputBlock(const Node &b, const vector<float> &v);
+
+	static void createOutputBlock(size_t width, size_t height, Node &base);
+
+	static void readOutputBlock(const Node &b, vector<float> &v);
 
 
 	/**
@@ -126,7 +89,7 @@ class Fabric {
 	 *     Some of these nodes may not be involved in a hyperarc.
 	 * @return Total number of allocated nodes.
 	 */
-	static size_t harcCount()        { return harccount__; }
+	static size_t harcCount();
 
 	static size_t followCount()        { return followcount__; }
 
@@ -178,27 +141,7 @@ class Fabric {
 
 
 	private:
-	static constexpr size_t MAX_GARBAGE_CHUNK = 10000;
-	static constexpr size_t GARBAGE_DELAY = 100;
-	static constexpr size_t HARC_BLOCK_SIZE = 4096;
-	static constexpr size_t MAX_UNPROCESSED = 1000;
-	static constexpr size_t MAX_TAIL = 20;
-	static constexpr float SIG_THRESHOLD = 0.05f;
-
-	struct HarcBlock {
-		unsigned short available;
-		array<Harc, HARC_BLOCK_SIZE> harcs;
-	};
-
-	static unordered_map<Tail, Node> tails__;
-	static vector<HarcBlock*> harcs__;
-
-	static set<Node, bool(*)(const Node &, const Node &)> unproc__;
-	static std::mutex unproc_lock__;
-	static std::mutex harc_lock__;
-
 	static std::atomic<size_t> branchcount__;
-	static std::atomic<size_t> harccount__;
 	static std::atomic<size_t> cullcount__;
 	static std::atomic<size_t> activatecount__;
 	static std::atomic<size_t> followcount__;
@@ -206,22 +149,18 @@ class Fabric {
 
 	static std::atomic<unsigned long long> counter__;
 
-	static Node get(const Tail &key);
-
-	inline static Harc *get(const Node &node) {
-		const auto x = node.value / HARC_BLOCK_SIZE;
-		const auto y = node.value % HARC_BLOCK_SIZE;
-		assert(x < harcs__.size());
-		return &harcs__[x]->harcs.at(y);
-	}
+	static vector<MacroBlockBase*> blocks__;
 
 	static void counterThread();
 	static void processThread();
 
-	static void addToQueue(const Node &node, Harc *harc);
-
-	inline static bool harcCompare(const Node &a, const Node &b);
-	inline static bool harcMin(const Node &a, const Node &b);
+	static MacroBlockBase *getMacro(const Node &b);
+	/*inline MicroBlock *getMicro(const Node &b) {
+		return getMacro(b)->getMicro(b);
+	}
+	inline Harc *getHarc(const Node &h) {
+		return getMacro(h)->getMicro(h)->getHarc(h);
+	}*/
 };
 };  // namespace dharc
 

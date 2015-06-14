@@ -117,7 +117,7 @@ struct Packer<std::vector<float>> {
 /**
  * RPC packer for Tails.
  */
-template<>
+/*template<>
 struct Packer<dharc::Tail> {
 	static void pack(std::ostream &os, const dharc::Tail &tail) {
 		auto x = tail.size();
@@ -139,7 +139,7 @@ struct Packer<dharc::Tail> {
 		is.ignore();  // Remove trailing ']'
 		return res;
 	}
-};
+};*/
 
 /**
  * RPC packer for lists.

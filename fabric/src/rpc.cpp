@@ -48,13 +48,12 @@ int rpc_version() {
 
 /* rpc::Command::unique */
 Node rpc_makeharc() {
-	return Fabric::makeHarc();
+	return dharc::null_n;
 }
 
-vector<Node> rpc_makeharcs(const int &count) {
-	vector<Node> res;
-	res.resize(2);
-	Fabric::makeHarcs(count, res[0], res[1]);
+Node rpc_makeinputblock(const size_t &w, const size_t &h) {
+	Node res;
+	Fabric::createInputBlock(w, h, res);
 	return res;
 }
 
@@ -83,14 +82,12 @@ float rpc_processed() {
 }
 
 bool rpc_activate(const Node &node, const float &value) {
-	Fabric::activateConstant(node, value);
 	return true;
 }
 
-bool rpc_activateblock(const Node &first,
-						const Node &last,
+bool rpc_writeblock(const Node &b,
 						const vector<float> &values) {
-	Fabric::activateConstant(first, last, values);
+	Fabric::writeInputBlock(b, values);
 	return true;
 }
 
@@ -106,9 +103,9 @@ dharc::rpc::commands_t commands {
 	rpc_activations,
 	rpc_processed,
 	rpc_makeharc,
-	rpc_makeharcs,
+	rpc_makeinputblock,
 	rpc_activate,
-	rpc_activateblock
+	rpc_writeblock
 };
 };  // namespace
 

@@ -14,18 +14,11 @@ Sense::Sense(const char *addr, int port) : Rpc(addr, port) {}
 
 Sense::~Sense() {}
 
-Node Sense::makeHarc() {
-	return send<Command::makeharc>();
+void Sense::makeInputBlock(size_t w, size_t h, Node &b) {
+	b = send<Command::makeinputblock>(w, h);
 }
 
-void Sense::makeHarcs(int count, Node &first, Node &last) {
-	vector<Node> res = send<Command::makeharcs>(count);
-	first = res[0];
-	last = res[1];
-}
-
-void Sense::activate(const Node &first,
-						const Node &last,
+void Sense::writeInput(const Node &b,
 						const vector<float> &values) {
-	send<Command::activateblock>(first, last, values);
+	send<Command::writeblock>(b, values);
 }

@@ -25,7 +25,7 @@ class Harc {
 	bool query(const Node &node);
 
 	void activateConstant(float value);
-	void activatePulse();
+	void pulse();
 
 	float significance() const;
 
@@ -34,7 +34,10 @@ class Harc {
 	bool isAvailable() const { return lastactive_ == 0; }
 	void notAvailable() { lastactive_ = 1; }
 
-	bool isWeak() const { return strength_ < 0.00000001; }
+	bool isWeak() const {
+		return (strength_ < 0.00001f) ||
+				((lastActive() > 2000.0f) && strength_ <= 0.01f);
+	}
 
 	void reset();
 
@@ -47,13 +50,15 @@ class Harc {
 
 	private:
 	Node        head_;
-	float       activation_;
 	float       delta_;
+	union {
+	float       activation_;
 	float       strength_;
+	};
 	uint64_t    lastactive_;
 	dharc::Lock lock_;
 
-	inline float lastActive() const;
+	float lastActive() const;
 
 	float decayedActivation() const;
 };
