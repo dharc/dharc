@@ -131,8 +131,8 @@ bool MicroBlock<T>::query(const Tail &tail, int card) {
 	
 	if (get(tail, hnode)) {
 		if (hnode == dharc::null_n) return true;
-		pulse(hnode);
 		Harc *h = get(hnode);
+		h->pulse();
 		if (h->strength() > 0.1) {
 			std::cout << "Strong: " << h->strength() << " @ " << card << std::endl;
 		}
@@ -143,7 +143,8 @@ bool MicroBlock<T>::query(const Tail &tail, int card) {
 		return false;
 	}
 	tails_.insert({tail, hnode});
-	pulse(hnode);
+	Harc *h = get(hnode);
+	h->pulse();
 	return false; 
 }
 
