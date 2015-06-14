@@ -81,12 +81,12 @@ void MicroBlock<T>::process(int factor) {
 			}
 			Tail::make(tvec, tail);
 			if (query(tail, tvec)) {
-				//break;
+				break;
 			}
 		}
 	}
 
-	if (Fabric::counter() - lastgarbage_ > 100) {
+	if ((Fabric::counter() - lastgarbage_) > 1000) {
 		//garbage();
 		lastgarbage_ = Fabric::counter();
 	}
@@ -96,7 +96,8 @@ void MicroBlock<T>::process(int factor) {
 
 template<typename T>
 void MicroBlock<T>::garbage() {
-	for (auto i = tails_.begin(); i != tails_.end(); ++i) {
+	auto i = tails_.begin();
+	while (i != tails_.end()) {
 		//if (maxgarbage == 0) break;
 		//--maxgarbage;
 
@@ -104,13 +105,17 @@ void MicroBlock<T>::garbage() {
 			Harc *h = get((*i).second);
 			if (h->isWeak()) {
 				freed_.push_back((*i).second.harc());
-				std::cout << "GARBAGE\n";
+				//std::cout << "GARBAGE\n";
 				i = tails_.erase(i);
 				h->reset();
 				// ++cullcount__;
+			} else {
+				++i;
 			}
 		//}
 	}
+
+	std::cout << "Free: " << freed_.size() << std::endl;
 }
 
 
