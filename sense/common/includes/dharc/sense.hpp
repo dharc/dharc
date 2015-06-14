@@ -18,6 +18,8 @@ class Sense : public dharc::Rpc {
 
 	void writeInput(const Node &b,
 					const vector<float> &values);
+
+	vector<Node> readStrong(const Node &b, float active);
 };
 
 };

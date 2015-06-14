@@ -95,23 +95,24 @@ class Rpc {
 	template<typename F, typename... Args>
 	void pack_(std::ostream &os, const F &first, const Args&... args) {
 		pack_(os, first);
-		os << ',';
+		//os << ',';
 		pack_(os, args...);
 	}
 
 	template<typename... Args>
 	void pack(std::ostream &os, const Args&... args) {
-		os << ", \"args\": [";
+		//os << ", \"args\": [";
 		pack_(os, args...);
-		os << "]}";
+		//os << "]}";
 	}
 
 	inline void pack(std::ostream &os) {
-		os << ", \"args\": []}";
+		//os << ", \"args\": []}";
 	}
 
 	inline void packcmd(std::ostream &os, Command c) {
-		os << "{\"c\": " << static_cast<int>(c);
+		//os << "{\"c\": " << static_cast<int>(c);
+		os.write((const char*)&c, sizeof(Command));
 	}
 
 	zmq::socket_t sock_;

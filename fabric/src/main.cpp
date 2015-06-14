@@ -77,14 +77,17 @@ int main(int argc, char *argv[]) {
 			dharc::rpc::process_msg(is, os);
 
 			string res = os.str();
-			zmq::message_t rep(const_cast<char*>(res.c_str()), res.size()+1, 0);
+			zmq::message_t rep(const_cast<char*>(res.data()), os.tellp(), 0);
 
 			while (true) {
 				try {
-					rpc.send(rep);
+					rpc.send(res.data(), os.tellp());
 					break;
-				} catch (zmq::error_t err) {}
+				} catch (zmq::error_t err) {
+					std::cout << "Oops, send error\n";
+				}
 			}
+
 			items[0].revents = 0;
 		}
 	}

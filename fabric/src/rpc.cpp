@@ -91,6 +91,10 @@ bool rpc_writeblock(const Node &b,
 	return true;
 }
 
+vector<Node> rpc_readstrong(const Node &b, const float &a) {
+	return Fabric::strongestAssociated(b, a);
+}
+
 
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
@@ -105,7 +109,8 @@ dharc::rpc::commands_t commands {
 	rpc_makeharc,
 	rpc_makeinputblock,
 	rpc_activate,
-	rpc_writeblock
+	rpc_writeblock,
+	rpc_readstrong
 };
 };  // namespace
 
@@ -115,7 +120,7 @@ namespace {
 template<typename Ret>
 Ret unpack(std::istream &is) {
 	Ret res = Packer<Ret>::unpack(is);
-	if (is.peek() == ',') is.ignore();
+	//if (is.peek() == ',') is.ignore();
 	return res;
 }
 
@@ -175,9 +180,10 @@ inline void callCmd<static_cast<int>(Command::end)>(
 void dharc::rpc::process_msg(istream &is, ostream &os) {
 	Context parse(is);
 	int cmd = 0;
-	if (parse("{\"c\": ", value<int>{cmd}, ", \"args\": [", noact)) {
+	is.read((char*)&cmd, sizeof(int));
+	//if (parse("{\"c\": ", value<int>{cmd}, ", \"args\": [", noact)) {
 		if (cmd >= static_cast<int>(Command::end) || cmd < 0) cmd = 0;
 		callCmd<0>(is, os, cmd);
-	}
+	//}
 }
 

@@ -25,7 +25,7 @@ class Harc {
 	bool query(const Node &node);
 
 	void activateConstant(float value);
-	void pulse();
+	void pulse(float s);
 
 	float significance() const;
 
@@ -40,6 +40,8 @@ class Harc {
 	}
 
 	void reset();
+
+	float lastActive() const;
 
 	/**
 	 * Calculate the significance value between 0.0 and 1.0 of this hyper-arc.
@@ -57,8 +59,6 @@ class Harc {
 	};
 	uint64_t    lastactive_;
 	dharc::Lock lock_;
-
-	float lastActive() const;
 
 	float decayedActivation() const;
 };

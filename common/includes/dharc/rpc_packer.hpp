@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <cassert>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -21,11 +22,11 @@ namespace rpc {
 template<typename T>
 struct Packer {
 	static void pack(std::ostream &os, const T &first) {
-		os << first;
+		os.write((const char*)&first, sizeof(T));
 	}
 	static T unpack(std::istream &is) {
 		T res;
-		is >> res;
+		is.read((char*)&res, sizeof(T));
 		return res;
 	}
 };
@@ -33,11 +34,11 @@ struct Packer {
 template <>
 struct Packer<dharc::Node> {
 	static void pack(std::ostream &os, const dharc::Node &n) {
-		os << n.value;
+		os.write((const char*)&n.value, sizeof(uint64_t));
 	}
 	static dharc::Node unpack(std::istream &is) {
 		dharc::Node res;
-		is >> res.value;
+		is.read((char*)&res.value, sizeof(uint64_t));
 		return res;
 	}
 };

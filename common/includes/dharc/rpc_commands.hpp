@@ -37,6 +37,7 @@ enum struct Command : int {
 	makeinputblock,
 	activate,
 	writeblock,
+	readstrong,
 	end
 };
 
@@ -56,7 +57,8 @@ typedef tuple<
 	Node(*)(),  // makeharc
 	Node(*)(const size_t &, const size_t &),  // makeinputblock
 	bool(*)(const Node &, const float &),  // activate
-	bool(*)(const Node &, const vector<float>&)  // writeblock
+	bool(*)(const Node &, const vector<float>&),  // writeblock
+	vector<Node>(*)(const Node &b, const float &a)  // readstrong
 > commands_t;
 
 };  // namespace rpc

@@ -75,6 +75,10 @@ class Fabric {
 
 	static void readOutputBlock(const Node &b, vector<float> &v);
 
+	static vector<Node> strongestAssociated(const Node &b, float a) {
+		return getMacro(b)->strongestAssociated(a);
+	}
+
 
 	/**
 	 * Statistic: Number of hyperarcs.

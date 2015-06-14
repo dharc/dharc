@@ -22,3 +22,8 @@ void Sense::writeInput(const Node &b,
 						const vector<float> &values) {
 	send<Command::writeblock>(b, values);
 }
+
+vector<Node> Sense::readStrong(const Node &b, float active) {
+	return send<Command::readstrong>(b, active);
+}
+

@@ -75,9 +75,10 @@ class MicroBlock {
 	size_t harc_count_;
 	vector<int> freed_;
 	unordered_map<Tail, Node> tails_;
+	size_t lastgarbage_;
 
 	bool get(const Tail &key, Node &hnode);
-	bool query(const Tail &tail, int card);
+	bool query(const Tail &tail, const vector<Node> &tvec);
 	void addToQueue(const Node &node, Harc *harc);
 };
 };

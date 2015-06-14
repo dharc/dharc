@@ -37,7 +37,7 @@ Rpc::~Rpc() {
 
 
 std::string Rpc::send(const std::string &s) {
-	zmq::message_t req(const_cast<char*>(s.c_str()), s.size()+1, 0, 0);
+	zmq::message_t req(const_cast<char*>(s.data()), s.size(), 0, 0);
 
 	while (true) {
 		try {

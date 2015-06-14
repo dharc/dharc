@@ -7,11 +7,13 @@
 
 #include <vector>
 #include <cassert>
+#include <unordered_map>
 
 #include "dharc/node.hpp"
 
 using dharc::Node;
 using std::vector;
+using std::unordered_map;
 
 namespace dharc {
 namespace fabric {
@@ -25,6 +27,7 @@ class MacroBlockBase {
 	virtual void writeInput(const vector<float> &v) = 0;
 	virtual void process(int factor) = 0;
 	virtual void pulse(const Node &n) = 0;
+	virtual vector<Node> strongestAssociated(float active) = 0;
 
 	virtual size_t harcCount() const = 0;
 };
@@ -59,6 +62,9 @@ class MacroBlock : public MacroBlockBase {
 
 	size_t harcCount() const;
 
+	void addStrong(const Node &node, const vector<Node> &tvec);
+	vector<Node> strongestAssociated(float active);
+
 	typedef T params;
 
 	private:
@@ -68,6 +74,7 @@ class MacroBlock : public MacroBlockBase {
 	size_t block_w_;
 	size_t block_h_;
 	vector<MicroBlock<T>*> blocks_;
+	unordered_map<uint64_t, vector<Node>> strong_;
 };
 };
 };

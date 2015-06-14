@@ -10,7 +10,7 @@ using std::mutex;
 
 template<typename T>
 MicroBlock<T>::MicroBlock(MacroBlock<T> *macro, uint64_t blockid) :
-	blockid_(blockid), macro_(macro), sig_({this}) {
+	blockid_(blockid), macro_(macro), sig_({this}), lastgarbage_(0) {
 	harc_count_ = params::BLOCK_WIDTH * params::BLOCK_WIDTH;
 }
 
@@ -80,32 +80,36 @@ void MicroBlock<T>::process(int factor) {
 				tvec.push_back(signodes[i]);
 			}
 			Tail::make(tvec, tail);
-			if (query(tail, params::MAX_TAIL - t)) {
+			if (query(tail, tvec)) {
 				break;
 			}
 		}
 	}
 
-	garbage();
+	if (Fabric::counter() - lastgarbage_ > 100) {
+		//garbage();
+		lastgarbage_ = Fabric::counter();
+	}
 }
 
 
 
 template<typename T>
 void MicroBlock<T>::garbage() {
-	for (auto i : tails_) {
+	for (auto i = tails_.begin(); i != tails_.end(); ++i) {
 		//if (maxgarbage == 0) break;
 		//--maxgarbage;
 
-		if (i.second != dharc::null_n) {
-			Harc *h = get(i.second);
+		//if ((*i).second != dharc::null_n) {
+			Harc *h = get((*i).second);
 			if (h->isWeak()) {
-				freed_.push_back(i.second.harc());
-				i.second = dharc::null_n;
+				freed_.push_back((*i).second.harc());
+				std::cout << "GARBAGE\n";
+				i = tails_.erase(i);
 				h->reset();
 				// ++cullcount__;
 			}
-		}
+		//}
 	}
 }
 
@@ -126,15 +130,22 @@ bool MicroBlock<T>::get(const Tail &key, Node &hnode) {
 
 
 template<typename T>
-bool MicroBlock<T>::query(const Tail &tail, int card) {
+bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
 	Node hnode;
 	
 	if (get(tail, hnode)) {
 		if (hnode == dharc::null_n) return true;
 		Harc *h = get(hnode);
-		h->pulse();
+
+		float sig = 0.0;
+		for (auto i : tvec) sig += get(i)->significance();
+		sig = sig / static_cast<float>(tvec.size());
+
+		h->pulse(sig);
 		if (h->strength() > 0.1) {
-			std::cout << "Strong: " << h->strength() << " @ " << card << std::endl;
+			macro_->addStrong(hnode, tvec);
+			//std::cout << "Strong: " << h->strength() <<
+			//		" @ " << tvec.size() << std::endl;
 		}
 		return true;
 	}
@@ -144,7 +155,13 @@ bool MicroBlock<T>::query(const Tail &tail, int card) {
 	}
 	tails_.insert({tail, hnode});
 	Harc *h = get(hnode);
-	h->pulse();
+
+	float sig = 0.0;
+	for (auto i : tvec) sig += get(i)->significance();
+	sig = sig / static_cast<float>(tvec.size());
+
+
+	h->pulse(sig);
 	return false; 
 }
 
@@ -154,7 +171,7 @@ template<typename T>
 void MicroBlock<T>::pulse(const Node &n) {
 	Harc *h = get(n);
 	// ++activatecount__;
-	h->pulse();
+	h->pulse(1.0f);
 	addToQueue(n, h);
 }
 

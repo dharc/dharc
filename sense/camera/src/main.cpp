@@ -287,7 +287,7 @@ int main(int argc, char *argv[]) {
     SDL_SetVideoMode(kWidth, kHeight, 24, SDL_HWSURFACE);
 
     auto *data_sf = SDL_CreateRGBSurfaceFrom(buffer_sdl, kWidth, kHeight,
-                                       24, kWidth * 3, 0xFF, 0xFF, 0xFF, 0);
+                                       24, kWidth * 3, 0, 0, 0, 0);
 
     SDL_SetEventFilter(sdl_filter);
 
@@ -335,6 +335,9 @@ int main(int argc, char *argv[]) {
 
 
 		read_frame();
+
+		vector<Node> strong = sense.readStrong(cam, 100.0);
+
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
 
@@ -344,6 +347,24 @@ int main(int argc, char *argv[]) {
 			buffer_sdl[(i*3)+2] = y;
 		}
 		sense.writeInput(cam, data);
+
+		for (auto i : strong) {
+			assert(i.harc() < 10*10);
+			size_t bx = i.macroX() * 10;
+			size_t by = i.macroY() * 10;
+
+			bx += i.harc() % 10;
+			by += i.harc() / 10;
+
+			if (bx >= kWidth || by >= kHeight) {
+				std::cout << "FUCKUP\n";
+			}
+
+			size_t ix = (by * kWidth) + bx;
+			buffer_sdl[ix*3] = 255;
+			buffer_sdl[(ix*3)+1] = 0;
+			buffer_sdl[(ix*3)+2] = 0;
+		}
 
 		SDL_Surface *screen = SDL_GetVideoSurface();
 		if (SDL_BlitSurface(data_sf, NULL, screen, NULL) == 0)
