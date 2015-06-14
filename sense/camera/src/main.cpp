@@ -336,7 +336,7 @@ int main(int argc, char *argv[]) {
 
 		read_frame();
 
-		vector<Node> strong = sense.readStrong(cam, 100.0);
+		vector<Node> strong = sense.readStrong(cam, 20.0);
 
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
@@ -349,21 +349,21 @@ int main(int argc, char *argv[]) {
 		sense.writeInput(cam, data);
 
 		for (auto i : strong) {
-			assert(i.harc() < 10*10);
-			size_t bx = i.macroX() * 10;
-			size_t by = i.macroY() * 10;
+			assert(i.harc() < 5*5);
+			size_t bx = i.macroX() * 5;
+			size_t by = i.macroY() * 5;
 
-			bx += i.harc() % 10;
-			by += i.harc() / 10;
+			bx += i.harc() % 5;
+			by += i.harc() / 5;
 
 			if (bx >= kWidth || by >= kHeight) {
 				std::cout << "FUCKUP\n";
 			}
 
 			size_t ix = (by * kWidth) + bx;
-			buffer_sdl[ix*3] = 255;
+			buffer_sdl[ix*3] = 0;
 			buffer_sdl[(ix*3)+1] = 0;
-			buffer_sdl[(ix*3)+2] = 0;
+			buffer_sdl[(ix*3)+2] = 255;
 		}
 
 		SDL_Surface *screen = SDL_GetVideoSurface();

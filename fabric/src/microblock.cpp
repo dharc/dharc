@@ -81,7 +81,7 @@ void MicroBlock<T>::process(int factor) {
 			}
 			Tail::make(tvec, tail);
 			if (query(tail, tvec)) {
-				break;
+				//break;
 			}
 		}
 	}
