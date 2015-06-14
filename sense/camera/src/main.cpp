@@ -336,7 +336,9 @@ int main(int argc, char *argv[]) {
 
 		read_frame();
 
-		vector<Node> strong = sense.readStrong(cam, 20.0);
+		constexpr auto BWIDTH = 5U;
+
+		vector<Node> strong = sense.readStrong(cam, 15.0);
 
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
@@ -349,12 +351,12 @@ int main(int argc, char *argv[]) {
 		sense.writeInput(cam, data);
 
 		for (auto i : strong) {
-			assert(i.harc() < 5*5);
-			size_t bx = i.macroX() * 5;
-			size_t by = i.macroY() * 5;
+			assert(i.harc() < BWIDTH*BWIDTH);
+			size_t bx = i.macroX() * BWIDTH;
+			size_t by = i.macroY() * BWIDTH;
 
-			bx += i.harc() % 5;
-			by += i.harc() / 5;
+			bx += i.harc() % BWIDTH;
+			by += i.harc() / BWIDTH;
 
 			if (bx >= kWidth || by >= kHeight) {
 				std::cout << "FUCKUP\n";

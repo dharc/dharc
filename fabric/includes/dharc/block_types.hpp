@@ -12,8 +12,8 @@ struct RawSense {
 	static constexpr size_t MAX_BLOCK_HARCS =   BLOCK_WIDTH *
 												BLOCK_WIDTH *
 												200;
-	static constexpr size_t MAX_SIGNIFICANT = 150;
-	static constexpr float SIG_THRESHOLD = 0.03;
+	static constexpr size_t MAX_SIGNIFICANT = 100;
+	static constexpr float SIG_THRESHOLD = 0.01;
 	static constexpr size_t MAX_TAIL = 5;
 	static constexpr size_t MIN_TAIL = 3;
 };
