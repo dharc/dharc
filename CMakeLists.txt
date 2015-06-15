@@ -15,7 +15,7 @@ set(dharc_VERSION_MAJOR "0")
 set(dharc_VERSION_MINOR "1")
 set(dharc_VERSION_PATCH "1")
 
-set(CMAKE_CXX_FLAGS "-pthread -std=c++14 -Wall -Wno-deprecated -Werror -Wno-psabi")
+set(CMAKE_CXX_FLAGS "-pthread -fopenmp -std=c++14 -Wall -Wno-deprecated -Werror -Wno-psabi")
 set(CMAKE_CXX_FLAGS_DEBUG "-D_DEBUG -pg -Wall -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 

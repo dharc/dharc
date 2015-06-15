@@ -73,8 +73,11 @@ void MacroBlock<T>::writeInput(const vector<float> &v) {
 
 template<typename T>
 void MacroBlock<T>::process(int factor) {
-	for (auto i : blocks_) {
-		i->process(factor);
+	const int len = (int)blocks_.size();
+
+	#pragma omp parallel for
+	for (int i = 0; i < len; ++i) {
+		blocks_[i]->process(factor);
 	}
 }
 

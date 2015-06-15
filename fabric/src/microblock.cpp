@@ -53,45 +53,45 @@ void MicroBlock<T>::process(int factor) {
 	//float factor_grad = 1.0f / (float)factor;
 
 	lock();
-	for (int r = 0; r < 20; ++r) {
-			if (sig_.size() < params::MAX_TAIL) {
-				//unlock();
-				break;
-			}
+	for (int f = 0; f < factor; ++f) {
+		if (sig_.size() < params::MAX_TAIL) {
+			//unlock();
+			break;
+		}
 
 
-			// Copy the nodes to a buffer for processing
-			auto it = sig_.begin();
-			for (auto i = 0U; i < (params::MAX_TAIL*factor); ++i) {
-				signodes[i] = *it;
-				++it;
-			}
-			// remove first and try again
-			//sig_.erase(sig_.begin());
+		// Copy the nodes to a buffer for processing
+		auto it = sig_.begin();
+		for (auto i = 0U; i < (params::MAX_TAIL); ++i) {
+			signodes[i] = *it;
+			++it;
+		}
+		// remove first and try again
+		sig_.erase(sig_.begin(), it);
 		//unlock();
 
-		// ++processed__;
+		//bool has_added = false;
 
 		// Generate all tail combinations
 		// Vary number of tails
-		for (auto x = 0; x < factor; ++x) {
-			for (auto t = 0U; t < (params::MAX_TAIL - params::MIN_TAIL); ++t) {
-				tvec.clear();
-				// Now pick t most significant 
-				for (auto i = 0U; i < (params::MAX_TAIL-t); ++i) {
-					tvec.push_back(signodes[x+i]);
-				}
-				Tail::make(tvec, tail);
+		for (auto t = params::MIN_TAIL; t < params::MAX_TAIL; ++t) {
+			tvec.clear();
+			float sig = 0.0f;
+			// Now pick t most significant 
+			for (auto i = 0U; i < t; ++i) {
+				tvec.push_back(signodes[i]);
+				sig += get(signodes[i])->significance();
+			}
 
-				float sig = 0.0f;
-				for (auto i : tvec) sig += get(i)->significance();
-				sig = sig / static_cast<float>(tvec.size());
-				//sig += (1.0 - sig) * ((float)(factor-x) / ((float)factor*2.0));
+			sig = sig / static_cast<float>(tvec.size());
 
+			Tail::make(tvec, tail);
 
-				if (query(tail, tvec, sig)) {
-					break;
-				}
+			if (!query(tail, tvec, sig)) {
+				//if (has_added == false) {
+					add(tail, sig);
+				//	has_added = true;
+				//}
 			}
 		}
 
@@ -130,6 +130,8 @@ void MicroBlock<T>::garbage() {
 			}
 		//}
 	}
+
+	std::cout << "Free: " << freed_.size() << std::endl;
 }
 
 
@@ -153,45 +155,36 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec, float sig)
 	Node hnode;
 	
 	if (get(tail, hnode)) {
-		if (hnode == dharc::null_n) return true;
+		//if (hnode == dharc::null_n) return true;
 		Harc *h = get(hnode);
-
-		// Average the significance of the tail
-		//float sig = 0.0;
-		//for (auto i : tvec) sig += get(i)->significance();
-		//sig = sig / static_cast<float>(tvec.size());
-
 		h->pulse(sig);
-		//lock();
 		addToQueue(hnode, h);
-		//unlock();
 
 		// Strong enough to be important?
 		if (h->strength() > 0.1) {
 			macro_->addStrong(hnode, tvec);
-			//std::cout << "Strong: " << h->strength() <<
-			//		" @ " << tvec.size() << std::endl;
 		}
 		return true;
 	}
 
+	return false; 
+}
+
+
+
+template<typename T>
+void MicroBlock<T>::add(const Tail &tail, float sig) {
+	Node hnode;
+
 	if (!allocate(hnode)) {
-		return false;
+		std::cout << "Failed to allocate\n";
+		return;
 	}
+
 	tails_.insert({tail, hnode});
 	Harc *h = get(hnode);
-
-	// Average significance of the tail
-	//float sig = 0.0;
-	//for (auto i : tvec) sig += get(i)->significance();
-	//sig = sig / static_cast<float>(tvec.size());
-
-
 	h->pulse(sig);
-	//lock();
 	addToQueue(hnode, h);
-	//unlock();
-	return false; 
 }
 
 

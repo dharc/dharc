@@ -351,8 +351,13 @@ int main(int argc, char *argv[]) {
 		}
 		sense.writeInput(cam, data);
 
+		size_t hlevel_harc = 0;
+
 		for (auto i : strong) {
-			if (i.second.harc() >= BWIDTH*BWIDTH) continue;
+			if (i.second.harc() >= BWIDTH*BWIDTH) {
+				++hlevel_harc;
+				continue;
+			}
 
 			size_t bx = i.second.macroX() * BWIDTH;
 			size_t by = i.second.macroY() * BWIDTH;
@@ -371,6 +376,10 @@ int main(int argc, char *argv[]) {
 				buffer_sdl[(ix*3)+1] = colour;
 				buffer_sdl[(ix*3)+2] = colour;
 			}
+		}
+
+		if (hlevel_harc > 0) {
+			std::cout << "High-level HARCs: " << hlevel_harc << "\n";
 		}
 
 		SDL_Surface *screen = SDL_GetVideoSurface();
