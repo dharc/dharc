@@ -55,7 +55,7 @@ void MicroBlock<T>::process(int factor) {
 		lock();
 			if (sig_.size() < params::MAX_TAIL) {
 				unlock();
-				return;
+				break;
 			}
 
 
@@ -66,7 +66,7 @@ void MicroBlock<T>::process(int factor) {
 				++it;
 			}
 			// remove first and try again
-			sig_.erase(sig_.begin());
+			//sig_.erase(sig_.begin());
 		unlock();
 
 		// ++processed__;
@@ -86,8 +86,12 @@ void MicroBlock<T>::process(int factor) {
 		}
 	}
 
+	lock();
+	sig_.clear();
+	unlock();
+
 	if ((Fabric::counter() - lastgarbage_) > 1000) {
-		//garbage();
+		garbage();
 		lastgarbage_ = Fabric::counter();
 	}
 }
@@ -142,11 +146,17 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
 		if (hnode == dharc::null_n) return true;
 		Harc *h = get(hnode);
 
+		// Average the significance of the tail
 		float sig = 0.0;
 		for (auto i : tvec) sig += get(i)->significance();
 		sig = sig / static_cast<float>(tvec.size());
 
 		h->pulse(sig);
+		lock();
+		addToQueue(hnode, h);
+		unlock();
+
+		// Strong enough to be important?
 		if (h->strength() > 0.1) {
 			macro_->addStrong(hnode, tvec);
 			//std::cout << "Strong: " << h->strength() <<
@@ -161,12 +171,16 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
 	tails_.insert({tail, hnode});
 	Harc *h = get(hnode);
 
+	// Average significance of the tail
 	float sig = 0.0;
 	for (auto i : tvec) sig += get(i)->significance();
 	sig = sig / static_cast<float>(tvec.size());
 
 
 	h->pulse(sig);
+	lock();
+	addToQueue(hnode, h);
+	unlock();
 	return false; 
 }
 

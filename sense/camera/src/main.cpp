@@ -351,7 +351,8 @@ int main(int argc, char *argv[]) {
 		sense.writeInput(cam, data);
 
 		for (auto i : strong) {
-			assert(i.harc() < BWIDTH*BWIDTH);
+			if (i.harc() >= BWIDTH*BWIDTH) continue;
+
 			size_t bx = i.macroX() * BWIDTH;
 			size_t by = i.macroY() * BWIDTH;
 

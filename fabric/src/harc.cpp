@@ -76,7 +76,7 @@ void Harc::activateConstant(float value) {
 
 float Harc::significance() const {
 	// Simple linear decayed absolute delta
-	float decdelta = delta_; /// lastActive();
+	float decdelta = delta_ / lastActive();
 	return (decdelta < 0.0) ? 0.0f - decdelta : decdelta;
 }
 
