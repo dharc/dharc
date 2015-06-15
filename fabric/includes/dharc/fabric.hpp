@@ -23,6 +23,7 @@
 using std::vector;
 using std::array;
 using std::set;
+using std::pair;
 using std::unordered_map;
 using std::chrono::time_point;
 using std::size_t;
@@ -75,7 +76,7 @@ class Fabric {
 
 	static void readOutputBlock(const Node &b, vector<float> &v);
 
-	static vector<Node> strongestAssociated(const Node &b, float a) {
+	static vector<pair<float,Node>> strongestAssociated(const Node &b, float a) {
 		return getMacro(b)->strongestAssociated(a);
 	}
 

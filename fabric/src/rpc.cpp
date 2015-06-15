@@ -26,6 +26,7 @@ using std::ostream;
 using std::string;
 using std::vector;
 using std::list;
+using std::pair;
 using dharc::Node;
 using dharc::fabric::Harc;
 using dharc::Fabric;
@@ -91,7 +92,7 @@ bool rpc_writeblock(const Node &b,
 	return true;
 }
 
-vector<Node> rpc_readstrong(const Node &b, const float &a) {
+vector<pair<float,Node>> rpc_readstrong(const Node &b, const float &a) {
 	return Fabric::strongestAssociated(b, a);
 }
 

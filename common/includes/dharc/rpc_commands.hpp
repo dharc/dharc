@@ -17,6 +17,7 @@ using std::list;
 using std::tuple;
 using dharc::Node;
 using dharc::Tail;
+using std::pair;
 
 namespace dharc {
 namespace rpc {
@@ -58,7 +59,7 @@ typedef tuple<
 	Node(*)(const size_t &, const size_t &),  // makeinputblock
 	bool(*)(const Node &, const float &),  // activate
 	bool(*)(const Node &, const vector<float>&),  // writeblock
-	vector<Node>(*)(const Node &b, const float &a)  // readstrong
+	vector<pair<float,Node>>(*)(const Node &b, const float &a)  // readstrong
 > commands_t;
 
 };  // namespace rpc

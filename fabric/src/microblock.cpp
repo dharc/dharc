@@ -120,8 +120,6 @@ void MicroBlock<T>::garbage() {
 			}
 		//}
 	}
-
-	std::cout << "Free: " << freed_.size() << std::endl;
 }
 
 

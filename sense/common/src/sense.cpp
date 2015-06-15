@@ -9,6 +9,7 @@
 using std::vector;
 using dharc::Node;
 using dharc::Sense;
+using std::pair;
 
 Sense::Sense(const char *addr, int port) : Rpc(addr, port) {}
 
@@ -23,7 +24,7 @@ void Sense::writeInput(const Node &b,
 	send<Command::writeblock>(b, values);
 }
 
-vector<Node> Sense::readStrong(const Node &b, float active) {
+vector<pair<float,Node>> Sense::readStrong(const Node &b, float active) {
 	return send<Command::readstrong>(b, active);
 }
 

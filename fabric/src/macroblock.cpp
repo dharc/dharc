@@ -110,15 +110,16 @@ void MacroBlock<T>::addStrong(const Node &node, const vector<Node> &tvec) {
 
 
 template<typename T>
-vector<Node> MacroBlock<T>::strongestAssociated(float active) {
-	vector<Node> res;
+vector<pair<float,Node>> MacroBlock<T>::strongestAssociated(float active) {
+	vector<pair<float,Node>> res;
 
 	strong_lock_.lock();
 	auto i = strong_.begin();
 	while (i != strong_.end()) {
-		if (get(Node((*i).first))->lastActive() < active) {
+		Harc *h = get(Node((*i).first));
+		if (h->lastActive() < active) {
 			for (auto j : (*i).second) {
-				res.push_back(j);
+				res.push_back({h->significance(), j});
 			}
 			++i;
 		} else {

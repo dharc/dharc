@@ -15,6 +15,7 @@
 using dharc::Node;
 using std::vector;
 using std::unordered_map;
+using std::pair;
 
 namespace dharc {
 namespace fabric {
@@ -28,7 +29,7 @@ class MacroBlockBase {
 	virtual void writeInput(const vector<float> &v) = 0;
 	virtual void process(int factor) = 0;
 	virtual void pulse(const Node &n) = 0;
-	virtual vector<Node> strongestAssociated(float active) = 0;
+	virtual vector<pair<float,Node>> strongestAssociated(float active) = 0;
 
 	virtual size_t harcCount() const = 0;
 };
@@ -64,7 +65,7 @@ class MacroBlock : public MacroBlockBase {
 	size_t harcCount() const;
 
 	void addStrong(const Node &node, const vector<Node> &tvec);
-	vector<Node> strongestAssociated(float active);
+	vector<pair<float,Node>> strongestAssociated(float active);
 
 	typedef T params;
 

@@ -7,6 +7,8 @@
 
 #include "dharc/rpc.hpp"
 
+using std::pair;
+
 namespace dharc {
 
 class Sense : public dharc::Rpc {
@@ -19,7 +21,7 @@ class Sense : public dharc::Rpc {
 	void writeInput(const Node &b,
 					const vector<float> &values);
 
-	vector<Node> readStrong(const Node &b, float active);
+	vector<pair<float,Node>> readStrong(const Node &b, float active);
 };
 
 };
