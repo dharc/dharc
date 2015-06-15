@@ -50,11 +50,12 @@ void MicroBlock<T>::process(int factor) {
 	Node signodes[params::MAX_TAIL*factor];
 	Tail tail;
 	vector<Node> tvec;
+	//float factor_grad = 1.0f / (float)factor;
 
-	while (factor-- > 0) {
-		lock();
+	lock();
+	for (int r = 0; r < 20; ++r) {
 			if (sig_.size() < params::MAX_TAIL) {
-				unlock();
+				//unlock();
 				break;
 			}
 
@@ -67,7 +68,7 @@ void MicroBlock<T>::process(int factor) {
 			}
 			// remove first and try again
 			//sig_.erase(sig_.begin());
-		unlock();
+		//unlock();
 
 		// ++processed__;
 
@@ -81,14 +82,23 @@ void MicroBlock<T>::process(int factor) {
 					tvec.push_back(signodes[x+i]);
 				}
 				Tail::make(tvec, tail);
-				if (query(tail, tvec)) {
+
+				float sig = 0.0f;
+				for (auto i : tvec) sig += get(i)->significance();
+				sig = sig / static_cast<float>(tvec.size());
+				//sig += (1.0 - sig) * ((float)(factor-x) / ((float)factor*2.0));
+
+
+				if (query(tail, tvec, sig)) {
 					break;
 				}
 			}
 		}
+
+		//--factor;
 	}
 
-	lock();
+	//lock();
 	sig_.clear();
 	unlock();
 
@@ -139,7 +149,7 @@ bool MicroBlock<T>::get(const Tail &key, Node &hnode) {
 
 
 template<typename T>
-bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
+bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec, float sig) {
 	Node hnode;
 	
 	if (get(tail, hnode)) {
@@ -147,14 +157,14 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
 		Harc *h = get(hnode);
 
 		// Average the significance of the tail
-		float sig = 0.0;
-		for (auto i : tvec) sig += get(i)->significance();
-		sig = sig / static_cast<float>(tvec.size());
+		//float sig = 0.0;
+		//for (auto i : tvec) sig += get(i)->significance();
+		//sig = sig / static_cast<float>(tvec.size());
 
 		h->pulse(sig);
-		lock();
+		//lock();
 		addToQueue(hnode, h);
-		unlock();
+		//unlock();
 
 		// Strong enough to be important?
 		if (h->strength() > 0.1) {
@@ -172,15 +182,15 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec) {
 	Harc *h = get(hnode);
 
 	// Average significance of the tail
-	float sig = 0.0;
-	for (auto i : tvec) sig += get(i)->significance();
-	sig = sig / static_cast<float>(tvec.size());
+	//float sig = 0.0;
+	//for (auto i : tvec) sig += get(i)->significance();
+	//sig = sig / static_cast<float>(tvec.size());
 
 
 	h->pulse(sig);
-	lock();
+	//lock();
 	addToQueue(hnode, h);
-	unlock();
+	//unlock();
 	return false; 
 }
 

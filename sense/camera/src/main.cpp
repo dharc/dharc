@@ -365,8 +365,11 @@ int main(int argc, char *argv[]) {
 			}
 
 			size_t ix = (by * kWidth) + bx;
-			if (buffer_sdl[(ix*3)+2] <= 200) {
-				buffer_sdl[(ix*3)+2] += (unsigned char)(50.0f * i.first);
+			unsigned char colour = (unsigned char)(255.0f * i.first);
+			if (buffer_sdl[(ix*3)+2] < colour) {
+				buffer_sdl[(ix*3)+0] = colour;
+				buffer_sdl[(ix*3)+1] = colour;
+				buffer_sdl[(ix*3)+2] = colour;
 			}
 		}
 

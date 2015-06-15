@@ -78,7 +78,7 @@ class MicroBlock {
 	size_t lastgarbage_;
 
 	bool get(const Tail &key, Node &hnode);
-	bool query(const Tail &tail, const vector<Node> &tvec);
+	bool query(const Tail &tail, const vector<Node> &tvec, float sig);
 	void addToQueue(const Node &node, Harc *harc);
 };
 };

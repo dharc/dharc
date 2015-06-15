@@ -50,23 +50,16 @@ template<>
 template<typename R>
 struct Packer<std::vector<R>> {
 	static void pack(std::ostream &os, const std::vector<R> &vec) {
-		auto x = vec.size();
-		os << '[';
-		for (auto i : vec) {
-			--x;
-			Packer<R>::pack(os, i);
-			if (x != 0) os << ',';
-		}
-		os << ']';
+		uint32_t x = vec.size();
+		os.write((const char *)&x, sizeof(uint32_t));
+		os.write((const char *)vec.data(), x * sizeof(R));
 	}
 	static std::vector<R> unpack(std::istream &is) {
 		std::vector<R> res;
-		if (is.get() != '[') return res;
-		while (is.peek() != ']') {
-			res.push_back(Packer<R>::unpack(is));
-			if (is.peek() == ',') is.ignore();
-		}
-		is.ignore();  // Remove trailing ']'
+		uint32_t x;
+		is.read((char *)&x, sizeof(uint32_t));
+		res.resize(x);
+		is.read((char *)res.data(), x * sizeof(R));
 		return res;
 	}
 };
