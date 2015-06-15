@@ -13,7 +13,7 @@
 
 namespace dharc {
 struct Tail {
-	uint32_t d[8];
+	uint32_t d[4];
 
 	bool operator==(const Tail &o) const;
 
@@ -37,7 +37,7 @@ struct Tail {
 			data += 4;
 		}
 		return h;*/
-		return d[7];
+		return d[3];
 	}
 
 	static void make(std::vector<Node> &t, Tail &res);
