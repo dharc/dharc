@@ -47,7 +47,7 @@ bool MicroBlock<T>::allocate(Node &node) {
 
 template<typename T>
 void MicroBlock<T>::process(int factor) {
-	array<Node, params::MAX_TAIL> signodes;
+	Node signodes[params::MAX_TAIL*factor];
 	Tail tail;
 	vector<Node> tvec;
 
@@ -61,7 +61,7 @@ void MicroBlock<T>::process(int factor) {
 
 			// Copy the nodes to a buffer for processing
 			auto it = sig_.begin();
-			for (auto i = 0U; i < params::MAX_TAIL; ++i) {
+			for (auto i = 0U; i < (params::MAX_TAIL*factor); ++i) {
 				signodes[i] = *it;
 				++it;
 			}
@@ -73,15 +73,17 @@ void MicroBlock<T>::process(int factor) {
 
 		// Generate all tail combinations
 		// Vary number of tails
-		for (auto t = 0U; t < (params::MAX_TAIL - params::MIN_TAIL); ++t) {
-			tvec.clear();
-			// Now pick t most significant 
-			for (auto i = 0U; i < (params::MAX_TAIL-t); ++i) {
-				tvec.push_back(signodes[i]);
-			}
-			Tail::make(tvec, tail);
-			if (query(tail, tvec)) {
-				break;
+		for (auto x = 0; x < factor; ++x) {
+			for (auto t = 0U; t < (params::MAX_TAIL - params::MIN_TAIL); ++t) {
+				tvec.clear();
+				// Now pick t most significant 
+				for (auto i = 0U; i < (params::MAX_TAIL-t); ++i) {
+					tvec.push_back(signodes[x+i]);
+				}
+				Tail::make(tvec, tail);
+				if (query(tail, tvec)) {
+					break;
+				}
 			}
 		}
 	}

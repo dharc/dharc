@@ -6,6 +6,7 @@
 #define DHARC_FABRIC_MACROBLOCK_HPP_
 
 #include <vector>
+#include <mutex>
 #include <cassert>
 #include <unordered_map>
 
@@ -75,6 +76,7 @@ class MacroBlock : public MacroBlockBase {
 	size_t block_h_;
 	vector<MicroBlock<T>*> blocks_;
 	unordered_map<uint64_t, vector<Node>> strong_;
+	std::mutex strong_lock_;
 };
 };
 };

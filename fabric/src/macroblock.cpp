@@ -100,9 +100,11 @@ size_t MacroBlock<T>::harcCount() const {
 
 template<typename T>
 void MacroBlock<T>::addStrong(const Node &node, const vector<Node> &tvec) {
+	strong_lock_.lock();
 	if (strong_.find(node.value) == strong_.end()) {
 		strong_.insert({node.value, tvec});
 	}
+	strong_lock_.unlock();
 }
 
 
@@ -110,13 +112,20 @@ void MacroBlock<T>::addStrong(const Node &node, const vector<Node> &tvec) {
 template<typename T>
 vector<Node> MacroBlock<T>::strongestAssociated(float active) {
 	vector<Node> res;
-	for (auto i : strong_) {
-		if (get(Node(i.first))->lastActive() < active) {
-			for (auto j : i.second) {
+
+	strong_lock_.lock();
+	auto i = strong_.begin();
+	while (i != strong_.end()) {
+		if (get(Node((*i).first))->lastActive() < active) {
+			for (auto j : (*i).second) {
 				res.push_back(j);
 			}
+			++i;
+		} else {
+			i = strong_.erase(i);
 		}
 	}
+	strong_lock_.unlock();
 
 	return res;
 }

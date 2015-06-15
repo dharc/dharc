@@ -35,7 +35,7 @@ void Harc::reset() {
 
 float Harc::decayedActivation() const {
 	// Simple linear decay over time
-	return activation_ / lastActive();
+	return activation_ / (0.1 * lastActive());
 }
 
 
@@ -58,8 +58,8 @@ bool Harc::query(const Node &node) {
 
 void Harc::pulse(float s) {
 	lock_.lock();
-	delta_ = strength_;
-	strength_ += (1.0f - strength_) * (s * 0.1f);
+	delta_ = s * strength_;
+	strength_ += (1.0f - strength_) * 0.01f;
 	// activation_ = value;
 	lastactive_ = Fabric::counter();
 	lock_.unlock();

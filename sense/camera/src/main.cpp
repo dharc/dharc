@@ -338,15 +338,15 @@ int main(int argc, char *argv[]) {
 
 		constexpr auto BWIDTH = 5U;
 
-		vector<Node> strong = sense.readStrong(cam, 15.0);
+		vector<Node> strong = sense.readStrong(cam, 10.0);
 
 		for (auto i = 0U; i < data.size(); ++i) {
 			unsigned char y = *((char*)buffers[0].start + (2*i));
 
 			data[i] = static_cast<float>(y) / 255.0f;
-			buffer_sdl[i*3] = y;
-			buffer_sdl[(i*3)+1] = y;
-			buffer_sdl[(i*3)+2] = y;
+			buffer_sdl[i*3] = 0;
+			buffer_sdl[(i*3)+1] = 0;
+			buffer_sdl[(i*3)+2] = 0;
 		}
 		sense.writeInput(cam, data);
 
@@ -364,9 +364,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			size_t ix = (by * kWidth) + bx;
-			buffer_sdl[ix*3] = 0;
-			buffer_sdl[(ix*3)+1] = 0;
-			buffer_sdl[(ix*3)+2] = 255;
+			if (buffer_sdl[(ix*3)+2] <= 200) buffer_sdl[(ix*3)+2] += 50;
 		}
 
 		SDL_Surface *screen = SDL_GetVideoSurface();

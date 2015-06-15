@@ -76,7 +76,7 @@ void Fabric::counterThread() {
 void Fabric::processThread() {
 	while (true) {
 		for (auto i : blocks__) {
-			i->process(50);
+			i->process(10);
 		}
 		std::this_thread::sleep_for(
 			std::chrono::milliseconds(10));
