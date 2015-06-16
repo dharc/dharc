@@ -52,6 +52,8 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 {
     ctx *pctx = (ctx*)data;
 
+	vector<pair<float,Node>> strong = sense->readStrong(dblock, 5.0);
+
     /* VLC just rendered the video, but we can also render stuff */
     uint16_t *pixels = (uint16_t*)*p_pixels;
 
@@ -70,7 +72,6 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 
 	sense->writeInput(dblock, ddata);
 
-	vector<pair<float,Node>> strong = sense->readStrong(dblock, 10.0);
 	constexpr auto BWIDTH = 5U;
 
 	for (auto i : strong) {

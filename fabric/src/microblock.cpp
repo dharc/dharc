@@ -77,7 +77,7 @@ void MicroBlock<T>::process(int factor) {
 		it = sig_.erase(it);
 
 		// Find most significant neighbour
-		for (; count < params::MAX_TAIL; ++count) {
+		while (count < params::MAX_TAIL) {
 			if (it == sig_.end()) break;
 			if (distance(signodes[count - 1], *it) == 1) {
 				signodes[count++] = *it;
