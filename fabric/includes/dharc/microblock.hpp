@@ -82,6 +82,7 @@ class MicroBlock {
 	void addToQueue(const Node &node, Harc *harc);
 	void add(const Tail &tail, float sig);
 	inline size_t distance(const Node &a, const Node &b);
+	Node sigNeighbour(const Node *signodes, size_t count, float minsig);
 };
 };
 };

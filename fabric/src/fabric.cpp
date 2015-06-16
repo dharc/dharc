@@ -78,9 +78,9 @@ void Fabric::processThread() {
 		for (auto i : blocks__) {
 			i->process(50);
 		}
-		std::this_thread::sleep_for(
-			std::chrono::milliseconds(10));
-		//std::this_thread::yield();
+		//std::this_thread::sleep_for(
+			//std::chrono::milliseconds(10));
+		std::this_thread::yield();
 	}
 }
 

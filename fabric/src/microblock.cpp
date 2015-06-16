@@ -57,12 +57,72 @@ inline size_t MicroBlock<T>::distance(const Node &a, const Node &b) {
 }
 
 
+
+template<typename T>
+Node MicroBlock<T>::sigNeighbour(const Node *signodes, size_t count, float minsig) {
+	Node focus = signodes[count-1];
+	Node n[8];
+	float max_sig = 0.0f;
+	int sigix = -1;
+	const int x = focus.harc() % params::BLOCK_WIDTH;
+	const int y = focus.harc() / params::BLOCK_WIDTH;
+
+	if ((x - 1) < 0) {
+		n[0] = dharc::null_n;
+	} else {
+		n[0] = Node(focus.value - 1);
+	}
+
+	if ((x + 1) == params::BLOCK_WIDTH) {
+		n[1] = dharc::null_n;
+	} else {
+		n[1] = Node(focus.value + 1);
+	}
+
+	if ((y + 1) == params::BLOCK_WIDTH) {
+		n[2] = dharc::null_n;
+	} else {
+		n[2] = Node(focus.value + params::BLOCK_WIDTH);
+	}
+
+	if ((y - 1) < 0) {
+		n[3] = dharc::null_n;
+	} else {
+		n[3] = Node(focus.value - params::BLOCK_WIDTH);
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		for (auto j = 0U; j < count; ++j) {
+			if (n[i] == signodes[j]) {
+				n[i] = dharc::null_n;
+				break;
+			}
+		}
+
+		if (n[i] != dharc::null_n) {
+			Harc *h = get(n[i]);
+			if (h->significance() > max_sig) {
+				max_sig = h->significance();
+				sigix = i;
+			}
+		}
+	}
+
+	if (sigix == -1 || (max_sig < minsig)) {
+		return dharc::null_n;
+	} else {
+		return n[sigix];
+	}
+}
+
+
+
 template<typename T>
 void MicroBlock<T>::process(int factor) {
 	Node signodes[params::MAX_TAIL];
 	Tail tail;
 	vector<Node> tvec;
-	//float sig_delta = 0.0f;
+	float minsig = 0.0f;
 
 	lock();
 	for (int f = 0; f < factor; ++f) {
@@ -74,18 +134,17 @@ void MicroBlock<T>::process(int factor) {
 		// Pick most significant node.
 		auto it = sig_.begin();
 		signodes[0] = *it;
+		minsig = get(signodes[0])->significance() * 0.7;
 		size_t count = 1;
-		it = sig_.erase(it);
+		sig_.erase(it);
 
 		// Find most significant neighbour
 		while (count < params::MAX_TAIL) {
-			if (it == sig_.end()) break;
-			if (distance(signodes[count - 1], *it) == 1) {
-				signodes[count++] = *it;
-				sig_.erase(it);
-				it = sig_.begin();
+			Node signode = sigNeighbour(signodes, count, minsig);
+			if (signode != dharc::null_n) {
+				signodes[count++] = signode;
 			} else {
-				++it;
+				break;
 			}
 		}
 
@@ -113,7 +172,9 @@ void MicroBlock<T>::process(int factor) {
 		Tail::make(tvec, tail);
 
 		if (!query(tail, tvec, sig)) {
-			add(tail, sig);
+			if (Fabric::counter() < 12000) {
+				add(tail, sig);
+			}
 		}
 	}
 
@@ -121,9 +182,11 @@ void MicroBlock<T>::process(int factor) {
 	sig_.clear();
 	unlock();
 
-	if ((Fabric::counter() - lastgarbage_) > 1000) {
-		garbage();
-		lastgarbage_ = Fabric::counter();
+	if (Fabric::counter() < 14000) {
+		if ((Fabric::counter() - lastgarbage_) > 1000) {
+			garbage();
+			lastgarbage_ = Fabric::counter();
+		}
 	}
 }
 
@@ -196,7 +259,7 @@ void MicroBlock<T>::add(const Tail &tail, float sig) {
 	Node hnode;
 
 	if (!allocate(hnode)) {
-		std::cout << "Failed to allocate\n";
+		//std::cout << "Failed to allocate\n";
 		return;
 	}
 

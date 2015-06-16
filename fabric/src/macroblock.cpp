@@ -120,16 +120,16 @@ vector<pair<float,Node>> MacroBlock<T>::strongestAssociated(float active) {
 	auto i = strong_.begin();
 	while (i != strong_.end()) {
 		Harc *h = get(Node((*i).first));
-		//if (h->lastActive() < active) {
+		if (h->lastActive() < active) {
 			for (auto j : (*i).second) {
 				res.push_back({h->significance(), j});
 			}
 			++i;
-		//} else {
-		//	i = strong_.erase(i);
-		//}
+		} else {
+			i = strong_.erase(i);
+		}
 	}
-	strong_.clear();
+	//strong_.clear();
 	strong_lock_.unlock();
 
 	return res;

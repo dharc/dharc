@@ -35,7 +35,7 @@ class Harc {
 	void notAvailable() { lastactive_ = 1; }
 
 	bool isWeak() const {
-		return ((lastActive() > 200.0f) && (strength_ <= 0.1f));
+		return ((lastActive() > 2000.0f) && (strength_ <= 0.1f));
 	}
 
 	void reset();
