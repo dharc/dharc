@@ -337,7 +337,7 @@ int main(int argc, char *argv[]) {
 
 		read_frame();
 
-		constexpr auto BWIDTH = 5U;
+		constexpr auto BWIDTH = 10U;
 
 		vector<pair<float,Node>> strong = sense.readStrong(cam, 10.0);
 

@@ -62,6 +62,7 @@ void MicroBlock<T>::process(int factor) {
 	Node signodes[params::MAX_TAIL];
 	Tail tail;
 	vector<Node> tvec;
+	//float sig_delta = 0.0f;
 
 	lock();
 	for (int f = 0; f < factor; ++f) {
@@ -102,6 +103,12 @@ void MicroBlock<T>::process(int factor) {
 		}
 
 		sig = sig / static_cast<float>(tvec.size());
+		/*if (f == 0) {
+			sig_delta = 1.0f - sig;
+			sig = 1.0f;
+		} else {
+			sig += sig_delta;
+		}*/
 
 		Tail::make(tvec, tail);
 

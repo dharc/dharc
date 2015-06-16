@@ -72,7 +72,7 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 
 	sense->writeInput(dblock, ddata);
 
-	constexpr auto BWIDTH = 5U;
+	constexpr auto BWIDTH = 10U;
 
 	for (auto i : strong) {
 		if (i.second.harc() >= BWIDTH*BWIDTH) {
