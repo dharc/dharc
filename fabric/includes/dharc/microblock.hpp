@@ -81,6 +81,7 @@ class MicroBlock {
 	bool query(const Tail &tail, const vector<Node> &tvec, float sig);
 	void addToQueue(const Node &node, Harc *harc);
 	void add(const Tail &tail, float sig);
+	inline size_t distance(const Node &a, const Node &b);
 };
 };
 };

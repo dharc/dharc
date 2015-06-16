@@ -44,58 +44,70 @@ bool MicroBlock<T>::allocate(Node &node) {
 }
 
 
+template<typename T>
+inline size_t MicroBlock<T>::distance(const Node &a, const Node &b) {
+	const auto ah = a.harc();
+	const auto bh = b.harc();
+	const auto ax = ah % params::BLOCK_WIDTH;
+	const auto ay = ah / params::BLOCK_WIDTH;
+	const auto bx = bh % params::BLOCK_WIDTH;
+	const auto by = bh / params::BLOCK_WIDTH;
+
+	return std::max(std::abs(ax-bx),std::abs(ay-by));
+}
+
 
 template<typename T>
 void MicroBlock<T>::process(int factor) {
-	Node signodes[params::MAX_TAIL*factor];
+	Node signodes[params::MAX_TAIL];
 	Tail tail;
 	vector<Node> tvec;
-	//float factor_grad = 1.0f / (float)factor;
 
 	lock();
 	for (int f = 0; f < factor; ++f) {
-		if (sig_.size() < params::MAX_TAIL) {
-			//unlock();
+		if (sig_.size() < params::MIN_TAIL) {
 			break;
 		}
 
 
-		// Copy the nodes to a buffer for processing
+		// Pick most significant node.
 		auto it = sig_.begin();
-		for (auto i = 0U; i < (params::MAX_TAIL); ++i) {
-			signodes[i] = *it;
-			++it;
+		signodes[0] = *it;
+		size_t count = 1;
+		it = sig_.erase(it);
+
+		// Find most significant neighbour
+		for (; count < params::MAX_TAIL; ++count) {
+			if (it == sig_.end()) break;
+			if (distance(signodes[count - 1], *it) == 1) {
+				signodes[count++] = *it;
+				sig_.erase(it);
+				it = sig_.begin();
+			} else {
+				++it;
+			}
 		}
-		// remove first and try again
-		sig_.erase(sig_.begin(), it);
-		//unlock();
 
 		//bool has_added = false;
 
 		// Generate all tail combinations
 		// Vary number of tails
-		for (auto t = params::MIN_TAIL; t < params::MAX_TAIL; ++t) {
-			tvec.clear();
-			float sig = 0.0f;
-			// Now pick t most significant 
-			for (auto i = 0U; i < t; ++i) {
-				tvec.push_back(signodes[i]);
-				sig += get(signodes[i])->significance();
-			}
+		tvec.clear();
+		float sig = 0.0f;
 
-			sig = sig / static_cast<float>(tvec.size());
-
-			Tail::make(tvec, tail);
-
-			if (!query(tail, tvec, sig)) {
-				//if (has_added == false) {
-					add(tail, sig);
-				//	has_added = true;
-				//}
-			}
+		// Now pick t most significant 
+		for (auto i = 0U; i < count; ++i) {
+			tvec.push_back(signodes[i]);
+			sig += get(signodes[i])->significance();
 		}
 
-		//--factor;
+		sig = sig / static_cast<float>(tvec.size());
+
+		Tail::make(tvec, tail);
+
+		if (!query(tail, tvec, sig)) {
+			add(tail, sig);
+		}
 	}
 
 	//lock();
@@ -158,7 +170,7 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec, float sig)
 		//if (hnode == dharc::null_n) return true;
 		Harc *h = get(hnode);
 		h->pulse(sig);
-		addToQueue(hnode, h);
+		//addToQueue(hnode, h);
 
 		// Strong enough to be important?
 		if (h->strength() > 0.1) {
@@ -184,7 +196,7 @@ void MicroBlock<T>::add(const Tail &tail, float sig) {
 	tails_.insert({tail, hnode});
 	Harc *h = get(hnode);
 	h->pulse(sig);
-	addToQueue(hnode, h);
+	//addToQueue(hnode, h);
 }
 
 

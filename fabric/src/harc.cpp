@@ -59,7 +59,7 @@ bool Harc::query(const Node &node) {
 void Harc::pulse(float s) {
 	lock_.lock();
 	delta_ = s * strength_;
-	strength_ += (1.0f - strength_) * 0.02f;
+	strength_ += (1.0f - strength_) * 0.1f;
 	// activation_ = value;
 	lastactive_ = Fabric::counter();
 	lock_.unlock();
