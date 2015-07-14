@@ -46,6 +46,7 @@ static void *lock(void *data, void **p_pixels)
 
 vector<int8_t> ddata;
 vector<uint8_t> ldata;
+vector<int> odata;
 Sense *sense;
 Node dblock;
 
@@ -78,10 +79,21 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 	assert(rdata.size() == 320 * 240);
 
 	for (auto i = 0U; i < rdata.size(); ++i) {
-		uint16_t colour = 128 + rdata[i];
+		//odata[i] += rdata[i];
+		//if (odata[i] < 0) odata[i] = 0;
+		//if (odata[i] > 255) odata[i] = 255;
+		//uint16_t colour = odata[i];
 		//uint16_t colour = (ldata[i] >= 0) ? ldata[i] : 0 - ldata[i];
 		//colour *= 2;
-		pixels[i] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
+		//pixels[i] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
+
+		if (rdata[i] < 0) {
+			uint16_t colour = (0 - rdata[i]) * 2;
+			pixels[i] = ((colour >> 3));
+		} else {
+			uint16_t colour = rdata[i] * 2;
+			pixels[i] = ((colour >> 2) << 5);
+		}
 	}
 
     SDL_UnlockSurface(pctx->surf);
@@ -103,6 +115,11 @@ int main(int argc, char *argv[])
 
 	ddata.resize(320*240);
 	ldata.resize(320*240);
+	odata.resize(320*240);
+
+	for (auto i = 0U; i < odata.size(); ++i) {
+		odata[i] = 128;
+	}
 
     libvlc_instance_t *libvlc;
     libvlc_media_t *m;

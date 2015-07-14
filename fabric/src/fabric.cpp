@@ -112,7 +112,7 @@ vector<int8_t> Fabric::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
 		const auto uix = ux + (uy * usx);
 		const auto j = uix * usize + (ox * 2) + (oy * uw * 2);
 
-		res[i] = (int8_t)((out[j] * 128.0f) + (0.0f - (out[j + 1] * 128.0f)));
+		res[i] = (int8_t)((out[j] * 127.0f) - (out[j + 1] * 127.0f));
 		//res[i] = (uint8_t)((out[j]) * 255.0f);
 	}
 

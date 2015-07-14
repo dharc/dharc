@@ -47,11 +47,11 @@ size_t TMAX
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 initUnit(size_t ix) {
 	for (auto i = 0U; i < kSpatialLinks; ++i) {
-		units_[ix].slinks[i] = 255;
+		units_[ix].slinks[i] = 128;
 	}
 
 	for (auto i = 0U; i < kTemporalLinks; ++i) {
-		units_[ix].tlinks[i] = 255;
+		units_[ix].tlinks[i] = 128;
 	}
 
 	for (auto i = 0U; i < SMAX; ++i) {
@@ -78,6 +78,8 @@ void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 write(const vector<float> &v) {
 	assert(v.size() == kInputSize);
 
+	clearInput();
+
 	for (auto i = 0U; i < v.size(); ++i) {
 		inputs_[i] += (1.0f - inputs_[i]) * v[i];
 	}
@@ -100,7 +102,7 @@ process() {
 		//adjustSpatial(i, s);
 	}
 
-	clearInput();
+	//clearInput();
 
 	for (auto i = 0U; i < kUnitCount; ++i) {
 		decayTemporal(i);
@@ -142,7 +144,7 @@ reform(vector<float> &v) {
 			}
 		} else {
 			for (auto j = 0U; j < USIZE; ++j) {
-				v[i * USIZE + j] = ((float)units_[i].slinks[maxix * SMAX + j] / 255.0f) * max;
+				v[i * USIZE + j] = ((float)units_[i].slinks[j * SMAX + maxix] / 255.0f);
 			}
 		}
 	}
@@ -195,20 +197,20 @@ adjustSpatial(size_t ix, size_t s) {
 		if (j == s) {
 			for (auto i = 0U; i < USIZE; ++i) {
 				if (inputs_[ibase + i] > units_[ix].modulation * 0.1) {
-					if (units_[ix].slinks[j * SMAX + i] < 255) {
-						++units_[ix].slinks[j * SMAX + i];
+					if (units_[ix].slinks[i * SMAX + j] < 255) {
+						++units_[ix].slinks[i * SMAX + j];
 					}
-				} //else {
-				//	if (units_[ix].slinks[j * SMAX + i] > 0) {
-				//		--units_[ix].slinks[j * SMAX + i];
-				//	}
-				//}
+				}/* else {
+					if (units_[ix].slinks[i * SMAX + j] > 1) {
+						units_[ix].slinks[i * SMAX + j] -= 2;
+					}
+				}*/
 			}
 		} else {
 			for (auto i = 0U; i < USIZE; ++i) {
 				if (inputs_[ibase + i] > units_[ix].modulation * 0.5) {
-					if (units_[ix].slinks[j * SMAX + i] > 0) {
-						--units_[ix].slinks[j * SMAX + i];
+					if (units_[ix].slinks[i * SMAX + j] > 0) {
+						--units_[ix].slinks[i * SMAX + j];
 					}
 				}
 			}
@@ -259,7 +261,7 @@ activateSpatial(size_t ix) {
 	for (auto i = 0U; i < USIZE; ++i) {
 		for (auto j = 0U; j < SMAX; ++j) {
 			depol[j] += inputs_[ibase + i] * contrib *
-						((float)units_[ix].slinks[j * SMAX + i] / 255.0f);
+						((float)units_[ix].slinks[i * SMAX + j] / 255.0f);
 		}
 	}
 

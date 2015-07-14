@@ -52,7 +52,7 @@ class Region : public RegionBase {
 	static constexpr auto kOutputSize = TMAX * kUnitCount;
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
-	static constexpr auto kSpatialDecay = 0.999f;
+	static constexpr auto kSpatialDecay = 0.9f;
 	static constexpr auto kTemporalDecay = 0.5f;
 
 	Region();
