@@ -69,14 +69,38 @@ Node MicroBlock<T>::sigNeighbour(const Node *signodes, size_t count, float minsi
 
 	if ((x - 1) < 0) {
 		n[0] = dharc::null_n;
+		n[4] = dharc::null_n;
+		n[5] = dharc::null_n;
 	} else {
 		n[0] = Node(focus.value - 1);
+		if ((y - 1) >= 0) {
+			n[4] = Node(focus.value - params::BLOCK_WIDTH - 1);
+		} else {
+			n[4] = dharc::null_n;
+		}
+		if ((y + 1) < (signed)params::BLOCK_WIDTH) {
+			n[5] = Node(focus.value + params::BLOCK_WIDTH - 1);
+		} else {
+			n[5] = dharc::null_n;
+		}
 	}
 
 	if ((x + 1) == params::BLOCK_WIDTH) {
 		n[1] = dharc::null_n;
+		n[6] = dharc::null_n;
+		n[7] = dharc::null_n;
 	} else {
 		n[1] = Node(focus.value + 1);
+		if ((y - 1) >= 0) {
+			n[6] = Node(focus.value - params::BLOCK_WIDTH + 1);
+		} else {
+			n[6] = dharc::null_n;
+		}
+		if ((y + 1) < (signed)params::BLOCK_WIDTH) {
+			n[7] = Node(focus.value + params::BLOCK_WIDTH + 1);
+		} else {
+			n[7] = dharc::null_n;
+		}
 	}
 
 	if ((y + 1) == params::BLOCK_WIDTH) {
@@ -91,7 +115,7 @@ Node MicroBlock<T>::sigNeighbour(const Node *signodes, size_t count, float minsi
 		n[3] = Node(focus.value - params::BLOCK_WIDTH);
 	}
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < 8; ++i) {
 		for (auto j = 0U; j < count; ++j) {
 			if (n[i] == signodes[j]) {
 				n[i] = dharc::null_n;
@@ -123,6 +147,7 @@ void MicroBlock<T>::process(int factor) {
 	Tail tail;
 	vector<Node> tvec;
 	float minsig = 0.0f;
+	const float sigdelta = 1.0f / (float)factor;
 
 	lock();
 	for (int f = 0; f < factor; ++f) {
@@ -134,7 +159,7 @@ void MicroBlock<T>::process(int factor) {
 		// Pick most significant node.
 		auto it = sig_.begin();
 		signodes[0] = *it;
-		minsig = get(signodes[0])->significance() * 0.7;
+		minsig = get(signodes[0])->significance() * 0.5;
 		size_t count = 1;
 		sig_.erase(it);
 
@@ -148,6 +173,8 @@ void MicroBlock<T>::process(int factor) {
 			}
 		}
 
+		if (count < params::MIN_TAIL) continue;
+
 		//bool has_added = false;
 
 		// Generate all tail combinations
@@ -158,10 +185,10 @@ void MicroBlock<T>::process(int factor) {
 		// Now pick t most significant 
 		for (auto i = 0U; i < count; ++i) {
 			tvec.push_back(signodes[i]);
-			sig += get(signodes[i])->significance();
+			//sig += get(signodes[i])->significance();
 		}
 
-		sig = sig / static_cast<float>(tvec.size());
+		sig = 1.0f - ((float)f * sigdelta);//sig / static_cast<float>(tvec.size());
 		/*if (f == 0) {
 			sig_delta = 1.0f - sig;
 			sig = 1.0f;
@@ -172,9 +199,9 @@ void MicroBlock<T>::process(int factor) {
 		Tail::make(tvec, tail);
 
 		if (!query(tail, tvec, sig)) {
-			if (Fabric::counter() < 12000) {
+			//if (Fabric::counter() < 12000) {
 				add(tail, sig);
-			}
+			//}
 		}
 	}
 
@@ -182,12 +209,12 @@ void MicroBlock<T>::process(int factor) {
 	sig_.clear();
 	unlock();
 
-	if (Fabric::counter() < 14000) {
+	//if (Fabric::counter() < 14000) {
 		if ((Fabric::counter() - lastgarbage_) > 1000) {
 			garbage();
 			lastgarbage_ = Fabric::counter();
 		}
-	}
+	//}
 }
 
 
@@ -195,6 +222,7 @@ void MicroBlock<T>::process(int factor) {
 template<typename T>
 void MicroBlock<T>::garbage() {
 	auto i = tails_.begin();
+	size_t count = 0;
 	while (i != tails_.end()) {
 		//if (maxgarbage == 0) break;
 		//--maxgarbage;
@@ -206,6 +234,7 @@ void MicroBlock<T>::garbage() {
 				//std::cout << "GARBAGE\n";
 				i = tails_.erase(i);
 				h->reset();
+				++count;
 				// ++cullcount__;
 			} else {
 				++i;
@@ -213,7 +242,7 @@ void MicroBlock<T>::garbage() {
 		//}
 	}
 
-	std::cout << "Free: " << freed_.size() << std::endl;
+	std::cout << "Free: " << count << std::endl;
 }
 
 
@@ -239,7 +268,7 @@ bool MicroBlock<T>::query(const Tail &tail, const vector<Node> &tvec, float sig)
 	if (get(tail, hnode)) {
 		//if (hnode == dharc::null_n) return true;
 		Harc *h = get(hnode);
-		h->pulse(sig);
+		if (!h->pulse(sig)) return true;
 		//addToQueue(hnode, h);
 
 		// Strong enough to be important?

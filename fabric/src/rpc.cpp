@@ -47,71 +47,21 @@ int rpc_version() {
 	return static_cast<int>(Command::end);
 }
 
-/* rpc::Command::unique */
-Node rpc_makeharc() {
-	return dharc::null_n;
-}
-
-Node rpc_makeinputblock(const size_t &w, const size_t &h) {
-	Node res;
-	Fabric::createInputBlock(w, h, res);
-	return res;
-}
-
-size_t rpc_harccount() {
-	return Fabric::harcCount();
-}
-
-size_t rpc_branchcount() {
-	return Fabric::branchCount();
-}
-
-size_t rpc_followcount() {
-	return Fabric::followCount();
-}
-
-float rpc_follows() {
-	return Fabric::followsPerSecond();
-}
-
-float rpc_activations() {
-	return Fabric::activationsPerSecond();
-}
-
-float rpc_processed() {
-	return Fabric::processedPerSecond();
-}
-
-bool rpc_activate(const Node &node, const float &value) {
+bool rpc_write2dsigned(const size_t &regid, const vector<int8_t> &values, const size_t &uw, const size_t &uh) {
+	Fabric::write2DSigned(static_cast<dharc::RegionID>(regid), values, uw, uh);
 	return true;
 }
 
-bool rpc_writeblock(const Node &b,
-						const vector<float> &values) {
-	Fabric::writeInputBlock(b, values);
-	return true;
+vector<int8_t> rpc_reform2dsigned(const size_t &regid, const size_t &uw, const size_t &uh) {
+	return Fabric::reform2DSigned(static_cast<dharc::RegionID>(regid), uw, uh);
 }
-
-vector<pair<float,Node>> rpc_readstrong(const Node &b, const float &a) {
-	return Fabric::strongestAssociated(b, a);
-}
-
 
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
 	rpc_version,
-	rpc_harccount,
-	rpc_branchcount,
-	rpc_followcount,
-	rpc_follows,
-	rpc_activations,
-	rpc_processed,
-	rpc_makeharc,
-	rpc_makeinputblock,
-	rpc_activate,
-	rpc_writeblock,
-	rpc_readstrong
+	rpc_write2dsigned,
+	rpc_reform2dsigned
 };
 };  // namespace
 

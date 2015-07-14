@@ -6,8 +6,9 @@
 #define DHARC_SENSE_HPP_
 
 #include "dharc/rpc.hpp"
+#include "dharc/regions.hpp"
 
-using std::pair;
+using dharc::RegionID;
 
 namespace dharc {
 
@@ -16,12 +17,12 @@ class Sense : public dharc::Rpc {
 	Sense(const char *addr, int port);
 	~Sense();
 
-	void makeInputBlock(size_t w, size_t h, Node &b);
+	void write2DSigned(
+		RegionID regid,
+		const vector<int8_t> &values,
+		size_t uw, size_t uh);
 
-	void writeInput(const Node &b,
-					const vector<float> &values);
-
-	vector<pair<float,Node>> readStrong(const Node &b, float active);
+	vector<int8_t> reform2DSigned(RegionID regid, size_t uw, size_t uh);
 };
 
 };

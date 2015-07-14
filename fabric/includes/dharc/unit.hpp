@@ -23,15 +23,19 @@ namespace fabric {
  * immediate neighbouring blocks to make significant connections, although
  * local is given priority.
  */
-template <typename T>
-class MicroBlock {
+template <
+size_t USIZE,
+size_t SMAX,
+size_t TMAX
+>
+class Unit {
 	friend dharc::Fabric;
 
 	public:
-	typedef T params;
+	Unit(Unit *neighbours[8]);
+	~Unit();
 
-	MicroBlock(MacroBlock<T> *macro, uint64_t blockid);
-	~MicroBlock();
+	void spatialMatch(float *data, size_t distance
 
 	inline Harc *get(const Node &n) {
 		assert( n.harc() < params::MAX_BLOCK_HARCS );

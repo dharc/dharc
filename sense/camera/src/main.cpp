@@ -274,9 +274,6 @@ int sdl_filter(const SDL_Event * event)
 int main(int argc, char *argv[]) {
 	Sense sense("localhost", 7878);
 
-	Node cam;
-	sense.makeInputBlock(320, 240, cam);
-
 	atexit(SDL_Quit);
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
         return 1;
@@ -296,8 +293,10 @@ int main(int argc, char *argv[]) {
 	init_device();
 	start_capturing();
 
-	vector<float> data;
+	vector<int8_t> data;
 	data.resize(320 * 240);
+	vector<uint8_t> ldata;
+	ldata.resize(320 * 240);
 
 	SDL_Event event;
 	bool running = true;
@@ -337,21 +336,34 @@ int main(int argc, char *argv[]) {
 
 		read_frame();
 
-		constexpr auto BWIDTH = 10U;
-
-		vector<pair<float,Node>> strong = sense.readStrong(cam, 10.0);
+		vector<int8_t> rdata = sense.reform2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
 
 		for (auto i = 0U; i < data.size(); ++i) {
-			unsigned char y = *((char*)buffers[0].start + (2*i));
+			int y = *((unsigned char*)buffers[0].start + (2*i));
 
-			data[i] = static_cast<float>(y) / 255.0f;
+			data[i] = (y - (int)ldata[i]) / 2;
+			ldata[i] = y;
 			buffer_sdl[i*3] = 0;
 			buffer_sdl[(i*3)+1] = 0;
 			buffer_sdl[(i*3)+2] = 0;
-		}
-		sense.writeInput(cam, data);
 
-		size_t hlevel_harc = 0;
+			//if (data[i] < 0) {
+			//	buffer_sdl[i*3] = (0 - data[i]) * 2;
+			//} else {
+			//	buffer_sdl[i*3 + 1] = data[i] * 2;
+			//}
+		}
+		sense.write2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, data, 5, 5);
+
+		assert(rdata.size() == 320 * 240);
+
+		for (auto i = 0U; i < rdata.size(); ++i) {
+			buffer_sdl[i*3] = 128 + rdata[i];
+			buffer_sdl[i*3 + 1] = 128 + rdata[i];
+			buffer_sdl[i*3 + 2] = 128 + rdata[i];
+		}
+
+		/*size_t hlevel_harc = 0;
 
 		for (auto i : strong) {
 			if (i.second.harc() >= BWIDTH*BWIDTH) {
@@ -380,7 +392,7 @@ int main(int argc, char *argv[]) {
 
 		if (hlevel_harc > 0) {
 			std::cout << "High-level HARCs: " << hlevel_harc << "\n";
-		}
+		}*/
 
 		SDL_Surface *screen = SDL_GetVideoSurface();
 		if (SDL_BlitSurface(data_sf, NULL, screen, NULL) == 0)

@@ -9,27 +9,15 @@
 #include <chrono>
 #include <utility>
 #include <atomic>
-#include <unordered_map>
-#include <array>
 #include <cassert>
-#include <set>
 #include <mutex>
 
-#include "dharc/node.hpp"
-#include "dharc/harc.hpp"
-#include "dharc/tail.hpp"
-#include "dharc/macroblock.hpp"
+#include "dharc/region.hpp"
 
 using std::vector;
-using std::array;
-using std::set;
-using std::pair;
-using std::unordered_map;
 using std::chrono::time_point;
 using std::size_t;
-using dharc::fabric::Harc;
-using dharc::Tail;
-using dharc::fabric::MacroBlockBase;
+using dharc::fabric::RegionBase;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
@@ -46,78 +34,17 @@ namespace dharc {
  *     per instance of the fabric server.
  */
 class Fabric {
-	friend dharc::fabric::Harc;
-	// friend dharc::fabric::MicroBlock;
-
 	public:
 	Fabric() = delete;
 
 	static void initialise();
 	static void finalise();
 
+	static void write2DSigned(RegionID regid, const vector<int8_t> &v, size_t uw, size_t uh);
 
-	/**
-	 * Send an activation pulse to a Harc at global level.
-	 */
-	static void pulse(const Node &n);
+	static vector<int8_t> reform2DSigned(RegionID regid, size_t uw, size_t uh);
 
-
-	/**
-	 * Make block of harcs that have no tails or heads.
-	 * @param count Number of harcs to create.
-	 * @param first Filled with first harc node.
-	 * @param last Filled with last (first+count).
-	 */
-	static void createInputBlock(size_t w, size_t h, Node &base);
-
-	static void writeInputBlock(const Node &b, const vector<float> &v);
-
-	static void createOutputBlock(size_t width, size_t height, Node &base);
-
-	static void readOutputBlock(const Node &b, vector<float> &v);
-
-	static vector<pair<float,Node>> strongestAssociated(const Node &b, float a) {
-		return getMacro(b)->strongestAssociated(a);
-	}
-
-
-	/**
-	 * Statistic: Number of hyperarcs.
-	 * @return Total hyperarcs in the fabric
-	 */
-	static size_t branchCount()        { return branchcount__; }
-
-
-
-	/**
-	 * Statistic: Number of nodes.
-	 *     Some of these nodes may not be involved in a hyperarc.
-	 * @return Total number of allocated nodes.
-	 */
-	static size_t harcCount();
-
-	static size_t followCount()        { return followcount__; }
-
-
-	/**
-	 * Statistic: Approximate number of queries per second.
-	 */
-	static float  followsPerSecond() {
-		return (static_cast<float>(followcount__) /
-				static_cast<float>(counter__)) *
-				static_cast<float>(counterResolution());
-	}
-
-
-
-	/**
-	 * Statistic: Approximate number of hyperarc modifications per second.
-	 */
-	static float  activationsPerSecond() {
-		return (static_cast<float>(activatecount__) /
-				static_cast<float>(counter__)) *
-				static_cast<float>(counterResolution());
-	}
+	static RegionBase *getRegion(RegionID regid);
 
 	/**
 	 * Statistic: Approximate number of hyperarc modifications per second.
@@ -146,26 +73,15 @@ class Fabric {
 
 
 	private:
-	static std::atomic<size_t> branchcount__;
-	static std::atomic<size_t> cullcount__;
-	static std::atomic<size_t> activatecount__;
-	static std::atomic<size_t> followcount__;
 	static std::atomic<size_t> processed__;
 
 	static std::atomic<unsigned long long> counter__;
 
-	static vector<MacroBlockBase*> blocks__;
+	static vector<RegionBase*> regions__;
+	//static vector<vector<float>> region_inputs__;
 
 	static void counterThread();
 	static void processThread();
-
-	static MacroBlockBase *getMacro(const Node &b);
-	/*inline MicroBlock *getMicro(const Node &b) {
-		return getMacro(b)->getMicro(b);
-	}
-	inline Harc *getHarc(const Node &h) {
-		return getMacro(h)->getMicro(h)->getHarc(h);
-	}*/
 };
 };  // namespace dharc
 

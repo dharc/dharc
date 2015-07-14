@@ -25,7 +25,7 @@ add_custom_target(tests)
 
 ADD_SUBDIRECTORY(common)
 ADD_SUBDIRECTORY(fabric)
-ADD_SUBDIRECTORY(monitor)
+#ADD_SUBDIRECTORY(monitor)
 ADD_SUBDIRECTORY(sense)
 #ADD_SUBDIRECTORY(architect)
 

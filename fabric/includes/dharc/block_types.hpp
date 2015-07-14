@@ -8,11 +8,11 @@
 namespace dharc {
 namespace fabric {
 struct RawSense {
-	static constexpr size_t BLOCK_WIDTH = 10;
+	static constexpr size_t BLOCK_WIDTH = 80;
 	static constexpr size_t MAX_BLOCK_HARCS =   BLOCK_WIDTH *
 												BLOCK_WIDTH *
 												200;
-	static constexpr size_t MAX_SIGNIFICANT = 150;
+	static constexpr size_t MAX_SIGNIFICANT = 6000;
 	static constexpr float SIG_THRESHOLD = 0.0001;
 	static constexpr size_t MAX_TAIL = 10;
 	static constexpr size_t MIN_TAIL = 3;

@@ -44,7 +44,8 @@ static void *lock(void *data, void **p_pixels)
     return NULL; /* picture identifier, not needed here */
 }
 
-vector<float> ddata;
+vector<int8_t> ddata;
+vector<uint8_t> ldata;
 Sense *sense;
 Node dblock;
 
@@ -52,7 +53,7 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 {
     ctx *pctx = (ctx*)data;
 
-	vector<pair<float,Node>> strong = sense->readStrong(dblock, 5.0);
+	vector<int8_t> rdata = sense->reform2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
 
     /* VLC just rendered the video, but we can also render stuff */
     uint16_t *pixels = (uint16_t*)*p_pixels;
@@ -65,36 +66,22 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 		float g = (float)((y >> 5) & 0x3f) / 63.0f * 255.0f;
 		float b = (float)(y & 0x1f) / 31.0f * 255.0f;
 
-		ddata[i] = ((0.257 * r) + (0.504 * g) + (0.098 * b) + 16.0) / 255.0f;
+		int dy = (int)((0.257 * r) + (0.504 * g) + (0.098 * b) + 16.0);
+		ddata[i] = (dy - (int)ldata[i]) / 2;
+		ldata[i] = dy;
 
 		//ddata[i] = static_cast<float>(y & 0x001f) / 31.0f;
 	}
 
-	sense->writeInput(dblock, ddata);
+	sense->write2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, ddata, 5, 5);
 
-	constexpr auto BWIDTH = 10U;
+	assert(rdata.size() == 320 * 240);
 
-	for (auto i : strong) {
-		if (i.second.harc() >= BWIDTH*BWIDTH) {
-			//++hlevel_harc;
-			continue;
-		}
-
-		size_t bx = i.second.macroX() * BWIDTH;
-		size_t by = i.second.macroY() * BWIDTH;
-
-		bx += i.second.harc() % BWIDTH;
-		by += i.second.harc() / BWIDTH;
-
-		if (bx >= VIDEOWIDTH || by >= VIDEOHEIGHT) {
-			std::cout << "FUCKUP\n";
-		}
-
-		size_t ix = (by * VIDEOWIDTH) + bx;
-		uint16_t colour = (unsigned char)(255.0f * i.first);
-		if ((pixels[ix] & 0x001f) < (colour >> 3)) {
-			pixels[ix] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
-		}
+	for (auto i = 0U; i < rdata.size(); ++i) {
+		uint16_t colour = 128 + rdata[i];
+		//uint16_t colour = (ldata[i] >= 0) ? ldata[i] : 0 - ldata[i];
+		//colour *= 2;
+		pixels[i] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
 	}
 
     SDL_UnlockSurface(pctx->surf);
@@ -113,8 +100,9 @@ static void display(void *data, void *id)
 int main(int argc, char *argv[])
 {
 	sense = new Sense("localhost", 7878);
-	sense->makeInputBlock(320, 240, dblock);
+
 	ddata.resize(320*240);
+	ldata.resize(320*240);
 
     libvlc_instance_t *libvlc;
     libvlc_media_t *m;
@@ -170,7 +158,7 @@ int main(int argc, char *argv[])
      *  Initialise libVLC
      */
     libvlc = libvlc_new(vlc_argc, vlc_argv);
-    m = libvlc_media_new_path(libvlc, argv[1]);
+    m = libvlc_media_new_location(libvlc, argv[1]);
     mp = libvlc_media_player_new_from_media(m);
     libvlc_media_release(m);
 

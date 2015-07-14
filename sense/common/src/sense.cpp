@@ -7,7 +7,6 @@
 #include <vector>
 
 using std::vector;
-using dharc::Node;
 using dharc::Sense;
 using std::pair;
 
@@ -15,16 +14,14 @@ Sense::Sense(const char *addr, int port) : Rpc(addr, port) {}
 
 Sense::~Sense() {}
 
-void Sense::makeInputBlock(size_t w, size_t h, Node &b) {
-	b = send<Command::makeinputblock>(w, h);
+void Sense::write2DSigned(
+		RegionID regid,
+		const vector<int8_t> &values,
+		size_t uw, size_t uh) {
+	send<Command::write2dsigned>(static_cast<size_t>(regid), values, uw, uh);
 }
 
-void Sense::writeInput(const Node &b,
-						const vector<float> &values) {
-	send<Command::writeblock>(b, values);
-}
-
-vector<pair<float,Node>> Sense::readStrong(const Node &b, float active) {
-	return send<Command::readstrong>(b, active);
+vector<int8_t> Sense::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
+	return send<Command::reform2dsigned>(static_cast<size_t>(regid), uw, uh);
 }
 

@@ -19,46 +19,25 @@
 #include <iostream>
 #include <mutex>
 
-#include "dharc/harc.hpp"
-#include "dharc/block_types.hpp"
+#include "dharc/region.hpp"
 
-#include "macroblock.cpp"
+#include "region.cpp"
 
 using dharc::Fabric;
-using dharc::fabric::Harc;
-using dharc::Node;
 using std::vector;
 using std::list;
 using std::atomic;
-using dharc::Tail;
 using std::mutex;
 using std::unique_lock;
 using std::condition_variable;
-using dharc::fabric::MacroBlockBase;
-using dharc::fabric::MacroBlock;
-using dharc::fabric::RawSense;
+using dharc::fabric::RegionBase;
 
-
-/*inline bool Fabric::harcCompare(const Node &a, const Node &b) {
-	return get(a)->significance() > get(b)->significance();
-}
-
-
-inline bool Fabric::harcMin(const Node &a, const Node &b) {
-	if (a == dharc::null_n) return true;
-	if (b == dharc::null_n) return false;
-	return get(a)->significance() < get(b)->significance();
-}*/
 
 
 atomic<unsigned long long> Fabric::counter__(0);
-atomic<size_t> Fabric::branchcount__(0);
-atomic<size_t> Fabric::cullcount__(0);
-atomic<size_t> Fabric::activatecount__(0);
-atomic<size_t> Fabric::followcount__(0);
 atomic<size_t> Fabric::processed__(0);
+vector<RegionBase*> Fabric::regions__;
 
-vector<MacroBlockBase*> Fabric::blocks__;
 
 
 
@@ -75,8 +54,8 @@ void Fabric::counterThread() {
 
 void Fabric::processThread() {
 	while (true) {
-		for (auto i : blocks__) {
-			i->process(50);
+		for (auto i : regions__) {
+			i->process();
 		}
 		//std::this_thread::sleep_for(
 			//std::chrono::milliseconds(10));
@@ -87,6 +66,11 @@ void Fabric::processThread() {
 
 
 void Fabric::initialise() {
+	regions__.resize(1);
+
+	regions__[static_cast<size_t>(RegionID::SENSE_CAMERA_0_LUMINANCE)] =
+		new Region<50,64,48,10,20>();
+
 	std::thread t(counterThread);
 	t.detach();
 
@@ -104,37 +88,85 @@ void Fabric::finalise() {
 
 
 
-size_t Fabric::harcCount() {
-	size_t res = 0;
-	for (auto i : blocks__) {
-		res += i->harcCount();
+vector<int8_t> Fabric::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
+	vector<int8_t> res;
+	RegionBase *reg = getRegion(regid);
+	if (reg == nullptr) return res;
+
+	const auto usx = reg->unitsX();
+	const auto usy = reg->unitsY();
+	const auto usize = reg->unitSize();
+
+	vector<float> out;
+	out.resize(usize * usx * usy);
+	reg->reform(out);
+	res.resize(usx * uw * usy * uh);
+
+	for (auto i = 0U; i < res.size(); ++i) {
+		const auto y = i / (uw * usx);
+		const auto x = i % (uw * usx);
+		const auto uy = y / uh;
+		const auto oy = y % uh;
+		const auto ux = x / uw;
+		const auto ox = x % uw;
+		const auto uix = ux + (uy * usx);
+		const auto j = uix * usize + (ox * 2) + (oy * uw * 2);
+
+		res[i] = (int8_t)((out[j] * 128.0f) + (0.0f - (out[j + 1] * 128.0f)));
+		//res[i] = (uint8_t)((out[j]) * 255.0f);
 	}
+
 	return res;
 }
 
 
 
-MacroBlockBase *Fabric::getMacro(const Node &b) {
-	assert(b.macro() < blocks__.size());
-	return blocks__[b.macro()];
+void Fabric::write2DSigned(
+		RegionID regid,
+		const vector<int8_t> &v,
+		size_t uw, size_t uh) {
+	RegionBase *reg = getRegion(regid);
+	if (reg == nullptr) return;
+
+	const auto usx = reg->unitsX();
+	const auto usy = reg->unitsY();
+	const auto usize = reg->unitSize();
+
+	assert(usize == 2 * uw * uh);
+	assert(v.size() == usx * usy * usize / 2);
+
+	vector<float> input;
+	input.resize(usx * usy * usize);
+
+	for (auto i = 0U; i < v.size(); ++i) {
+		const auto y = i / (uw * usx);
+		const auto x = i % (uw * usx);
+		const auto uy = y / uh;
+		const auto oy = y % uh;
+		const auto ux = x / uw;
+		const auto ox = x % uw;
+		const auto uix = ux + (uy * usx);
+		const auto j = uix * usize + (ox * 2) + (oy * uw * 2);
+
+		if (v[i] > 0) {
+			input[j] = (float)v[i] / 128.0f;
+			input[j + 1] = 0.0f;
+		} else {
+			input[j+1] = (float)(0 - v[i]) / 128.0f;
+			input[j] = 0.0f;
+		}
+	}
+
+	reg->write(input);
 }
 
 
 
-void Fabric::createInputBlock(size_t w, size_t h, Node &b) {
-	b = Node(blocks__.size(), 0, 0, 0);
-	blocks__.push_back(new MacroBlock<RawSense>(b, w, h));
+RegionBase *Fabric::getRegion(RegionID regid) {
+	if (static_cast<size_t>(regid) >= regions__.size()) {
+		return nullptr;
+	} else {
+		return regions__[static_cast<size_t>(regid)];
+	}
 }
-
-
-
-void Fabric::writeInputBlock(const Node &b, const vector<float> &v) {
-	getMacro(b)->writeInput(v);
-}
-
-void Fabric::pulse(const Node &n) {
-	getMacro(n)->pulse(n);
-}
-
-
 

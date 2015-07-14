@@ -28,17 +28,8 @@ namespace rpc {
 enum struct Command : int {
 	nop,
 	version,
-	harccount,
-	branchcount,
-	followcount,
-	followps,
-	activeps,
-	procps,
-	makeharc,
-	makeinputblock,
-	activate,
-	writeblock,
-	readstrong,
+	write2dsigned,
+	reform2dsigned,
 	end
 };
 
@@ -49,17 +40,8 @@ enum struct Command : int {
 typedef tuple<
 	bool(*)(),  // nop
 	int(*)(),  // version
-	size_t(*)(),  // harccount
-	size_t(*)(),  // branchcount
-	size_t(*)(),  // followcount
-	float(*)(),  // followps
-	float(*)(),  // activeps
-	float(*)(),  // procps
-	Node(*)(),  // makeharc
-	Node(*)(const size_t &, const size_t &),  // makeinputblock
-	bool(*)(const Node &, const float &),  // activate
-	bool(*)(const Node &, const vector<float>&),  // writeblock
-	vector<pair<float,Node>>(*)(const Node &b, const float &a)  // readstrong
+	bool(*)(const size_t &, const vector<int8_t> &, const size_t &, const size_t &),
+	vector<int8_t>(*)(const size_t &, const size_t &, const size_t &)
 > commands_t;
 
 };  // namespace rpc

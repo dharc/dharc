@@ -20,11 +20,11 @@ namespace dharc {
  *     each other.
  */
 struct Node {
-	static constexpr uint64_t HARC_MASK = 0xFFFF;
-	static constexpr uint64_t MACRO_X_MASK = 0xFFFF00000000;
-	static constexpr uint64_t MACRO_Y_MASK = 0xFFFF0000;
+	static constexpr uint64_t HARC_MASK        = 0x00000000FFFFFFFF;
+	static constexpr uint64_t MACRO_X_MASK     = 0x0000FF0000000000;
+	static constexpr uint64_t MACRO_Y_MASK     = 0x000000FF00000000;
 	static constexpr uint64_t MACRO_BLOCK_MASK = 0xFFFF000000000000;
-	static constexpr uint64_t MICRO_BLOCK_MASK = 0xFFFFFFFFFFFF0000;
+	static constexpr uint64_t MICRO_BLOCK_MASK = 0xFFFFFFFF00000000;
 
 	uint64_t value;
 
@@ -33,7 +33,7 @@ struct Node {
 	constexpr explicit Node(uint64_t v) : value(v) {}
 
 	constexpr Node(uint64_t macro, uint64_t x, uint64_t y, uint64_t micro) :
-		value((macro << 48) | (x << 32) | (y << 16) | micro) {}
+		value((macro << 48) | (x << 40) | (y << 32) | micro) {}
 
 	/**
 	 * Generate a Node from a string.
@@ -62,8 +62,8 @@ struct Node {
 	explicit operator std::string() const;
 
 	inline size_t macro() const { return value >> 48; }
-	inline size_t macroX() const { return (value & MACRO_X_MASK) >> 32; }
-	inline size_t macroY() const { return (value & MACRO_Y_MASK) >> 16; }
+	inline size_t macroX() const { return (value & MACRO_X_MASK) >> 40; }
+	inline size_t macroY() const { return (value & MACRO_Y_MASK) >> 32; }
 	inline size_t harc() const { return value & HARC_MASK; }
 	inline size_t micro() const { return value & MICRO_BLOCK_MASK; }
 };

@@ -25,7 +25,9 @@ class Harc {
 	bool query(const Node &node);
 
 	void activateConstant(float value);
-	void pulse(float s);
+	bool pulse(float s);
+
+	inline float activeDelta(float a) const { return activation_ - a; }
 
 	float significance() const;
 
@@ -35,7 +37,7 @@ class Harc {
 	void notAvailable() { lastactive_ = 1; }
 
 	bool isWeak() const {
-		return ((lastActive() > 2000.0f) && (strength_ <= 0.1f));
+		return ((lastActive() > 2000.0f) && (strength_ <= 0.2f));
 	}
 
 	void reset();
