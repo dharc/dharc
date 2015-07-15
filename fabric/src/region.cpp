@@ -47,11 +47,11 @@ size_t TMAX
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 initUnit(size_t ix) {
 	for (auto i = 0U; i < kSpatialLinks; ++i) {
-		units_[ix].slinks[i] = 255;
+		units_[ix].slinks[i] = 1;
 	}
 
 	for (auto i = 0U; i < kTemporalLinks; ++i) {
-		units_[ix].tlinks[i] = 255;
+		units_[ix].tlinks[i] = 1;
 	}
 
 	for (auto i = 0U; i < SMAX; ++i) {
