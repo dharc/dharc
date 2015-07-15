@@ -28,8 +28,8 @@ namespace rpc {
 enum struct Command : int {
 	nop,
 	version,
-	write2dsigned,
-	reform2dsigned,
+	write2d,
+	reform2d,
 	end
 };
 
@@ -40,8 +40,8 @@ enum struct Command : int {
 typedef tuple<
 	bool(*)(),  // nop
 	int(*)(),  // version
-	bool(*)(const size_t &, const vector<int8_t> &, const size_t &, const size_t &),
-	vector<int8_t>(*)(const size_t &, const size_t &, const size_t &)
+	bool(*)(const size_t &, const vector<uint8_t> &, const size_t &, const size_t &),
+	vector<uint8_t>(*)(const size_t &, const size_t &, const size_t &)
 > commands_t;
 
 };  // namespace rpc

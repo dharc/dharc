@@ -44,9 +44,8 @@ static void *lock(void *data, void **p_pixels)
     return NULL; /* picture identifier, not needed here */
 }
 
-vector<int8_t> ddata;
+vector<uint8_t> ddata;
 vector<uint8_t> ldata;
-vector<int> odata;
 Sense *sense;
 Node dblock;
 
@@ -54,7 +53,7 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 {
     ctx *pctx = (ctx*)data;
 
-	vector<int8_t> rdata = sense->reform2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
+	vector<uint8_t> rdata = sense->reform2D(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
 
     /* VLC just rendered the video, but we can also render stuff */
     uint16_t *pixels = (uint16_t*)*p_pixels;
@@ -68,13 +67,13 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 		float b = (float)(y & 0x1f) / 31.0f * 255.0f;
 
 		int dy = (int)((0.257 * r) + (0.504 * g) + (0.098 * b) + 16.0);
-		ddata[i] = (dy - (int)ldata[i]) / 2;
+		ddata[i] = (std::abs(dy - ldata[i]) & 0xF0) + (dy >> 4);
 		ldata[i] = dy;
 
 		//ddata[i] = static_cast<float>(y & 0x001f) / 31.0f;
 	}
 
-	sense->write2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, ddata, 5, 5);
+	sense->write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, ddata, 5, 5);
 
 	assert(rdata.size() == 320 * 240);
 
@@ -85,15 +84,9 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 		//uint16_t colour = odata[i];
 		//uint16_t colour = (ldata[i] >= 0) ? ldata[i] : 0 - ldata[i];
 		//colour *= 2;
-		//pixels[i] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
 
-		if (rdata[i] < 0) {
-			uint16_t colour = (0 - rdata[i]) * 2;
-			pixels[i] = ((colour >> 3));
-		} else {
-			uint16_t colour = rdata[i] * 2;
-			pixels[i] = ((colour >> 2) << 5);
-		}
+		uint16_t colour = rdata[i];
+		pixels[i] = (colour >> 3) | ((colour >> 2) << 5) | ((colour >> 3) << 11);
 	}
 
     SDL_UnlockSurface(pctx->surf);
@@ -115,11 +108,6 @@ int main(int argc, char *argv[])
 
 	ddata.resize(320*240);
 	ldata.resize(320*240);
-	odata.resize(320*240);
-
-	for (auto i = 0U; i < odata.size(); ++i) {
-		odata[i] = 128;
-	}
 
     libvlc_instance_t *libvlc;
     libvlc_media_t *m;

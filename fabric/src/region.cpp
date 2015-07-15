@@ -47,14 +47,15 @@ size_t TMAX
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 initUnit(size_t ix) {
 	for (auto i = 0U; i < kSpatialLinks; ++i) {
-		units_[ix].slinks[i] = 128;
+		units_[ix].slinks[i] = 255;
 	}
 
 	for (auto i = 0U; i < kTemporalLinks; ++i) {
-		units_[ix].tlinks[i] = 128;
+		units_[ix].tlinks[i] = 255;
 	}
 
 	for (auto i = 0U; i < SMAX; ++i) {
+		units_[ix].scontrib[i] = 1.0f / (255.0f * (float)USIZE);
 		units_[ix].spatial[i] = 0.0f;
 	}
 
@@ -78,7 +79,7 @@ void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 write(const vector<float> &v) {
 	assert(v.size() == kInputSize);
 
-	clearInput();
+	//clearInput();
 
 	for (auto i = 0U; i < v.size(); ++i) {
 		inputs_[i] += (1.0f - inputs_[i]) * v[i];
@@ -102,7 +103,7 @@ process() {
 		//adjustSpatial(i, s);
 	}
 
-	//clearInput();
+	clearInput();
 
 	for (auto i = 0U; i < kUnitCount; ++i) {
 		decayTemporal(i);
@@ -138,15 +139,15 @@ reform(vector<float> &v) {
 			}
 		}
 
-		if (max < 0.0001) {
+		/*if (max < 0.0001) {
 			for (auto j = 0U; j < USIZE; ++j) {
 				v[i * USIZE + j] = 0.0f;
 			}
-		} else {
+		} else {*/
 			for (auto j = 0U; j < USIZE; ++j) {
 				v[i * USIZE + j] = ((float)units_[i].slinks[j * SMAX + maxix] / 255.0f);
 			}
-		}
+		//}
 	}
 }
 
@@ -194,27 +195,33 @@ adjustSpatial(size_t ix, size_t s) {
 	const auto ibase = ix * USIZE;
 
 	for (auto j = 0U; j < SMAX; ++j) {
+		float contrib = 0.0f;
+
 		if (j == s) {
 			for (auto i = 0U; i < USIZE; ++i) {
-				if (inputs_[ibase + i] > units_[ix].modulation * 0.1) {
-					if (units_[ix].slinks[i * SMAX + j] < 255) {
-						++units_[ix].slinks[i * SMAX + j];
+				if (inputs_[ibase + i] > (units_[ix].modulation * kLearnScale)) {
+					if (units_[ix].slinks[i * SMAX + s] < 255) {
+						++units_[ix].slinks[i * SMAX + s];
 					}
 				}/* else {
-					if (units_[ix].slinks[i * SMAX + j] > 1) {
-						units_[ix].slinks[i * SMAX + j] -= 2;
+					if (units_[ix].slinks[i * SMAX + s] > 0) {
+						--units_[ix].slinks[i * SMAX + s];
 					}
 				}*/
+				contrib += units_[ix].slinks[i * SMAX + s];
 			}
 		} else {
 			for (auto i = 0U; i < USIZE; ++i) {
-				if (inputs_[ibase + i] > units_[ix].modulation * 0.5) {
-					if (units_[ix].slinks[i * SMAX + j] > 0) {
-						--units_[ix].slinks[i * SMAX + j];
+				if (inputs_[ibase + i] > (units_[ix].modulation * kLearnScale)) {
+					if (units_[ix].slinks[i * SMAX + j] > 1) {
+						units_[ix].slinks[i * SMAX + j] -= 2;
 					}
 				}
+				contrib += units_[ix].slinks[i * SMAX + j];
 			}
 		}
+		//NOTE: Should never be zero.
+		units_[ix].scontrib[j] = 1.0f / contrib;
 	}
 
 	/*for (auto i = 0U; i < USIZE; ++i) {
@@ -251,7 +258,6 @@ size_t TMAX
 size_t Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 activateSpatial(size_t ix) {
 	const auto ibase = ix * USIZE;
-	const auto contrib = (1.0f / (float)USIZE) * 0.8;
 	float depol[SMAX];
 
 	for (auto i = 0U; i < SMAX; ++i) {
@@ -260,8 +266,8 @@ activateSpatial(size_t ix) {
 
 	for (auto i = 0U; i < USIZE; ++i) {
 		for (auto j = 0U; j < SMAX; ++j) {
-			depol[j] += inputs_[ibase + i] * contrib *
-						((float)units_[ix].slinks[i * SMAX + j] / 255.0f);
+			depol[j] += inputs_[ibase + i] * units_[ix].scontrib[j] *
+						(float)units_[ix].slinks[i * SMAX + j];
 		}
 	}
 
@@ -275,16 +281,17 @@ activateSpatial(size_t ix) {
 	}
 
 	// Must at least reach a threshold value.
-	if (max > units_[ix].modulation * 0.1) {
+	if (max > (units_[ix].modulation * kThresholdScale)) {
+		// Activation strength inverse of threshold.
 		units_[ix].spatial[maxix] = 1.0f - units_[ix].modulation;
 
 		// Activate any others that are a close enough match
-		for (auto i = 0U; i < SMAX; ++i) {
+		/*for (auto i = 0U; i < SMAX; ++i) {
 			if (i == maxix) continue;
-			if (depol[i] >= (max - contrib)) {
+			if (depol[i] >= (max - (1.0f / USIZE))) {
 				units_[ix].spatial[i] = 1.0f - units_[ix].modulation;
 			}
-		}
+		}*/
 
 		adjustSpatial(ix, maxix);
 	}

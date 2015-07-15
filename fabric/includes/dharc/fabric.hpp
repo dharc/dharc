@@ -40,9 +40,9 @@ class Fabric {
 	static void initialise();
 	static void finalise();
 
-	static void write2DSigned(RegionID regid, const vector<int8_t> &v, size_t uw, size_t uh);
+	static void write2D(RegionID regid, const vector<uint8_t> &v, size_t uw, size_t uh);
 
-	static vector<int8_t> reform2DSigned(RegionID regid, size_t uw, size_t uh);
+	static vector<uint8_t> reform2D(RegionID regid, size_t uw, size_t uh);
 
 	static RegionBase *getRegion(RegionID regid);
 

@@ -17,12 +17,12 @@ class Sense : public dharc::Rpc {
 	Sense(const char *addr, int port);
 	~Sense();
 
-	void write2DSigned(
+	void write2D(
 		RegionID regid,
-		const vector<int8_t> &values,
+		const vector<uint8_t> &values,
 		size_t uw, size_t uh);
 
-	vector<int8_t> reform2DSigned(RegionID regid, size_t uw, size_t uh);
+	vector<uint8_t> reform2D(RegionID regid, size_t uw, size_t uh);
 };
 
 };

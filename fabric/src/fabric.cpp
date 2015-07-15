@@ -69,7 +69,7 @@ void Fabric::initialise() {
 	regions__.resize(1);
 
 	regions__[static_cast<size_t>(RegionID::SENSE_CAMERA_0_LUMINANCE)] =
-		new Region<50,64,48,10,20>();
+		new Region<25,64,48,10,20>();
 
 	std::thread t(counterThread);
 	t.detach();
@@ -88,8 +88,8 @@ void Fabric::finalise() {
 
 
 
-vector<int8_t> Fabric::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
-	vector<int8_t> res;
+vector<uint8_t> Fabric::reform2D(RegionID regid, size_t uw, size_t uh) {
+	vector<uint8_t> res;
 	RegionBase *reg = getRegion(regid);
 	if (reg == nullptr) return res;
 
@@ -110,9 +110,9 @@ vector<int8_t> Fabric::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
 		const auto ux = x / uw;
 		const auto ox = x % uw;
 		const auto uix = ux + (uy * usx);
-		const auto j = uix * usize + (ox * 2) + (oy * uw * 2);
+		const auto j = uix * usize + (ox) + (oy * uw);
 
-		res[i] = (int8_t)((out[j] * 127.0f) - (out[j + 1] * 127.0f));
+		res[i] = (uint8_t)(out[j] * 255.0f);
 		//res[i] = (uint8_t)((out[j]) * 255.0f);
 	}
 
@@ -121,9 +121,9 @@ vector<int8_t> Fabric::reform2DSigned(RegionID regid, size_t uw, size_t uh) {
 
 
 
-void Fabric::write2DSigned(
+void Fabric::write2D(
 		RegionID regid,
-		const vector<int8_t> &v,
+		const vector<uint8_t> &v,
 		size_t uw, size_t uh) {
 	RegionBase *reg = getRegion(regid);
 	if (reg == nullptr) return;
@@ -132,8 +132,8 @@ void Fabric::write2DSigned(
 	const auto usy = reg->unitsY();
 	const auto usize = reg->unitSize();
 
-	assert(usize == 2 * uw * uh);
-	assert(v.size() == usx * usy * usize / 2);
+	assert(usize == uw * uh);
+	assert(v.size() == usx * usy * usize);
 
 	vector<float> input;
 	input.resize(usx * usy * usize);
@@ -146,15 +146,9 @@ void Fabric::write2DSigned(
 		const auto ux = x / uw;
 		const auto ox = x % uw;
 		const auto uix = ux + (uy * usx);
-		const auto j = uix * usize + (ox * 2) + (oy * uw * 2);
+		const auto j = uix * usize + (ox) + (oy * uw);
 
-		if (v[i] > 0) {
-			input[j] = (float)v[i] / 128.0f;
-			input[j + 1] = 0.0f;
-		} else {
-			input[j+1] = (float)(0 - v[i]) / 128.0f;
-			input[j] = 0.0f;
-		}
+		input[j] = (float)v[i] / 255.0f;
 	}
 
 	reg->write(input);

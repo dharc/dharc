@@ -47,21 +47,21 @@ int rpc_version() {
 	return static_cast<int>(Command::end);
 }
 
-bool rpc_write2dsigned(const size_t &regid, const vector<int8_t> &values, const size_t &uw, const size_t &uh) {
-	Fabric::write2DSigned(static_cast<dharc::RegionID>(regid), values, uw, uh);
+bool rpc_write2d(const size_t &regid, const vector<uint8_t> &values, const size_t &uw, const size_t &uh) {
+	Fabric::write2D(static_cast<dharc::RegionID>(regid), values, uw, uh);
 	return true;
 }
 
-vector<int8_t> rpc_reform2dsigned(const size_t &regid, const size_t &uw, const size_t &uh) {
-	return Fabric::reform2DSigned(static_cast<dharc::RegionID>(regid), uw, uh);
+vector<uint8_t> rpc_reform2d(const size_t &regid, const size_t &uw, const size_t &uh) {
+	return Fabric::reform2D(static_cast<dharc::RegionID>(regid), uw, uh);
 }
 
 /* Register the handler for each rpc command */
 dharc::rpc::commands_t commands {
 	rpc_nop,
 	rpc_version,
-	rpc_write2dsigned,
-	rpc_reform2dsigned
+	rpc_write2d,
+	rpc_reform2d
 };
 };  // namespace
 

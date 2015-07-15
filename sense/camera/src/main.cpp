@@ -293,10 +293,8 @@ int main(int argc, char *argv[]) {
 	init_device();
 	start_capturing();
 
-	vector<int8_t> data;
+	vector<uint8_t> data;
 	data.resize(320 * 240);
-	vector<uint8_t> ldata;
-	ldata.resize(320 * 240);
 
 	SDL_Event event;
 	bool running = true;
@@ -336,13 +334,13 @@ int main(int argc, char *argv[]) {
 
 		read_frame();
 
-		vector<int8_t> rdata = sense.reform2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
+		vector<uint8_t> rdata = sense.reform2D(RegionID::SENSE_CAMERA_0_LUMINANCE, 5, 5);
 
 		for (auto i = 0U; i < data.size(); ++i) {
 			int y = *((unsigned char*)buffers[0].start + (2*i));
 
-			data[i] = (y - (int)ldata[i]) / 2;
-			ldata[i] = y;
+			data[i] = y;
+			//ldata[i] = y;
 			buffer_sdl[i*3] = 0;
 			buffer_sdl[(i*3)+1] = 0;
 			buffer_sdl[(i*3)+2] = 0;
@@ -353,14 +351,14 @@ int main(int argc, char *argv[]) {
 			//	buffer_sdl[i*3 + 1] = data[i] * 2;
 			//}
 		}
-		sense.write2DSigned(RegionID::SENSE_CAMERA_0_LUMINANCE, data, 5, 5);
+		sense.write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, data, 5, 5);
 
 		assert(rdata.size() == 320 * 240);
 
 		for (auto i = 0U; i < rdata.size(); ++i) {
-			buffer_sdl[i*3] = 128 + rdata[i];
-			buffer_sdl[i*3 + 1] = 128 + rdata[i];
-			buffer_sdl[i*3 + 2] = 128 + rdata[i];
+			buffer_sdl[i*3] = rdata[i];
+			buffer_sdl[i*3 + 1] = rdata[i];
+			buffer_sdl[i*3 + 2] = rdata[i];
 		}
 
 		/*size_t hlevel_harc = 0;
