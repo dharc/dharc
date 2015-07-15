@@ -191,7 +191,7 @@ size_t SMAX,
 size_t TMAX
 >
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-adjustSpatial(size_t ix, size_t s) {
+adjustSpatial(size_t ix, size_t s, float depol) {
 	const auto ibase = ix * USIZE;
 
 	for (auto j = 0U; j < SMAX; ++j) {
@@ -199,7 +199,7 @@ adjustSpatial(size_t ix, size_t s) {
 
 		if (j == s) {
 			for (auto i = 0U; i < USIZE; ++i) {
-				if (inputs_[ibase + i] > (units_[ix].modulation * kLearnScale)) {
+				if (inputs_[ibase + i] > depol) {
 					if (units_[ix].slinks[i * SMAX + s] < 255) {
 						++units_[ix].slinks[i * SMAX + s];
 					}
@@ -212,7 +212,7 @@ adjustSpatial(size_t ix, size_t s) {
 			}
 		} else {
 			for (auto i = 0U; i < USIZE; ++i) {
-				if (inputs_[ibase + i] > (units_[ix].modulation * kLearnScale)) {
+				if (inputs_[ibase + i] > depol) {
 					if (units_[ix].slinks[i * SMAX + j] > 1) {
 						units_[ix].slinks[i * SMAX + j] -= 2;
 					}
@@ -281,7 +281,7 @@ activateSpatial(size_t ix) {
 	}
 
 	// Must at least reach a threshold value.
-	if (max > (units_[ix].modulation * kThresholdScale)) {
+	if (units_[ix].modulation <= max * (1.0f - units_[ix].scontrib[maxix])) {
 		// Activation strength inverse of threshold.
 		units_[ix].spatial[maxix] = 1.0f - units_[ix].modulation;
 
@@ -293,7 +293,7 @@ activateSpatial(size_t ix) {
 			}
 		}*/
 
-		adjustSpatial(ix, maxix);
+		adjustSpatial(ix, maxix, max);
 	}
 
 	return maxix;
