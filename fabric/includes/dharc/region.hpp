@@ -90,7 +90,7 @@ class Region : public RegionBase {
 	void processUnit(size_t ix);
 	void decaySpatial(size_t ix);
 	size_t activateSpatial(size_t ix);
-	void adjustSpatial(size_t ix, size_t s);
+	void adjustSpatial(size_t ix, size_t s, float depol);
 	void decayTemporal(size_t ix);
 	void activateTemporal(size_t ix);
 	void adjustTemporal(size_t);
