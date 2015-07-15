@@ -295,6 +295,8 @@ int main(int argc, char *argv[]) {
 
 	vector<uint8_t> data;
 	data.resize(320 * 240);
+	vector<uint8_t> ldata;
+	ldata.resize(320 * 240);
 
 	SDL_Event event;
 	bool running = true;
@@ -339,8 +341,8 @@ int main(int argc, char *argv[]) {
 		for (auto i = 0U; i < data.size(); ++i) {
 			int y = *((unsigned char*)buffers[0].start + (2*i));
 
-			data[i] = y;
-			//ldata[i] = y;
+			data[i] = (std::abs(y - ldata[i]) & 0xF0) + (y >> 4);
+			ldata[i] = y;
 			buffer_sdl[i*3] = 0;
 			buffer_sdl[(i*3)+1] = 0;
 			buffer_sdl[(i*3)+2] = 0;

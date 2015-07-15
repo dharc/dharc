@@ -145,7 +145,8 @@ reform(vector<float> &v) {
 			}
 		} else {*/
 			for (auto j = 0U; j < USIZE; ++j) {
-				v[i * USIZE + j] = ((float)units_[i].slinks[j * SMAX + maxix] / 255.0f);
+				v[i * USIZE + j] = ((float)units_[i].slinks[j * SMAX + maxix] / 255.0f) *
+										(max * (1.0f / units_[i].modulation));
 			}
 		//}
 	}
@@ -194,10 +195,10 @@ void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 adjustSpatial(size_t ix, size_t s, float depol) {
 	const auto ibase = ix * USIZE;
 
-	for (auto j = 0U; j < SMAX; ++j) {
+	//for (auto j = 0U; j < SMAX; ++j) {
 		float contrib = 0.0f;
 
-		if (j == s) {
+		//if (j == s) {
 			for (auto i = 0U; i < USIZE; ++i) {
 				if (inputs_[ibase + i] > depol) {
 					if (units_[ix].slinks[i * SMAX + s] < 255) {
@@ -210,19 +211,19 @@ adjustSpatial(size_t ix, size_t s, float depol) {
 				}
 				contrib += units_[ix].slinks[i * SMAX + s];
 			}
-		} else {
+		/*} else {
 			for (auto i = 0U; i < USIZE; ++i) {
-				/*if (inputs_[ibase + i] > depol) {
+				if (inputs_[ibase + i] > depol) {
 					if (units_[ix].slinks[i * SMAX + j] > 1) {
 						units_[ix].slinks[i * SMAX + j] -= 2;
 					}
-				}*/
+				}
 				contrib += units_[ix].slinks[i * SMAX + j];
 			}
-		}
+		}*/
 		//NOTE: Should never be zero.
-		units_[ix].scontrib[j] = 1.0f / contrib;
-	}
+		units_[ix].scontrib[s] = 1.0f / contrib;
+	//}
 
 	/*for (auto i = 0U; i < USIZE; ++i) {
 		for (auto j = 0U; j < SMAX; ++j) {

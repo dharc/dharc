@@ -69,7 +69,7 @@ void Fabric::initialise() {
 	regions__.resize(1);
 
 	regions__[static_cast<size_t>(RegionID::SENSE_CAMERA_0_LUMINANCE)] =
-		new Region<25,64,48,10,20>();
+		new Region<25,64,48,50,20>();
 
 	std::thread t(counterThread);
 	t.detach();
