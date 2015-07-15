@@ -54,7 +54,7 @@ class Region : public RegionBase {
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
 	static constexpr auto kSpatialDecay = 0.999f;
 	static constexpr auto kTemporalDecay = 0.5f;
-	static constexpr auto kThresholdScale = 0.00001f;
+	static constexpr auto kThresholdScale = 0.1f;
 	static constexpr auto kLearnScale = 1.0f;
 
 	Region();

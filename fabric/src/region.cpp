@@ -55,7 +55,7 @@ initUnit(size_t ix) {
 	}
 
 	for (auto i = 0U; i < SMAX; ++i) {
-		units_[ix].scontrib[i] = 1.0f / (255.0f * (float)USIZE);
+		units_[ix].scontrib[i] = 1.0f / (1.0f * (float)USIZE);
 		units_[ix].spatial[i] = 0.0f;
 	}
 
@@ -203,20 +203,20 @@ adjustSpatial(size_t ix, size_t s, float depol) {
 					if (units_[ix].slinks[i * SMAX + s] < 255) {
 						++units_[ix].slinks[i * SMAX + s];
 					}
-				}/* else {
-					if (units_[ix].slinks[i * SMAX + s] > 0) {
+				} else if (inputs_[ibase + i] < (1.0f - depol)) {
+					if (units_[ix].slinks[i * SMAX + s] > 1) {
 						--units_[ix].slinks[i * SMAX + s];
 					}
-				}*/
+				}
 				contrib += units_[ix].slinks[i * SMAX + s];
 			}
 		} else {
 			for (auto i = 0U; i < USIZE; ++i) {
-				if (inputs_[ibase + i] > depol) {
+				/*if (inputs_[ibase + i] > depol) {
 					if (units_[ix].slinks[i * SMAX + j] > 1) {
 						units_[ix].slinks[i * SMAX + j] -= 2;
 					}
-				}
+				}*/
 				contrib += units_[ix].slinks[i * SMAX + j];
 			}
 		}
@@ -266,14 +266,15 @@ activateSpatial(size_t ix) {
 
 	for (auto i = 0U; i < USIZE; ++i) {
 		for (auto j = 0U; j < SMAX; ++j) {
-			depol[j] += inputs_[ibase + i] * units_[ix].scontrib[j] *
-						(float)units_[ix].slinks[i * SMAX + j];
+			depol[j] += inputs_[ibase + i] *
+						((float)units_[ix].slinks[i * SMAX + j]);
 		}
 	}
 
 	float max = 0.0f;
 	size_t maxix = 0;
 	for (auto i = 0U; i < SMAX; ++i) {
+		depol[i] *= units_[ix].scontrib[i];
 		if (depol[i] >= max) {
 			maxix = i;
 			max = depol[i];
@@ -281,9 +282,10 @@ activateSpatial(size_t ix) {
 	}
 
 	// Must at least reach a threshold value.
-	if (units_[ix].modulation <= max * (1.0f - units_[ix].scontrib[maxix])) {
+	if (units_[ix].modulation * kThresholdScale <= max) {
 		// Activation strength inverse of threshold.
 		units_[ix].spatial[maxix] = 1.0f - units_[ix].modulation;
+		//std::cout << "ACTIVATE: " << max << "\n";
 
 		// Activate any others that are a close enough match
 		/*for (auto i = 0U; i < SMAX; ++i) {
