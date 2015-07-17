@@ -54,12 +54,11 @@ class Region : public RegionBase {
 	static constexpr auto kOutputSize = TMAX * kUnitCount;
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
-	//static constexpr auto kActiveDecayRate = 0.99f;
 	static constexpr auto kDecayRate = 0.5f;
 	static constexpr auto kThresholdScale = 0.1f;
-	static constexpr auto kLearnScale = 1.0f;
-	static constexpr auto kDepression = 0.3;
-	static constexpr auto kBaseLimit = 0.5;
+	static constexpr auto kModChangeRate = 0.1f;
+	static constexpr auto kModFactor = 0.5f;
+	
 
 	Region();
 	~Region();
@@ -96,12 +95,18 @@ class Region : public RegionBase {
 	void adjustSpatial(size_t ix, size_t s, float depol);
 	void activateTemporal(size_t ix);
 	void adjustTemporal(size_t);
+	void adjustModulation();
 
 	void clearInput();
 
-	inline bool isSpatialOff(size_t unit, size_t pattern) const {
-		return units_[unit].spatial[pattern] <
-				((1.0f - units_[unit].modulation) * kDepression);
+	inline Unit &getUnit(size_t x, size_t y) {
+		return units_[x + (y * UNITSX)];
+	}
+
+	inline void boostModulation(int x, int y, float delta) {
+		if (x < 0 || x >= (int)UNITSX || y < 0 || y >= (int)UNITSY) return;
+		float &mod = getUnit(x,y).modulation;
+		mod += (delta < 0.0f) ? mod * delta : (1.0f - mod) * delta;
 	}
 
 	Unit units_[kUnitCount];

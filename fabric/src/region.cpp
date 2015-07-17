@@ -82,7 +82,7 @@ initUnit(size_t ix) {
 		units_[ix].temporal[i] = 0.0f;
 	}
 
-	units_[ix].modulation = 0.3f;
+	units_[ix].modulation = 0.5f;
 }
 
 
@@ -116,6 +116,8 @@ size_t TMAX
 >
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 process() {
+	adjustModulation();
+
 	for (auto i = 0U; i < kUnitCount; ++i) {
 		//decaySpatial(i);
 		activateSpatial(i);
@@ -144,6 +146,44 @@ size_t SMAX,
 size_t TMAX
 >
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
+adjustModulation() {
+	for (auto i = 0U; i < kUnitCount; ++i) {
+		const auto ibase = i * USIZE;
+		const int ux = i % UNITSX;
+		const int uy = i / UNITSX;
+		float energy = 0.0f;
+
+		for (auto j = 0U; j < USIZE; ++j) {
+			energy += inputs_[ibase + j];
+		}
+
+		energy /= USIZE;
+		//energy = 1.0f - energy;
+		energy = energy - 0.5f;
+		//units_[i].modulation = 0.5f - (0.1f * energy);
+		energy =  -0.125f * kModChangeRate * energy;
+
+		boostModulation(ux-1, uy-1, energy);
+		boostModulation(ux-1, uy, energy);
+		boostModulation(ux-1, uy+1, energy);
+		boostModulation(ux+1, uy-1, energy);
+		boostModulation(ux+1, uy, energy);
+		boostModulation(ux+1, uy+1, energy);
+		boostModulation(ux, uy-1, energy);
+		boostModulation(ux, uy+1, energy);
+	}
+}
+
+
+
+template<
+size_t USIZE,
+size_t UNITSX,
+size_t UNITSY,
+size_t SMAX,
+size_t TMAX
+>
+void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 reform(vector<float> &v) {
 	/*for (auto i = 0U; i < kInputSize; ++i) {
 		v[i] = inputs_[i];
@@ -155,7 +195,7 @@ reform(vector<float> &v) {
 			if (units_[i].spatial[j] > 0.01) {
 				for (auto k = 0U; k < USIZE; ++k) {
 					v[i * USIZE + k] += ((float)units_[i].slinks[k * SMAX + j] / 255.0f) *
-											(units_[i].spatial[j] / (1.0f - units_[i].modulation));
+											(units_[i].spatial[j]);
 					if (v[i * USIZE + k] > 1.0f) v[i * USIZE + k] = 1.0f;
 				}
 			}
@@ -292,7 +332,8 @@ activateSpatial(size_t ix) {
 	// Depolarisation must reach a minimum level
 	//if (depolmax > (unit.modulation * kThresholdScale)) {
 		//const auto maxactive = 1.0f - unit.modulation;
-		auto activation = depolmax;
+		auto activation = (1.0f - kModFactor) * depolmax;
+		activation += kModFactor * depolmax * unit.modulation;
 		activation = (1.0f - energy) * activation;
 		auto delta = activation - unit.spatial[depolix];
 		//activation = unit.spatial[depolix] + (delta * 0.8f);
