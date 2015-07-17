@@ -56,8 +56,8 @@ class Region : public RegionBase {
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
 	static constexpr auto kDecayRate = 0.5f;
 	static constexpr auto kThresholdScale = 0.1f;
-	static constexpr auto kModChangeRate = 0.1f;
-	static constexpr auto kModFactor = 0.5f;
+	static constexpr auto kModChangeRate = 0.9f;
+	static constexpr auto kModFactor = 0.8f;
 	
 
 	Region();

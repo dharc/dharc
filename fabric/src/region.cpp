@@ -148,16 +148,15 @@ size_t TMAX
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 adjustModulation() {
 	for (auto i = 0U; i < kUnitCount; ++i) {
-		const auto ibase = i * USIZE;
+		//const auto ibase = i * USIZE;
 		const int ux = i % UNITSX;
 		const int uy = i / UNITSX;
 		float energy = 0.0f;
 
-		for (auto j = 0U; j < USIZE; ++j) {
-			energy += inputs_[ibase + j];
+		for (auto j = 0U; j < SMAX; ++j) {
+			energy += units_[i].spatial[j];
 		}
 
-		energy /= USIZE;
 		//energy = 1.0f - energy;
 		energy = energy - 0.5f;
 		//units_[i].modulation = 0.5f - (0.1f * energy);
@@ -332,8 +331,8 @@ activateSpatial(size_t ix) {
 	// Depolarisation must reach a minimum level
 	//if (depolmax > (unit.modulation * kThresholdScale)) {
 		//const auto maxactive = 1.0f - unit.modulation;
-		auto activation = (1.0f - kModFactor);
-		activation += kModFactor * unit.modulation;
+		auto activation = (1.0f - kModFactor) * depolmax;
+		activation += kModFactor * depolmax * unit.modulation;
 		activation = (1.0f - energy) * activation;
 		auto delta = activation - unit.spatial[depolix];
 		//activation = unit.spatial[depolix] + (delta * 0.8f);
