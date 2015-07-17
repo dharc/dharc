@@ -8,6 +8,7 @@
 #include <vector>
 #include <mutex>
 #include <cassert>
+#include <cmath>
 
 #include "dharc/regions.hpp"
 
@@ -47,15 +48,18 @@ size_t TMAX
 >
 class Region : public RegionBase {
 	public:
+	static constexpr auto kUnitSqrt = (size_t)std::sqrt(USIZE);
 	static constexpr auto kUnitCount = UNITSX * UNITSY;
 	static constexpr auto kInputSize = USIZE * kUnitCount;
 	static constexpr auto kOutputSize = TMAX * kUnitCount;
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
-	static constexpr auto kSpatialDecay = 0.99f;
-	static constexpr auto kTemporalDecay = 0.5f;
+	//static constexpr auto kActiveDecayRate = 0.99f;
+	static constexpr auto kDecayRate = 0.8f;
 	static constexpr auto kThresholdScale = 0.1f;
 	static constexpr auto kLearnScale = 1.0f;
+	static constexpr auto kDepression = 0.3;
+	static constexpr auto kBaseLimit = 0.5;
 
 	Region();
 	~Region();
@@ -81,21 +85,24 @@ class Region : public RegionBase {
 		float modulation;
 		float spatial[SMAX];
 		float temporal[TMAX];
-		float scontrib[SMAX];
+		size_t scount[SMAX];
 		uint8_t slinks[kSpatialLinks];
 		uint8_t tlinks[kTemporalLinks];
 	};
 
 	void initUnit(size_t ix);
 	void processUnit(size_t ix);
-	void decaySpatial(size_t ix);
 	size_t activateSpatial(size_t ix);
 	void adjustSpatial(size_t ix, size_t s, float depol);
-	void decayTemporal(size_t ix);
 	void activateTemporal(size_t ix);
 	void adjustTemporal(size_t);
 
-	void clearInput();	
+	void clearInput();
+
+	inline bool isSpatialOff(size_t unit, size_t pattern) const {
+		return units_[unit].spatial[pattern] <
+				((1.0f - units_[unit].modulation) * kDepression);
+	}
 
 	Unit units_[kUnitCount];
 	

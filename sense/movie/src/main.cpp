@@ -49,6 +49,8 @@ vector<uint8_t> ldata;
 Sense *sense;
 Node dblock;
 
+#define INDEX(X,Y,WIDTH) ((Y * WIDTH) + X)
+
 static void unlock(void *data, void *id, void *const *p_pixels)
 {
     ctx *pctx = (ctx*)data;
@@ -58,7 +60,7 @@ static void unlock(void *data, void *id, void *const *p_pixels)
     /* VLC just rendered the video, but we can also render stuff */
     uint16_t *pixels = (uint16_t*)*p_pixels;
 
-    for (auto i = 0U; i < ddata.size(); ++i) {
+    for (auto i = 0U; i < ldata.size(); ++i) {
 		uint16_t y = pixels[i];
 		pixels[i] = 0;
 
@@ -67,13 +69,23 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 		float b = (float)(y & 0x1f) / 31.0f * 255.0f;
 
 		int dy = (int)((0.257 * r) + (0.504 * g) + (0.098 * b) + 16.0);
-		ddata[i] = (std::abs(dy - ldata[i]) & 0xF0) + (dy >> 4);
+		//ddata[i] = (std::abs(dy - ldata[i]) & 0xF0) + (dy >> 4);
 		ldata[i] = dy;
 
 		//ddata[i] = static_cast<float>(y & 0x001f) / 31.0f;
 	}
 
-	sense->write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, ddata, 5, 5);
+	/*for (auto i = 1U; i < ldata.size()-1; ++i) {
+		int delta = 0;
+		delta += ldata[i-1];
+		delta += ldata[i+1];
+		if (i > 320) delta += ldata[i-320];
+		if (i < ldata.size()+320) delta += ldata[i+320];
+		delta /= 4;
+		ddata[i] = (std::abs(ldata[i] - delta) & 0xF0) + (ldata[i] >> 4);
+	}*/
+
+	sense->write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, ldata, 5, 5);
 
 	assert(rdata.size() == 320 * 240);
 
@@ -116,6 +128,8 @@ int main(int argc, char *argv[])
     {
         "--no-audio", /* skip any audio track */
         "--no-xlib", /* tell VLC to not use Xlib */
+		"--network-caching=50",
+		"--live-caching=50",
     };
     int vlc_argc = sizeof(vlc_argv) / sizeof(*vlc_argv);
 
