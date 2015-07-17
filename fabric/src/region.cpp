@@ -332,8 +332,8 @@ activateSpatial(size_t ix) {
 	// Depolarisation must reach a minimum level
 	//if (depolmax > (unit.modulation * kThresholdScale)) {
 		//const auto maxactive = 1.0f - unit.modulation;
-		auto activation = (1.0f - kModFactor) * depolmax;
-		activation += kModFactor * depolmax * unit.modulation;
+		auto activation = (1.0f - kModFactor);
+		activation += kModFactor * unit.modulation;
 		activation = (1.0f - energy) * activation;
 		auto delta = activation - unit.spatial[depolix];
 		//activation = unit.spatial[depolix] + (delta * 0.8f);
