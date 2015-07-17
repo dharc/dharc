@@ -51,6 +51,8 @@ initUnit(size_t ix) {
 		const int xx = xi % kUnitSqrt;
 		const int xy = xi / kUnitSqrt;
 
+		units_[ix].scount[x] = 0.0f;
+
 		for (auto y = 0U; y < USIZE; ++y) {
 			const int yx = y % kUnitSqrt;
 			const int yy = y / kUnitSqrt;
@@ -59,6 +61,8 @@ initUnit(size_t ix) {
 			const float dist = std::sqrt(dx * dx + dy * dy) / (float)kUnitSqrt;
 			
 			units_[ix].slinks[y * SMAX + x] = (uint8_t)(255.0f - (dist * 255.0f));
+
+			units_[ix].scount[x] += units_[ix].slinks[y * SMAX + x] / 255.0f;
 		}
 	}
 
@@ -71,7 +75,6 @@ initUnit(size_t ix) {
 	}
 
 	for (auto i = 0U; i < SMAX; ++i) {
-		units_[ix].scount[i] = 0;
 		units_[ix].spatial[i] = 0.0f;
 	}
 
@@ -202,63 +205,38 @@ size_t TMAX
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 adjustSpatial(size_t ix, size_t s, float depol) {
 	const auto ibase = ix * USIZE;
+	auto &unit = units_[ix];
 
 	for (auto j = 0U; j < SMAX; ++j) {
-		//float contrib = 0.0f;
+		unit.scount[j] = 0.0f;
 
 		// Did this pattern just get activated by the inputs?
 		if (j == s) {
 			for (auto i = 0U; i < USIZE; ++i) {
-				auto &link = units_[ix].slinks[i * SMAX + j];
-				if (inputs_[ibase + i] * (1.0f - ((float)link / 255.0f)) > (1.0f - depol)) {
+				auto &link = unit.slinks[i * SMAX + j];
+				if (inputs_[ibase + i] * (1.0f - ((float)link / 255.0f)) > (1.0f - unit.spatial[j])) {
 					if (link < 255) {
 						++link;
 					}
-				}/* else {
-					if (units_[ix].slinks[i * SMAX + j] > 0) {
-						--units_[ix].slinks[i * SMAX + j];
-					}
-				}*/
-				//contrib += link;
-			}
-		} else {
-			// If pattern not already active then don't bother.
-			//if (isSpatialOff(ix, j)) continue;
+				}
 
+				// Update weighted link count for pattern
+				unit.scount[j] += link / 255.0f;
+			}
+		// Otherwise decay those strong links of others if they are activated.
+		} else {
 			for (auto i = 0U; i < USIZE; ++i) {
-				auto &link = units_[ix].slinks[i * SMAX + j];
-				if (inputs_[ibase + i] * (1.0f - ((float)link / 255.0f)) > (1.0f - depol)) {
+				auto &link = unit.slinks[i * SMAX + j];
+				if (inputs_[ibase + i] * (((float)link / 255.0f)) > (1.0f - unit.spatial[j])) {
 					if (link > 0) {
 						--link;
 					}
 				}
-				//contrib += link;
-			}
-		}
-		//NOTE: Should never be zero.
-		//units_[ix].scontrib[j] = 1.0f / contrib;
-	}
 
-	/*for (auto i = 0U; i < USIZE; ++i) {
-		for (auto j = 0U; j < SMAX; ++j) {
-			// If the input provided was significant enough
-			if (inputs_[ibase + i] > units_[ix].modulation * 0.5) {
-				if (j == s) {
-					if (units_[ix].slinks[j * SMAX + i] < 255) {
-						++units_[ix].slinks[j * SMAX + i];
-					}
-				} else {
-					if (units_[ix].slinks[j * SMAX + i] > 0) {
-						--units_[ix].slinks[j * SMAX + i];
-					}
-				}
-			} else {
-				if (units_[ix].slinks[j * SMAX + i] > 0) {
-						--units_[ix].slinks[j * SMAX + i];
-					}
+				unit.scount[j] += link / 255.0f;
 			}
 		}
-	}*/
+	}
 }
 
 
@@ -300,6 +278,7 @@ activateSpatial(size_t ix) {
 	// Find max depol and max currently active pattern
 	// This is role of interneurons, calculating unit energy levels.
 	for (auto i = 0U; i < SMAX; ++i) {
+		depol[i] /= unit.scount[i];
 		if (depol[i] >= depolmax) {
 			depolix = i;
 			depolmax = depol[i];
@@ -308,26 +287,26 @@ activateSpatial(size_t ix) {
 		energy += unit.spatial[i];
 	}
 
-	energy -= unit.spatial[depolix];
+	//energy -= unit.spatial[depolix];
 
 	// Depolarisation must reach a minimum level
 	//if (depolmax > (unit.modulation * kThresholdScale)) {
 		//const auto maxactive = 1.0f - unit.modulation;
-		auto activation = depolmax / (float)USIZE;
+		auto activation = depolmax;
 		activation = (1.0f - energy) * activation;
 		auto delta = activation - unit.spatial[depolix];
-		//activation = activation + (0.2f * (activation - energy));
-
-		
+		//activation = unit.spatial[depolix] + (delta * 0.8f);
+		//activation = 0.5f * activation + (0.5f * delta);
 
 		// If off then boost to full level.
 		//if (isSpatialOff(ix, depolix)) {
-		if (delta > 0.0f) {
-			adjustSpatial(ix, depolix, delta);
-			unit.spatial[depolix] = activation;
-		}
+			if (delta > 0.0f) {
+				unit.spatial[depolix] = activation;
+				adjustSpatial(ix, depolix, delta);
+			}
 		//} else {
-		//	unit.spatial[depolix] *= kActiveDecayRate;
+		//	unit.spatial[depolix] /= kDecayRate;
+		//	unit.spatial[depolix] *= 0.99f;
 		//	depolix = SMAX;
 		//}
 

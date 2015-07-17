@@ -341,7 +341,7 @@ int main(int argc, char *argv[]) {
 		for (auto i = 0U; i < data.size(); ++i) {
 			int y = *((unsigned char*)buffers[0].start + (2*i));
 
-			data[i] = (std::abs(y - ldata[i]) & 0xF0) + (y >> 4);
+			//data[i] = (std::abs(y - ldata[i]) & 0xF0) + (y >> 4);
 			ldata[i] = y;
 			buffer_sdl[i*3] = 0;
 			buffer_sdl[(i*3)+1] = 0;
@@ -353,7 +353,7 @@ int main(int argc, char *argv[]) {
 			//	buffer_sdl[i*3 + 1] = data[i] * 2;
 			//}
 		}
-		sense.write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, data, 5, 5);
+		sense.write2D(RegionID::SENSE_CAMERA_0_LUMINANCE, ldata, 5, 5);
 
 		assert(rdata.size() == 320 * 240);
 

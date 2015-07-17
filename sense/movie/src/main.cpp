@@ -69,7 +69,7 @@ static void unlock(void *data, void *id, void *const *p_pixels)
 		float b = (float)(y & 0x1f) / 31.0f * 255.0f;
 
 		int dy = (int)((0.257 * r) + (0.504 * g) + (0.098 * b) + 16.0);
-		//ddata[i] = (std::abs(dy - ldata[i]) & 0xF0) + (dy >> 4);
+		//ddata[i] = (std::abs(dy - ldata[i]) & 0xC0) + (dy >> 2);
 		ldata[i] = dy;
 
 		//ddata[i] = static_cast<float>(y & 0x001f) / 31.0f;

@@ -55,7 +55,7 @@ class Region : public RegionBase {
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
 	//static constexpr auto kActiveDecayRate = 0.99f;
-	static constexpr auto kDecayRate = 0.8f;
+	static constexpr auto kDecayRate = 0.5f;
 	static constexpr auto kThresholdScale = 0.1f;
 	static constexpr auto kLearnScale = 1.0f;
 	static constexpr auto kDepression = 0.3;
@@ -85,7 +85,7 @@ class Region : public RegionBase {
 		float modulation;
 		float spatial[SMAX];
 		float temporal[TMAX];
-		size_t scount[SMAX];
+		float scount[SMAX];
 		uint8_t slinks[kSpatialLinks];
 		uint8_t tlinks[kTemporalLinks];
 	};
