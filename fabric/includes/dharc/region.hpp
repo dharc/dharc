@@ -57,7 +57,7 @@ class Region : public RegionBase {
 	static constexpr auto kDecayRate = 0.5f;
 	static constexpr auto kThresholdScale = 0.1f;
 	static constexpr auto kModChangeRate = 0.9f;
-	static constexpr auto kModFactor = 0.8f;
+	static constexpr auto kModFactor = 0.5f;
 	
 
 	Region();
@@ -85,14 +85,14 @@ class Region : public RegionBase {
 		float spatial[SMAX];
 		float temporal[TMAX];
 		float scount[SMAX];
-		uint8_t slinks[kSpatialLinks];
+		float slinks[kSpatialLinks];
 		uint8_t tlinks[kTemporalLinks];
 	};
 
 	void initUnit(size_t ix);
 	void processUnit(size_t ix);
-	size_t activateSpatial(size_t ix);
-	void adjustSpatial(size_t ix, size_t s, float depol);
+	size_t activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, float *outputs, size_t outsize);
+	//void adjust(size_t s, Unit &unit, float *inputs, size_t insize, float *links, float *counts, float *outputs, size_t outsize);
 	void activateTemporal(size_t ix);
 	void adjustTemporal(size_t);
 	void adjustModulation();
