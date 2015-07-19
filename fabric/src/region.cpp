@@ -273,35 +273,53 @@ activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, 
 	for (auto i : inputs_sorted) {
 		for (auto j = 0U; j < outsize; ++j) {
 			auto &link = links[i.second * outsize + j];
-			depol[j] += i.first * link;
+			// Use factor for soma suppression
+			depol[j] += i.first * link * factor;
 
 			// STDP Learning adjustments
 			// Has this pattern already fired?
-			link -= i.first * link * outputs[j];
+			counts[j] -= link;
+			link -= i.first * link * outputs[j] * kLearnRate;
+			counts[j] += link;
 
-			// TRIGGER if 20% activated.
-			if (depol[j] > energy * 0.2f) {
-				// Reset all depolarisations ????
-				// NO: Only those that contributed to this one!!
-				// OR some other value, because this triggers other patterns...
+			// TRIGGER if 20% activated. (% controlled by modulation)
+			if (depol[j] > counts[j] * (energy / insize) * 0.5f) {
+				// Suppress existing depolarisations and reduce axon output
 				for (auto k = 0U; k < outsize; ++k) {
-					depol[k] = 0.0f;
+					// Dendrite suppression
+					depol[k] *= 0.8f;
+					// Output axon suppression
+					outputs[k] *= (1.0f - factor);
 				}
+				// I can't go again...
+				depol[j] = -0.5f;
 
-				// Generate the Action Potential.
-				outputs[j] = (energy / insize) * factor;
+				// Generate new depolarisation
+				outputs[j] = factor * (energy / insize);
 				factor *= 0.5f;
 
 				// Boost all links that caused this firing
 				for (auto k : inputs_sorted) {
 					auto &link2 = links[k.second * outsize + j];
-					link2 += k.first * (1.0f - link2) * outputs[j];
+					counts[j] -= link2;
+					link2 += k.first * (1.0f - link2) * outputs[j] * kLearnRate;
+					counts[j] += link2;
 					if (k.second == i.second) break;
 				}
 			}
 		}
 	}
 
+	// Generate action potentials
+	energy /= insize;
+	for (auto i = 0U; i < outsize; ++i) {
+		//outputs[i] *= energy;
+		/*if (outputs[i] >= 0.5f) {
+			outputs[i] = energy + ((outputs[i] - 0.5f) * (1.0f - energy) * 0.2f);
+		} else {
+			outputs[i] = energy + ((outputs[i] - 0.5f) * (energy) * 0.2f);
+		}*/
+	}
 
 	/*
 
