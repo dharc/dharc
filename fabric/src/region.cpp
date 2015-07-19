@@ -269,12 +269,15 @@ activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, 
 		return a.first > b.first;
 	});
 
+	float modulation = 0.8f;
+	float threshold = (energy / insize) * modulation;
+
 	// Generate depolarisation values until first is fired.
 	for (auto i : inputs_sorted) {
 		for (auto j = 0U; j < outsize; ++j) {
 			auto &link = links[i.second * outsize + j];
 			// Use factor for soma suppression
-			depol[j] += i.first * link * factor;
+			depol[j] += i.first * link;
 
 			// STDP Learning adjustments
 			// Has this pattern already fired?
@@ -283,20 +286,19 @@ activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, 
 			counts[j] += link;
 
 			// TRIGGER if 20% activated. (% controlled by modulation)
-			if (depol[j] > counts[j] * (energy / insize) * 0.5f) {
+			if ((outputs[j] < 0.00001f) && (depol[j] * factor > counts[j] * threshold)) {
 				// Suppress existing depolarisations and reduce axon output
 				for (auto k = 0U; k < outsize; ++k) {
+					if (k == j) continue;
 					// Dendrite suppression
 					depol[k] *= 0.8f;
 					// Output axon suppression
 					outputs[k] *= (1.0f - factor);
 				}
-				// I can't go again...
-				depol[j] = -0.5f;
 
 				// Generate new depolarisation
-				outputs[j] = factor * (energy / insize);
-				factor *= 0.5f;
+				outputs[j] = factor; // * threshold;
+				factor *= 0.2f;
 
 				// Boost all links that caused this firing
 				for (auto k : inputs_sorted) {
@@ -310,83 +312,11 @@ activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, 
 		}
 	}
 
-	// Generate action potentials
-	energy /= insize;
 	for (auto i = 0U; i < outsize; ++i) {
-		//outputs[i] *= energy;
-		/*if (outputs[i] >= 0.5f) {
-			outputs[i] = energy + ((outputs[i] - 0.5f) * (1.0f - energy) * 0.2f);
-		} else {
-			outputs[i] = energy + ((outputs[i] - 0.5f) * (energy) * 0.2f);
-		}*/
+		outputs[i] *= depol[i] / counts[i]; //1.0f / modulation;
 	}
 
-	/*
 
-	float depolmax = 0.0f;
-	float depolmin = 1000.0f;
-	size_t depolix = 0;
-	float energy = 0.0f;
-
-	// Find min and max depolarisations for leveling
-	for (auto i = 0U; i < outsize; ++i) {
-		// Level based on number+strength of synapses
-		// Each synapse is less significant if there are lots of them...
-		depol[i] /= counts[i];
-
-		if (depol[i] >= depolmax) {
-			depolmax = depol[i];
-		}
-		if (depol[i] <= depolmin) {
-			depolmin = depol[i];
-		}
-		//outputs[i] = 0.0f;
-		outputs[i] *= kDecayRate;
-	}
-
-	
-
-	// Adjust depolarisation levels.
-	float depoldiff = depolmax - depolmin;
-	if (depoldiff > 0.0001f) {
-		depoldiff = 1.0f / depoldiff;
-		for (auto i = 0U; i < outsize; ++i) {
-			// Level the depolarisation
-			depol[i] -= depolmin;
-			depol[i] *= depoldiff;
-			energy += depol[i];
-		}
-
-		energy = 1.0f / energy;
-
-		for (auto i = 0U; i < outsize; ++i) {
-			depol[i] *= energy;
-			// Depolarisation must reach a minimum level
-			if (depol[i] > (energyin * kThresholdScale)) {
-				// Normalise activation (PV soma inhib effect)
-				auto activation = depol[i] * (depolmax - depolmin);
-				auto delta = activation - outputs[i];
-
-				if (delta > 0.0f) {
-					outputs[i] = activation;
-				}
-
-				for (auto j = 0U; j < insize; ++j) {
-					auto &link = links[j * outsize + i];
-					if (inputs[j] * (1.0f - ((float)link / 255.0f)) > (1.0f - depol[i])) {
-						if (link < 255) {
-							++link;
-						}
-					}
-				}
-			} else {
-				
-			}
-		}
-	}
-
-	adjust(depolix, unit, inputs, insize, links, counts, depol, outsize);
-*/
 	return 0;
 }
 
