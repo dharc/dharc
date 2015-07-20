@@ -55,7 +55,7 @@ class Region : public RegionBase {
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
 	static constexpr auto kSuppressionRate = 0.2;
-	static constexpr auto kLearnRate = 0.1f;
+	static constexpr auto kLearnRate = 0.9f;
 	static constexpr auto kModChangeRate = 0.9f;
 	static constexpr auto kModFactor = 0.5f;
 	

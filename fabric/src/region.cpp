@@ -250,8 +250,8 @@ activate(Unit &unit, float *inputs, size_t insize) {
 		}
 	}
 
-	float modulation = 0.8f;
-	float threshold = (energy / insize) * modulation;
+	float modulation = 0.2f;
+	//float threshold = (energy / insize) * modulation;
 	float maxdepol = 0.0f;
 
 	// Sum the depols
@@ -270,7 +270,7 @@ activate(Unit &unit, float *inputs, size_t insize) {
 			total_depol[i] *= maxdepol - total_depol[i];
 		}
 
-		if (total_depol[i] > threshold) {
+		if (total_depol[i] > modulation) {
 			newoutputs[i] = total_depol[i];
 		} else {
 			newoutputs[i] = 0.0f;
@@ -280,25 +280,26 @@ activate(Unit &unit, float *inputs, size_t insize) {
 		for (auto j = 0U; j < insize; ++j) {
 			auto &link = unit.links[j * SMAX + i];
 			float newdepol = inputs[i] * link.strength;
+			float delta = newdepol - link.depol;
 			// If the link became active (or more active)
-			if (link.depol < newdepol) {
-				// If output was and remains active
-				if (unit.outputs[j] > 0.00001f && newoutputs[j] > 0.00001f) {
+			if (delta > 0.2f) {
+				// If remains active
+				if ((unit.outputs[j] > 0.0001f) && (newoutputs[j] > 0.0001f)) {
 					// Weaken the link
 					unit.counts[i] -= link.strength;
-					link.strength -= newdepol * unit.outputs[j] * kLearnRate * (newdepol - link.depol);
+					link.strength -= newdepol * newoutputs[j] * kLearnRate; // * (newdepol - link.depol);
 					unit.counts[i] += link.strength;
 				}
-				// If output was inactive and becomes active
-				if (unit.outputs[j] <= 0.00001f && newoutputs[j] > 0.00001f) {
+				// If became active
+				if ((unit.outputs[j] < 0.0001f) && (newoutputs[j] > 0.0001f)) {
 					// Strengthen the link
 					unit.counts[i] -= link.strength;
-					link.strength += inputs[i] * (1.0f - link.strength) * unit.outputs[j] * kLearnRate * (newdepol - link.depol);
+					link.strength += inputs[i] * (1.0f - link.strength) * newoutputs[j] * kLearnRate; // * (newdepol - link.depol);
 					unit.counts[i] += link.strength;
 				}
-
-				link.depol = newdepol;
 			}
+
+			link.depol = newdepol;
 		}
 	}
 

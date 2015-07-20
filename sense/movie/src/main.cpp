@@ -116,7 +116,7 @@ static void display(void *data, void *id)
 
 int main(int argc, char *argv[])
 {
-	sense = new Sense("192.168.1.78", 7878);
+	sense = new Sense("localhost", 7878);
 
 	ddata.resize(320*240);
 	ldata.resize(320*240);
