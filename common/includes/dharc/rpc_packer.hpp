@@ -71,6 +71,7 @@ struct Packer<std::vector<R>> {
 		unsigned char *buffer = new unsigned char[ux];
 		is.read((char *)buffer, ux);
 		uncompress(res.data(), &x, buffer, ux);
+		delete [] buffer;
 		return res;
 	}
 };
