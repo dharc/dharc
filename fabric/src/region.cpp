@@ -46,40 +46,30 @@ size_t TMAX
 >
 void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
 initUnit(size_t ix) {
+	float maxdist = std::sqrt((float)USIZE + (float)USIZE);
 	for (auto x = 0U; x < SMAX; ++x) {
 		const int xi = (int)(((float)x / (float)SMAX) * (float)USIZE);
 		const int xx = xi % kUnitSqrt;
 		const int xy = xi / kUnitSqrt;
 
-		units_[ix].scount[x] = 0.0f;
+		units_[ix].counts[x] = 0.0f;
 
 		for (auto y = 0U; y < USIZE; ++y) {
 			const int yx = y % kUnitSqrt;
 			const int yy = y / kUnitSqrt;
 			const int dx = xx - yx;
 			const int dy = xy - yy;
-			const float dist = std::sqrt(dx * dx + dy * dy) / (float)kUnitSqrt;
+			const float dist = std::sqrt(dx * dx + dy * dy) / maxdist;
 			
-			units_[ix].slinks[y * SMAX + x] = 1.0f - dist;
+			units_[ix].links[y * SMAX + x].strength = 1.0f - dist;
+			units_[ix].links[y * SMAX + x].depol = 0.0f;
 
-			units_[ix].scount[x] += units_[ix].slinks[y * SMAX + x];
+			units_[ix].counts[x] += units_[ix].links[y * SMAX + x].strength;
 		}
 	}
 
-	/*for (auto i = 0U; i < kSpatialLinks; ++i) {
-		units_[ix].slinks[i] = (std::rand() % 255) + 1;
-	}*/
-
-	for (auto i = 0U; i < kTemporalLinks; ++i) {
-		units_[ix].tlinks[i] = 0;
-	}
-
 	for (auto i = 0U; i < SMAX; ++i) {
-		units_[ix].spatial[i] = 0.0f;
-	}
-
-	for (auto i = 0U; i < TMAX; ++i) {
-		units_[ix].temporal[i] = 0.0f;
+		units_[ix].outputs[i] = 0.0f;
 	}
 
 	units_[ix].modulation = 0.5f;
@@ -121,7 +111,7 @@ process() {
 	#pragma omp parallel for
 	for (auto i = 0U; i < kUnitCount; ++i) {
 		//decaySpatial(i);
-		activate(units_[i], &inputs_[i * USIZE], USIZE, units_[i].slinks, units_[i].scount, units_[i].spatial, SMAX);
+		activate(units_[i], &inputs_[i * USIZE], USIZE);
 		//adjustSpatial(i, s);
 	}
 
@@ -195,10 +185,10 @@ reform(vector<float> &v) {
 		//size_t maxix = 0;
 		for (auto j = 0U; j < SMAX; ++j) {
 			//v[i * USIZE + j] = units_[i].spatial[j];
-			if (units_[i].spatial[j] > 0.01) {
+			if (units_[i].outputs[j] > 0.01) {
 				for (auto k = 0U; k < USIZE; ++k) {
-					v[i * USIZE + k] += (units_[i].slinks[k * SMAX + j]) *
-											(units_[i].spatial[j]);
+					v[i * USIZE + k] += (units_[i].links[k * SMAX + j].strength) *
+											(units_[i].outputs[j]);
 					if (v[i * USIZE + k] > 1.0f) v[i * USIZE + k] = 1.0f;
 				}
 			}
@@ -246,76 +236,76 @@ size_t SMAX,
 size_t TMAX
 >
 size_t Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, float *outputs, size_t outsize) {
-	//auto &unit = units_[ix];
-	//const auto ibase = ix * USIZE;
-	float depol[outsize];
+activate(Unit &unit, float *inputs, size_t insize) {
 	float energy = 0.0f;
-	float factor = 1.0f;
+	vector<float> total_depol(SMAX, 0.0f);
+	vector<float> newoutputs(SMAX, 0.0f);
 
-	// Reset depols and outputs.
-	for (auto i = 0U; i < outsize; ++i) {
-		depol[i] = 0.0f;
-		outputs[i] = 0.0f;
-	}
-
-	// Sort the inputs
-	vector<std::pair<float,size_t>> inputs_sorted;
+	// Calculate total depolarisation
 	for (auto i = 0U; i < insize; ++i) {
 		energy += inputs[i];
-		inputs_sorted.push_back({inputs[i],i});
+		for (auto j = 0U; j < SMAX; ++j) {
+			auto &link = unit.links[i * SMAX + j];
+			total_depol[j] += inputs[i] * link.strength;
+		}
 	}
-	std::sort(inputs_sorted.begin(), inputs_sorted.end(), [](auto a, auto b) {
-		return a.first > b.first;
-	});
 
 	float modulation = 0.8f;
 	float threshold = (energy / insize) * modulation;
+	float maxdepol = 0.0f;
 
-	// Generate depolarisation values until first is fired.
-	for (auto i : inputs_sorted) {
-		for (auto j = 0U; j < outsize; ++j) {
-			auto &link = links[i.second * outsize + j];
-			// Use factor for soma suppression
-			depol[j] += i.first * link;
+	// Sum the depols
+	for (auto i = 0U; i < SMAX; ++i) {
+		total_depol[i] /= unit.counts[i];
 
-			// STDP Learning adjustments
-			// Has this pattern already fired?
-			counts[j] -= link;
-			link -= i.first * link * outputs[j] * kLearnRate;
-			counts[j] += link;
+		if (total_depol[i] > maxdepol) {
+			maxdepol = total_depol[i];
+		}
+	}
 
-			// TRIGGER if 20% activated. (% controlled by modulation)
-			if ((outputs[j] < 0.00001f) && (depol[j] * factor > counts[j] * threshold)) {
-				// Suppress existing depolarisations and reduce axon output
-				for (auto k = 0U; k < outsize; ++k) {
-					if (k == j) continue;
-					// Dendrite suppression
-					depol[k] *= 0.8f;
-					// Output axon suppression
-					outputs[k] *= (1.0f - factor);
+	// Calculate new outputs.
+	for (auto i = 0U; i < SMAX; ++i) {
+		// Scale depol by total
+		if (total_depol[i] < maxdepol) {
+			total_depol[i] *= maxdepol - total_depol[i];
+		}
+
+		if (total_depol[i] > threshold) {
+			newoutputs[i] = total_depol[i];
+		} else {
+			newoutputs[i] = 0.0f;
+		}
+
+		// Update link strengths
+		for (auto j = 0U; j < insize; ++j) {
+			auto &link = unit.links[j * SMAX + i];
+			float newdepol = inputs[i] * link.strength;
+			// If the link became active (or more active)
+			if (link.depol < newdepol) {
+				// If output was and remains active
+				if (unit.outputs[j] > 0.00001f && newoutputs[j] > 0.00001f) {
+					// Weaken the link
+					unit.counts[i] -= link.strength;
+					link.strength -= newdepol * unit.outputs[j] * kLearnRate * (newdepol - link.depol);
+					unit.counts[i] += link.strength;
+				}
+				// If output was inactive and becomes active
+				if (unit.outputs[j] <= 0.00001f && newoutputs[j] > 0.00001f) {
+					// Strengthen the link
+					unit.counts[i] -= link.strength;
+					link.strength += inputs[i] * (1.0f - link.strength) * unit.outputs[j] * kLearnRate * (newdepol - link.depol);
+					unit.counts[i] += link.strength;
 				}
 
-				// Generate new depolarisation
-				outputs[j] = factor; // * threshold;
-				factor *= 0.2f;
-
-				// Boost all links that caused this firing
-				for (auto k : inputs_sorted) {
-					auto &link2 = links[k.second * outsize + j];
-					counts[j] -= link2;
-					link2 += k.first * (1.0f - link2) * outputs[j] * kLearnRate;
-					counts[j] += link2;
-					if (k.second == i.second) break;
-				}
+				link.depol = newdepol;
 			}
 		}
 	}
 
-	for (auto i = 0U; i < outsize; ++i) {
-		outputs[i] *= depol[i] / counts[i]; //1.0f / modulation;
+	// Copy outputs
+	for (auto i = 0U; i < SMAX; ++i) {
+		unit.outputs[i] = newoutputs[i];
 	}
-
 
 	return 0;
 }

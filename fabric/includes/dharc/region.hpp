@@ -54,7 +54,7 @@ class Region : public RegionBase {
 	static constexpr auto kOutputSize = TMAX * kUnitCount;
 	static constexpr auto kSpatialLinks = USIZE * USIZE * SMAX;
 	static constexpr auto kTemporalLinks = SMAX * TMAX;
-	static constexpr auto kDecayRate = 0.5f;
+	static constexpr auto kSuppressionRate = 0.2;
 	static constexpr auto kLearnRate = 0.1f;
 	static constexpr auto kModChangeRate = 0.9f;
 	static constexpr auto kModFactor = 0.5f;
@@ -78,20 +78,23 @@ class Region : public RegionBase {
 
 	private:
 	float inputs_[kInputSize];
-	uint8_t outputs_[kOutputSize];	
+	uint8_t outputs_[kOutputSize];
+
+	struct Link {
+		float strength;
+		float depol;
+	};
 
 	struct Unit {
 		float modulation;
-		float spatial[SMAX];
-		float temporal[TMAX];
-		float scount[SMAX];
-		float slinks[kSpatialLinks];
-		uint8_t tlinks[kTemporalLinks];
+		float outputs[SMAX];
+		float counts[SMAX];
+		Link links[kSpatialLinks];
 	};
 
 	void initUnit(size_t ix);
 	void processUnit(size_t ix);
-	size_t activate(Unit &unit, float *inputs, size_t insize, float *links, float *counts, float *outputs, size_t outsize);
+	size_t activate(Unit &unit, float *inputs, size_t insize);
 	//void adjust(size_t s, Unit &unit, float *inputs, size_t insize, float *links, float *counts, float *outputs, size_t outsize);
 	void activateTemporal(size_t ix);
 	void adjustTemporal(size_t);
