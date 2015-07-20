@@ -9,6 +9,7 @@
 #include <vector>
 #include <list>
 #include <cassert>
+#include <zlib.h>
 
 #include "dharc/node.hpp"
 #include "dharc/tail.hpp"
@@ -50,63 +51,31 @@ template<>
 template<typename R>
 struct Packer<std::vector<R>> {
 	static void pack(std::ostream &os, const std::vector<R> &vec) {
-		uint32_t x = vec.size();
-		os.write((const char *)&x, sizeof(uint32_t));
-		os.write((const char *)vec.data(), x * sizeof(R));
+		long unsigned int x = vec.size();
+		os.write((const char *)&x, sizeof(long unsigned int));
+		x = compressBound(x * sizeof(R));
+		unsigned char *buffer = new unsigned char[x];
+		compress(buffer, &x, vec.data(), vec.size() * sizeof(R));
+		os.write((const char *)&x, sizeof(long unsigned int));
+		os.write((const char *)buffer, x);
+		delete [] buffer;
 	}
 	static std::vector<R> unpack(std::istream &is) {
 		std::vector<R> res;
-		uint32_t x;
-		is.read((char *)&x, sizeof(uint32_t));
+		long unsigned int x;
+		is.read((char *)&x, sizeof(long unsigned int));
 		res.resize(x);
-		is.read((char *)res.data(), x * sizeof(R));
+		x *= sizeof(R);
+		long unsigned int ux;
+		is.read((char *)&ux, sizeof(long unsigned int));
+		unsigned char *buffer = new unsigned char[ux];
+		is.read((char *)buffer, ux);
+		uncompress(res.data(), &x, buffer, ux);
 		return res;
 	}
 };
 
 
-/**
- * RPC packer for vectors of nodes.
- */
-template<>
-template<>
-struct Packer<std::vector<Node>> {
-	static void pack(std::ostream &os, const std::vector<Node> &vec) {
-		uint32_t x = vec.size();
-		os.write((const char *)&x, sizeof(uint32_t));
-		os.write((const char *)vec.data(), x * sizeof(Node));
-	}
-	static std::vector<Node> unpack(std::istream &is) {
-		std::vector<Node> res;
-		uint32_t x;
-		is.read((char *)&x, sizeof(uint32_t));
-		res.resize(x);
-		is.read((char *)res.data(), x * sizeof(Node));
-		return res;
-	}
-};
-
-
-/**
- * RPC packer for vectors of floats.
- */
-template<>
-template<>
-struct Packer<std::vector<float>> {
-	static void pack(std::ostream &os, const std::vector<float> &vec) {
-		uint32_t x = vec.size();
-		os.write((const char *)&x, sizeof(uint32_t));
-		os.write((const char *)vec.data(), x * sizeof(float));
-	}
-	static std::vector<float> unpack(std::istream &is) {
-		std::vector<float> res;
-		uint32_t x;
-		is.read((char *)&x, sizeof(uint32_t));
-		res.resize(x);
-		is.read((char *)res.data(), x * sizeof(float));
-		return res;
-	}
-};
 
 /**
  * RPC packer for Tails.
