@@ -48,7 +48,7 @@ int rpc_version() {
 }
 
 bool rpc_write2d(const size_t &regid, const vector<uint8_t> &values, const size_t &uw, const size_t &uh) {
-	Fabric::write2D(static_cast<dharc::RegionID>(regid), values, uw, uh);
+	Fabric::write2D(static_cast<dharc::RegionID>(regid), values);
 	return true;
 }
 

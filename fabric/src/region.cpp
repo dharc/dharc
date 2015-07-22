@@ -5,309 +5,235 @@
 #include "dharc/region.hpp"
 
 using dharc::fabric::Region;
+using std::pair;
 
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::Region() {
-	for (auto i = 0U; i <kUnitCount; ++i) {
-		initUnit(i);
-	}
 
-	for (auto i = 0U; i < kInputSize; ++i) {
-		inputs_[i] = 0.0f;
+Region::Region(size_t width, size_t height, size_t unitsx, size_t unitsy)
+	: unitsx_(unitsx), unitsy_(unitsy), width_(width), height_(height),
+		uwidth_(width / unitsx), uheight_(height / unitsy),
+		outsize_(uwidth_ * uheight_) {
+	assert(width % unitsx == 0);
+	assert(height % unitsy == 0);
+
+	units_.resize(1);
+	makeInputLayer();
+}
+
+
+
+Region::~Region() {
+}
+
+
+
+void Region::makeInputLayer() {
+	units_[0].resize(unitsx_);
+	for (auto x = 0U; x < unitsx_; ++x) {
+		units_[0][x].resize(unitsy_);
+		for (auto y = 0U; y < unitsy_; ++y) {
+			initUnit(units_[0][x][y], uwidth_, uheight_);
+		}
 	}
 }
 
 
 
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::~Region() {
-}
+void Region::initUnit(Unit &unit, size_t iwidth, size_t iheight) {
+	float maxdist = std::sqrt((float)(iwidth * iwidth) +
+								(float)(iheight * iheight));
 
+	const auto insize = iwidth * iheight;
+	const auto linksize = outsize_ * insize;
 
+	unit.inputs.resize(insize);
+	unit.outputs.resize(outsize_);
+	unit.links.resize(linksize);
+	unit.counts.resize(outsize_);
 
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-initUnit(size_t ix) {
-	float maxdist = std::sqrt((float)USIZE + (float)USIZE);
-	for (auto x = 0U; x < SMAX; ++x) {
-		const int xi = (int)(((float)x / (float)SMAX) * (float)USIZE);
-		const int xx = xi % kUnitSqrt;
-		const int xy = xi / kUnitSqrt;
+	for (auto x = 0U; x < outsize_; ++x) {
+		const int xi = (int)(((float)x / (float)outsize_) * (float)insize);
+		const int xx = xi % uwidth_;
+		const int xy = xi / uwidth_;
 
-		units_[ix].counts[x] = 0.0f;
+		unit.counts[x] = 0.0f;
+		unit.outputs[x] = 0.0f;
+		unit.inputs[x] = 0.0f;
 
-		for (auto y = 0U; y < USIZE; ++y) {
-			const int yx = y % kUnitSqrt;
-			const int yy = y / kUnitSqrt;
+		for (auto y = 0U; y < insize; ++y) {
+			const int yx = y % uwidth_;
+			const int yy = y / uwidth_;
 			const int dx = xx - yx;
 			const int dy = xy - yy;
 			const float dist = std::sqrt(dx * dx + dy * dy) / maxdist;
 			
-			units_[ix].links[y * SMAX + x].strength = 1.0f - dist;
-			units_[ix].links[y * SMAX + x].depol = 0.0f;
-
-			units_[ix].counts[x] += units_[ix].links[y * SMAX + x].strength;
+			unit.links[y * outsize_ + x].strength = 1.0f - dist;
+			unit.links[y * outsize_ + x].depol = 0.0f;
+			unit.counts[x] += unit.links[y * outsize_ + x].strength;
 		}
 	}
 
-	for (auto i = 0U; i < SMAX; ++i) {
-		units_[ix].outputs[i] = 0.0f;
-	}
-
-	units_[ix].modulation = 0.5f;
+	unit.modulation = 0.5f;
 }
 
 
 
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-write(const vector<float> &v) {
-	assert(v.size() == kInputSize);
+void Region::write(const vector<uint8_t> &v) {
+	assert(v.size() == width_ * height_);
 
-	clearInput();
+	for (auto x = 0U; x < unitsx_; ++x) {
+		for (auto y = 0U; y < unitsy_; ++y) {
+			float mininput = 1.1f;
+			float maxinput = 0.0f;
+			Unit &unit = units_[0][x][y];
+
+			for (auto xx = 0U; xx < uwidth_; ++xx) {
+				for (auto yy = 0U; yy < uheight_; ++yy) {
+					const auto ix = (x * uwidth_) + xx + ((y * uheight_ + yy) * width_);
+					const auto ux = xx + (yy * uwidth_);
+					unit.inputs[ux] = (float)v[ix] / 255.0f;
+					if (unit.inputs[ux] < mininput) mininput = unit.inputs[ux];
+					if (unit.inputs[ux] > maxinput) maxinput = unit.inputs[ux];
+				}
+			}
+
+			float scale = 1.0f / (maxinput - mininput);
+			if (scale > kContrastMax) scale = kContrastMax;
+
+			// Level the inputs
+			for (auto i = 0U; i < uwidth_ * uheight_; ++i) {
+				unit.inputs[i] = (unit.inputs[i] - mininput) * scale;
+			}
+		}
+	}
+}
+
+
+
+void Region::process() {
+	//adjustModulation();
+
+	//#pragma omp parallel for
+	for (auto i = 0U; i < 1; ++i) {
+		//decaySpatial(i);
+		//activate(units_[i], &inputs_[i * USIZE], USIZE);
+		//adjustSpatial(i, s);
+		processLayer(i);
+	}
+}
+
+
+
+void Region::processLayer(size_t layer) {
+	#pragma omp parallel for
+	for (auto x = 0U; x < unitsx_; ++x) {
+		for (auto y = 0U; y < unitsy_; ++y) {
+			processUnit(units_[layer][x][y]);
+		}
+	}
+}
+
+
+
+void Region::reform(vector<uint8_t> &v) {
+	v.resize(width_ * height_);
 
 	for (auto i = 0U; i < v.size(); ++i) {
-		inputs_[i] += (1.0f - inputs_[i]) * v[i];
-	}
-}
+		const auto y = i / width_;
+		const auto x = i % width_;
+		const auto uy = y / uheight_;
+		const auto oy = y % uheight_;
+		const auto ux = x / uwidth_;
+		const auto ox = x % uwidth_;
+		const auto uix = oy * uwidth_ + ox;
 
+		Unit &unit = units_[0][ux][uy];
+		float tmp = 0.0f;
 
-
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-process() {
-	adjustModulation();
-
-	#pragma omp parallel for
-	for (auto i = 0U; i < kUnitCount; ++i) {
-		//decaySpatial(i);
-		activate(units_[i], &inputs_[i * USIZE], USIZE);
-		//adjustSpatial(i, s);
-	}
-
-	//clearInput();
-
-	for (auto i = 0U; i < kUnitCount; ++i) {
-		//decayTemporal(i);
-		//activateTemporal(i);
-		//adjustTemporal(i);
-	}
-
-	// Interunit links
-	// Generate merged output
-}
-
-
-
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-adjustModulation() {
-	for (auto i = 0U; i < kUnitCount; ++i) {
-		const auto ibase = i * USIZE;
-		const int ux = i % UNITSX;
-		const int uy = i / UNITSX;
-		float energy = 0.0f;
-
-		for (auto j = 0U; j < USIZE; ++j) {
-			energy += inputs_[ibase + j];
+		for (auto j = 0U; j < outsize_; ++j) {
+			tmp += unit.links[uix * outsize_ + j].strength * unit.outputs[j];
 		}
-
-		energy /= USIZE;
-
-		energy = 1.0f - energy;
-		energy = energy - 0.5f;
-		//units_[i].modulation = 0.5f - (0.1f * energy);
-		energy =  0.125f * kModChangeRate * energy;
-
-		boostModulation(ux-1, uy-1, energy);
-		boostModulation(ux-1, uy, energy);
-		boostModulation(ux-1, uy+1, energy);
-		boostModulation(ux+1, uy-1, energy);
-		boostModulation(ux+1, uy, energy);
-		boostModulation(ux+1, uy+1, energy);
-		boostModulation(ux, uy-1, energy);
-		boostModulation(ux, uy+1, energy);
+		//tmp = unit.outputs[uix];
+		if (tmp > 1.0f) tmp = 1.0f;
+		v[i] = tmp * 255.0f;
 	}
 }
 
 
 
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-reform(vector<float> &v) {
-	/*for (auto i = 0U; i < kInputSize; ++i) {
-		v[i] = inputs_[i];
-	}*/
-	for (auto i = 0U; i < kUnitCount; ++i) {
-		//float max = 0.0f;
-		//size_t maxix = 0;
-		for (auto j = 0U; j < SMAX; ++j) {
-			//v[i * USIZE + j] = units_[i].spatial[j];
-			if (units_[i].outputs[j] > 0.01) {
-				for (auto k = 0U; k < USIZE; ++k) {
-					v[i * USIZE + k] += (units_[i].links[k * SMAX + j].strength) *
-											(units_[i].outputs[j]);
-					if (v[i * USIZE + k] > 1.0f) v[i * USIZE + k] = 1.0f;
+void Region::processUnit(Unit &unit) {
+	struct LinkState {
+		float depol;
+		size_t input;
+		Link *link;
+	};
+
+	vector<pair<size_t, float>> total_depol(outsize_, {0, 0.0f});
+	vector<vector<LinkState>> linkstates(outsize_);
+
+	for (auto i = 0U; i < outsize_; ++i) {
+		total_depol[i].first = i;
+		linkstates[i].reserve(uwidth_ * uheight_);
+	}
+
+	// Calculate individual link depolarisations and save
+	for (auto i = 0U; i < unit.inputs.size(); ++i) {
+		for (auto j = 0U; j < outsize_; ++j) {
+			auto &link = unit.links[i * outsize_ + j];
+			const float depol = (unit.inputs[i] * link.strength) / unit.counts[i];
+
+			if (depol > 0.0001f) {
+				linkstates[j].push_back({depol, i, &link});
+			}
+			total_depol[j].second += depol;
+		}
+	}
+
+	// Sort the match percentages, highest first.
+	std::sort(total_depol.begin(), total_depol.end(), [](auto a, auto b) {
+		return a.second > b.second;
+	});
+
+	// Minimum % match before activation
+	float threshold = 0.3f;
+
+	// For each sorted pattern
+	for (auto d : total_depol) {
+		// If it matched enough then
+		if (d.second > threshold) {
+			float newoutput = (d.second - threshold) * (1.0f + threshold);
+
+			if (unit.outputs[d.first] < 0.0001f) {
+				// Sort individual links to find tipping point
+				std::sort(linkstates[d.first].begin(), linkstates[d.first].end(), [](auto a, auto b) {
+					return a.depol > b.depol;
+				});
+
+				float depolsum = 0.0f;
+
+				for (auto l : linkstates[d.first]) {
+					if (depolsum > threshold) {
+						unit.counts[d.first] -= l.link->strength;
+						l.link->strength -= l.depol * newoutput * kLearnRate;
+						unit.counts[d.first] += l.link->strength;
+					} else {
+						unit.counts[d.first] -= l.link->strength;
+						l.link->strength += unit.inputs[l.input] * (1.0f - l.link->strength) * newoutput * kLearnRate;
+						unit.counts[d.first] += l.link->strength;
+					}
+					depolsum += l.depol;
 				}
 			}
-		}
-	}
-}
 
+			// Reduce other thresholds by inverse of this activation strength
+			for (auto i = outsize_ - 1; i >= 0; --i) {
+				if (d.first == total_depol[i].first) break;
+				total_depol[i].second *= 1.0f - newoutput;
+			}
 
-
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-activityMap(vector<uint8_t> &v) {
-
-}
-
-
-
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-void Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-clearInput() {
-	for (auto i = 0U; i < kInputSize; ++i) {
-		inputs_[i] = 0.0f;
-	}
-}
-
-
-
-template<
-size_t USIZE,
-size_t UNITSX,
-size_t UNITSY,
-size_t SMAX,
-size_t TMAX
->
-size_t Region<USIZE,UNITSX,UNITSY,SMAX,TMAX>::
-activate(Unit &unit, float *inputs, size_t insize) {
-	float energy = 0.0f;
-	vector<float> total_depol(SMAX, 0.0f);
-	vector<float> newoutputs(SMAX, 0.0f);
-
-	// Calculate total depolarisation
-	for (auto i = 0U; i < insize; ++i) {
-		energy += inputs[i];
-		for (auto j = 0U; j < SMAX; ++j) {
-			auto &link = unit.links[i * SMAX + j];
-			total_depol[j] += inputs[i] * link.strength;
-		}
-	}
-
-	float modulation = 0.2f;
-	//float threshold = (energy / insize) * modulation;
-	float maxdepol = 0.0f;
-
-	// Sum the depols
-	for (auto i = 0U; i < SMAX; ++i) {
-		total_depol[i] /= unit.counts[i];
-
-		if (total_depol[i] > maxdepol) {
-			maxdepol = total_depol[i];
-		}
-	}
-
-	// Calculate new outputs.
-	for (auto i = 0U; i < SMAX; ++i) {
-		// Scale depol by total
-		if (total_depol[i] < maxdepol) {
-			total_depol[i] *= maxdepol - total_depol[i];
-		}
-
-		if (total_depol[i] > modulation) {
-			newoutputs[i] = total_depol[i];
+			unit.outputs[d.first] = newoutput;
 		} else {
-			newoutputs[i] = 0.0f;
-		}
-
-		// Update link strengths
-		for (auto j = 0U; j < insize; ++j) {
-			auto &link = unit.links[j * SMAX + i];
-			float newdepol = inputs[i] * link.strength;
-			float delta = newdepol - link.depol;
-			// If the link became active (or more active)
-			if (delta > 0.2f) {
-				// If remains active
-				if ((unit.outputs[j] > 0.0001f) && (newoutputs[j] > 0.0001f)) {
-					// Weaken the link
-					unit.counts[i] -= link.strength;
-					link.strength -= newdepol * newoutputs[j] * kLearnRate; // * (newdepol - link.depol);
-					unit.counts[i] += link.strength;
-				}
-				// If became active
-				if ((unit.outputs[j] < 0.0001f) && (newoutputs[j] > 0.0001f)) {
-					// Strengthen the link
-					unit.counts[i] -= link.strength;
-					link.strength += inputs[i] * (1.0f - link.strength) * newoutputs[j] * kLearnRate; // * (newdepol - link.depol);
-					unit.counts[i] += link.strength;
-				}
-			}
-
-			link.depol = newdepol;
+			unit.outputs[d.first] = 0.0f;
 		}
 	}
-
-	// Copy outputs
-	for (auto i = 0U; i < SMAX; ++i) {
-		unit.outputs[i] = newoutputs[i];
-	}
-
-	return 0;
 }
 

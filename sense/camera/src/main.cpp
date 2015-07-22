@@ -272,7 +272,7 @@ int sdl_filter(const SDL_Event * event)
 
 
 int main(int argc, char *argv[]) {
-	Sense sense("192.168.1.78", 7878);
+	Sense sense("localhost", 7878);
 
 	atexit(SDL_Quit);
     if (SDL_Init(SDL_INIT_VIDEO) < 0)

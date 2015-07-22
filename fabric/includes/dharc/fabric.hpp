@@ -17,7 +17,7 @@
 using std::vector;
 using std::chrono::time_point;
 using std::size_t;
-using dharc::fabric::RegionBase;
+using dharc::fabric::Region;
 // using dharc::LIFOBuffer;
 
 namespace dharc {
@@ -40,11 +40,11 @@ class Fabric {
 	static void initialise();
 	static void finalise();
 
-	static void write2D(RegionID regid, const vector<uint8_t> &v, size_t uw, size_t uh);
+	static void write2D(RegionID regid, const vector<uint8_t> &v);
 
 	static vector<uint8_t> reform2D(RegionID regid, size_t uw, size_t uh);
 
-	static RegionBase *getRegion(RegionID regid);
+	static Region *getRegion(RegionID regid);
 
 	/**
 	 * Statistic: Approximate number of hyperarc modifications per second.
@@ -77,7 +77,7 @@ class Fabric {
 
 	static std::atomic<unsigned long long> counter__;
 
-	static vector<RegionBase*> regions__;
+	static vector<Region*> regions__;
 	//static vector<vector<float>> region_inputs__;
 
 	static void counterThread();
