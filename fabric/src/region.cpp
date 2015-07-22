@@ -181,9 +181,9 @@ void Region::processUnit(Unit &unit) {
 			auto &link = unit.links[i * outsize_ + j];
 			const float depol = (unit.inputs[i] * link.strength) / unit.counts[i];
 
-			if (depol > 0.0001f) {
-				linkstates[j].push_back({depol, i, &link});
-			}
+			//if (depol > 0.0001f) {
+			linkstates[j].push_back({depol, i, &link});
+			//}
 			total_depol[j].second += depol;
 		}
 	}
@@ -197,7 +197,9 @@ void Region::processUnit(Unit &unit) {
 	float threshold = 0.3f;
 
 	// For each sorted pattern
-	for (auto d : total_depol) {
+	for (auto i = total_depol.begin(); i != total_depol.end(); ++i) {
+		auto &d = *i;
+
 		// If it matched enough then
 		if (d.second > threshold) {
 			float newoutput = (d.second - threshold) * (1.0f + threshold);
@@ -212,9 +214,17 @@ void Region::processUnit(Unit &unit) {
 
 				for (auto l : linkstates[d.first]) {
 					if (depolsum > threshold) {
-						unit.counts[d.first] -= l.link->strength;
-						l.link->strength -= l.depol * newoutput * kLearnRate;
-						unit.counts[d.first] += l.link->strength;
+						//unit.counts[d.first] -= l.link->strength;
+						//l.link->strength -= l.depol * newoutput * kLearnRate;
+						//unit.counts[d.first] += l.link->strength;
+						for (auto j = ++i; j != total_depol.end(); ++j) {
+							auto &link = linkstates[(*j).first][l.input];
+							(*j).second -= link.depol;
+							unit.counts[(*j).first] -= link.link->strength;
+							l.link->strength -= link.depol * newoutput * kLearnRate;
+							unit.counts[(*j).first] -= link.link->strength;
+							link.depol = (unit.inputs[l.input] * link.link->strength) / unit.counts[(*j).first];
+						}
 					} else {
 						unit.counts[d.first] -= l.link->strength;
 						l.link->strength += unit.inputs[l.input] * (1.0f - l.link->strength) * newoutput * kLearnRate;
@@ -222,6 +232,10 @@ void Region::processUnit(Unit &unit) {
 					}
 					depolsum += l.depol;
 				}
+
+				std::sort(++i, total_depol.end(), [](auto a, auto b) {
+					return a.second > b.second;
+				});
 			}
 
 			// Reduce other thresholds by inverse of this activation strength
