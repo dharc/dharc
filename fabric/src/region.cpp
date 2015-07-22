@@ -217,7 +217,7 @@ void Region::processUnit(Unit &unit) {
 						//unit.counts[d.first] -= l.link->strength;
 						//l.link->strength -= l.depol * newoutput * kLearnRate;
 						//unit.counts[d.first] += l.link->strength;
-						for (auto j = ++i; j != total_depol.end(); ++j) {
+						for (auto j = i + 1; j != total_depol.end(); ++j) {
 							auto &link = linkstates[(*j).first][l.input];
 							(*j).second -= link.depol;
 							unit.counts[(*j).first] -= link.link->strength;
