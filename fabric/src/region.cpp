@@ -40,7 +40,7 @@ void Region::makeInputLayer() {
 
 void Region::initUnit(Unit &unit, size_t iwidth, size_t iheight) {
 	float maxdist = std::sqrt((float)(iwidth * iwidth) +
-								(float)(iheight * iheight)) / 2.0f;
+								(float)(iheight * iheight)) / 3.0f;
 
 	const auto insize = iwidth * iheight;
 	const auto linksize = outsize_ * insize;
@@ -99,13 +99,13 @@ void Region::write(const vector<uint8_t> &v) {
 				}
 			}
 
-			float scale = 1.0f / (maxinput - mininput);
+			/*float scale = 1.0f / (maxinput - mininput);
 			if (scale > kContrastMax) scale = kContrastMax;
 
 			// Level the inputs
 			for (auto i = 0U; i < uwidth_ * uheight_; ++i) {
 				unit.inputs[i] = (unit.inputs[i] - mininput) * scale;
-			}
+			}*/
 		}
 	}
 }
@@ -185,7 +185,7 @@ void Region::processUnit(Unit &unit) {
 
 	float insize = uwidth_ * uheight_;
 	// Percentage of max possible
-	float linklimit = 0.3f * (float)insize;
+	float linklimit = 0.2f * (float)insize;
 
 	// Calculate individual link depolarisations and save
 	for (auto i = 0U; i < unit.inputs.size(); ++i) {
@@ -214,7 +214,7 @@ void Region::processUnit(Unit &unit) {
 	});
 
 	// Minimum % match before activation
-	float threshold = 0.4f;
+	float threshold = 0.2f;
 	float factor = 1.0f;
 
 	// For each sorted pattern
@@ -224,7 +224,7 @@ void Region::processUnit(Unit &unit) {
 		// If it matched enough then
 		if (d.second * factor >= threshold) {
 			float newoutput = (d.second - threshold) * (1.0f + threshold) * factor;
-			factor *= newoutput; // (1.0f - newoutput);
+			factor *= (1.0f - newoutput);
 
 			// If not already activated
 			if (unit.outputs[d.first] < 0.0001f) {
@@ -241,7 +241,7 @@ void Region::processUnit(Unit &unit) {
 					if (depolsum >= threshold) {
 						l.link->strength -= l.depol * newoutput * kLearnRate;
 						// For the remaining patterns, not already activated
-						for (auto j = i + 1; j != total_depol.end(); ++j) {
+						/*for (auto j = i + 1; j != total_depol.end(); ++j) {
 							// Don't bother processing insignificant
 							if ((*j).second < threshold) break;
 
@@ -249,7 +249,7 @@ void Region::processUnit(Unit &unit) {
 							// Remove this link from other patterns input
 							(*j).second -= link.depol;
 							link.depol = 0.0f;
-						}
+						}*/
 					} else {
 						// This input contributed to this pattern, so strengthen
 						//unit.counts[d.first] -= l.link->strength;
