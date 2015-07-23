@@ -40,7 +40,7 @@ void Region::makeInputLayer() {
 
 void Region::initUnit(Unit &unit, size_t iwidth, size_t iheight) {
 	float maxdist = std::sqrt((float)(iwidth * iwidth) +
-								(float)(iheight * iheight));
+								(float)(iheight * iheight)) / 2.0f;
 
 	const auto insize = iwidth * iheight;
 	const auto linksize = outsize_ * insize;
@@ -66,9 +66,12 @@ void Region::initUnit(Unit &unit, size_t iwidth, size_t iheight) {
 			const int dy = xy - yy;
 			const float dist = std::sqrt(dx * dx + dy * dy) / maxdist;
 			
-			unit.links[y * outsize_ + x].strength = 1.0f - dist;
+			if (dist >= 1.0f) {
+				unit.links[y * outsize_ + x].strength = 0.0f;
+			} else {
+				unit.links[y * outsize_ + x].strength = 1.0f - dist;
+			}
 			unit.links[y * outsize_ + x].depol = 0.0f;
-			unit.counts[x] += unit.links[y * outsize_ + x].strength;
 		}
 	}
 
@@ -148,11 +151,16 @@ void Region::reform(vector<uint8_t> &v) {
 
 		Unit &unit = units_[0][ux][uy];
 		float tmp = 0.0f;
+		int count = 0;
 
 		for (auto j = 0U; j < outsize_; ++j) {
-			tmp += unit.links[uix * outsize_ + j].strength * unit.outputs[j];
+			if (unit.outputs[j] > 0.0001f) {
+				++count;
+				tmp += unit.links[uix * outsize_ + j].strength * unit.outputs[j];
+			}
 		}
 		//tmp = unit.outputs[uix];
+		tmp /= count;
 		if (tmp > 1.0f) tmp = 1.0f;
 		v[i] = tmp * 255.0f;
 	}
@@ -175,16 +183,28 @@ void Region::processUnit(Unit &unit) {
 		linkstates[i].reserve(uwidth_ * uheight_);
 	}
 
+	float insize = uwidth_ * uheight_;
+	// Percentage of max possible
+	float linklimit = 0.3f * (float)insize;
+
 	// Calculate individual link depolarisations and save
 	for (auto i = 0U; i < unit.inputs.size(); ++i) {
 		for (auto j = 0U; j < outsize_; ++j) {
 			auto &link = unit.links[i * outsize_ + j];
-			const float depol = (unit.inputs[i] * link.strength) / unit.counts[i];
+			const float depol = (unit.inputs[i] * link.strength) / linklimit;
 
 			//if (depol > 0.0001f) {
 			linkstates[j].push_back({depol, i, &link});
 			//}
 			total_depol[j].second += depol;
+		}
+	}
+
+	// Energy restrict total depols
+	for (auto i = 0U; i < outsize_; ++i) {
+		if (total_depol[i].second > 1.0f) {
+			//float excess = total_depol[i].second;
+			total_depol[i].second = 0.0f;
 		}
 	}
 
@@ -194,16 +214,19 @@ void Region::processUnit(Unit &unit) {
 	});
 
 	// Minimum % match before activation
-	float threshold = 0.3f;
+	float threshold = 0.4f;
+	float factor = 1.0f;
 
 	// For each sorted pattern
 	for (auto i = total_depol.begin(); i != total_depol.end(); ++i) {
 		auto &d = *i;
 
 		// If it matched enough then
-		if (d.second > threshold) {
-			float newoutput = (d.second - threshold) * (1.0f + threshold);
+		if (d.second * factor >= threshold) {
+			float newoutput = (d.second - threshold) * (1.0f + threshold) * factor;
+			factor *= newoutput; // (1.0f - newoutput);
 
+			// If not already activated
 			if (unit.outputs[d.first] < 0.0001f) {
 				// Sort individual links to find tipping point
 				std::sort(linkstates[d.first].begin(), linkstates[d.first].end(), [](auto a, auto b) {
@@ -212,37 +235,42 @@ void Region::processUnit(Unit &unit) {
 
 				float depolsum = 0.0f;
 
+				// For all of this patterns links
 				for (auto l : linkstates[d.first]) {
-					if (depolsum > threshold) {
-						//unit.counts[d.first] -= l.link->strength;
-						//l.link->strength -= l.depol * newoutput * kLearnRate;
-						//unit.counts[d.first] += l.link->strength;
+					// If this link occured after threshold
+					if (depolsum >= threshold) {
+						l.link->strength -= l.depol * newoutput * kLearnRate;
+						// For the remaining patterns, not already activated
 						for (auto j = i + 1; j != total_depol.end(); ++j) {
+							// Don't bother processing insignificant
+							if ((*j).second < threshold) break;
+
 							auto &link = linkstates[(*j).first][l.input];
+							// Remove this link from other patterns input
 							(*j).second -= link.depol;
-							unit.counts[(*j).first] -= link.link->strength;
-							l.link->strength -= link.depol * newoutput * kLearnRate;
-							unit.counts[(*j).first] -= link.link->strength;
-							link.depol = (unit.inputs[l.input] * link.link->strength) / unit.counts[(*j).first];
+							link.depol = 0.0f;
 						}
 					} else {
-						unit.counts[d.first] -= l.link->strength;
+						// This input contributed to this pattern, so strengthen
+						//unit.counts[d.first] -= l.link->strength;
 						l.link->strength += unit.inputs[l.input] * (1.0f - l.link->strength) * newoutput * kLearnRate;
-						unit.counts[d.first] += l.link->strength;
+						//unit.counts[d.first] += l.link->strength;
 					}
+
 					depolsum += l.depol;
 				}
 
-				std::sort(++i, total_depol.end(), [](auto a, auto b) {
+				// Resort after changes.
+				std::sort(i + 1, total_depol.end(), [](auto a, auto b) {
 					return a.second > b.second;
 				});
 			}
 
 			// Reduce other thresholds by inverse of this activation strength
-			for (auto i = outsize_ - 1; i >= 0; --i) {
+			/*for (auto i = outsize_ - 1; i >= 0; --i) {
 				if (d.first == total_depol[i].first) break;
 				total_depol[i].second *= 1.0f - newoutput;
-			}
+			}*/
 
 			unit.outputs[d.first] = newoutput;
 		} else {
