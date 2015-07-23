@@ -223,7 +223,7 @@ void Region::processUnit(Unit &unit) {
 
 		// If it matched enough then
 		if (d.second * factor >= threshold) {
-			float newoutput = (d.second - threshold) * (1.0f + threshold) * factor;
+			float newoutput = (d.second - threshold) * (1.0f / (1.0f - threshold)) * factor;
 			factor *= (1.0f - newoutput);
 
 			// If not already activated
@@ -239,38 +239,27 @@ void Region::processUnit(Unit &unit) {
 				for (auto l : linkstates[d.first]) {
 					// If this link occured after threshold
 					if (depolsum >= threshold) {
+						// Weaken link because it was not a main contributor
 						l.link->strength -= l.depol * newoutput * kLearnRate;
-						// For the remaining patterns, not already activated
-						/*for (auto j = i + 1; j != total_depol.end(); ++j) {
-							// Don't bother processing insignificant
-							if ((*j).second < threshold) break;
-
-							auto &link = linkstates[(*j).first][l.input];
-							// Remove this link from other patterns input
-							(*j).second -= link.depol;
-							link.depol = 0.0f;
-						}*/
 					} else {
 						// This input contributed to this pattern, so strengthen
-						//unit.counts[d.first] -= l.link->strength;
 						l.link->strength += unit.inputs[l.input] * (1.0f - l.link->strength) * newoutput * kLearnRate;
 						//unit.counts[d.first] += l.link->strength;
+
+						// If reached 1 then find one that is zero and double the link
+						//if (l.link->strength > (1.0f - epsilon)) {
+							
+						//}
 					}
 
 					depolsum += l.depol;
 				}
 
 				// Resort after changes.
-				std::sort(i + 1, total_depol.end(), [](auto a, auto b) {
-					return a.second > b.second;
-				});
+				//std::sort(i + 1, total_depol.end(), [](auto a, auto b) {
+				//	return a.second > b.second;
+				//});
 			}
-
-			// Reduce other thresholds by inverse of this activation strength
-			/*for (auto i = outsize_ - 1; i >= 0; --i) {
-				if (d.first == total_depol[i].first) break;
-				total_depol[i].second *= 1.0f - newoutput;
-			}*/
 
 			unit.outputs[d.first] = newoutput;
 		} else {

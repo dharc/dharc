@@ -20,7 +20,7 @@ namespace fabric {
 class Region {
 	public:
 	static constexpr auto kSuppressionRate = 0.5;
-	static constexpr auto kLearnRate = 0.1f;
+	static constexpr auto kLearnRate = 0.01f;
 	static constexpr auto kContrastMax = 10.0f;
 
 	Region(size_t width, size_t height, size_t unitsx, size_t unitsy);
