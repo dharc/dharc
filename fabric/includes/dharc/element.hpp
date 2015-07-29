@@ -68,8 +68,10 @@ template<size_t I>
 float dharc::Element<I>::integrate() const {
 	float energy = 0.0f;
 	for (auto i = 0U; i < I; ++i) {
-		energy += inputs_[i].get() / kEnergyLimit;
+		energy += inputs_[i].get();
 	}
+
+	energy /= kEnergyLimit;
 
 	// Limit to 1 and decay otherwise
 	if (energy > 1.0f) {
