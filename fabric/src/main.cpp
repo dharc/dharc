@@ -9,12 +9,10 @@
 
 #include "zmq.hpp"
 #include "dharc/rpc_server.hpp"
-#include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
 
 using std::cout;
 using std::string;
-using dharc::Node;
 using dharc::Fabric;
 
 void signal_handler(int param) {

@@ -204,7 +204,7 @@ void Region::processUnit(Unit &unit) {
 	for (auto i = 0U; i < outsize_; ++i) {
 		if (total_depol[i].second > 1.0f) {
 			//float excess = total_depol[i].second;
-			total_depol[i].second = 0.0f;
+			total_depol[i].second -= total_depol[i].second - 1.0f;
 		}
 	}
 

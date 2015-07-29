@@ -1,5 +1,4 @@
 set(FABRICSOURCE
-	src/harc.cpp
 	src/fabric.cpp
 	src/main.cpp
 	src/rpc.cpp

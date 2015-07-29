@@ -12,10 +12,7 @@
 #include <tuple>
 
 #include "dharc/rpc_commands.hpp"
-#include "dharc/node.hpp"
 #include "dharc/fabric.hpp"
-#include "dharc/harc.hpp"
-#include "dharc/parse.hpp"
 #include "dharc/rpc_packer.hpp"
 #include "dharc/rpc_server.hpp"
 
@@ -27,13 +24,8 @@ using std::string;
 using std::vector;
 using std::list;
 using std::pair;
-using dharc::Node;
-using dharc::fabric::Harc;
 using dharc::Fabric;
 using dharc::rpc::Command;
-using dharc::parser::Context;
-using dharc::parser::noact;
-using dharc::parser::value;
 
 namespace {
 
@@ -129,7 +121,6 @@ inline void callCmd<static_cast<int>(Command::end)>(
 
 
 void dharc::rpc::process_msg(istream &is, ostream &os) {
-	Context parse(is);
 	int cmd = 0;
 	is.read((char*)&cmd, sizeof(int));
 	//if (parse("{\"c\": ", value<int>{cmd}, ", \"args\": [", noact)) {
