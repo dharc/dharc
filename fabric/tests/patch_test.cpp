@@ -12,8 +12,8 @@ CASE( "Process Performance" ) {
 	auto *patch = new dharc::Patch<500,500,100,5,10,10>();
 
 	BEGIN_PERF;	
-	for (auto i = 0; i < 100; ++i) patch->process();
-	END_PERF(100, "ps");
+	for (auto i = 0; i < 1000; ++i) patch->process();
+	END_PERF(1000, "ps");
 }
 };
 

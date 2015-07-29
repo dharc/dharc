@@ -51,7 +51,7 @@ class Element : public ElementCore {
 
 	static constexpr float kEnergyLimit = 0.2f * (float)I;
 
-	float integrate() const;
+	inline float integrate() const;
 	static void learn(ElementCore *ele);
 
 	vector<Link*> deadLinks(size_t count);
@@ -65,10 +65,10 @@ class Element : public ElementCore {
 
 
 template<size_t I>
-float dharc::Element<I>::integrate() const {
+inline float dharc::Element<I>::integrate() const {
 	float energy = 0.0f;
 	for (auto i = 0U; i < I; ++i) {
-		energy += inputs_[i].get();
+		energy += inputs_[i].energy;
 	}
 
 	energy /= kEnergyLimit;
