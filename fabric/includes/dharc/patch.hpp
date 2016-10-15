@@ -19,37 +19,45 @@ struct ElementState {
 	void (*learn)(dharc::ElementCore *ele);
 };
 
-template<size_t X, size_t Y, size_t EPI, size_t MIN_FIELD, size_t MAX_FIELD, size_t ISTART>
-class Patch {
+struct ElementGenerator {
+	size_t sdepth;			// Start depth
+	size_t edepth;			// End depth
+	float density_mean;		// Mean density in centre of patch
+	float density_std;		// Standard deviation of density
+	size_t ifield;			// Input field size of these elements
+	float idecay;			// Input field decay rate
+	size_t ostart;			// Width of initial output field
+	float oexpand;			// Rate of output field expansion
+	size_t oend;			// min position of output field
+}
+
+class PatchBase {
+	public:
+	virtual ~PatchBase();
+
+	virtual void process();
+};
+
+template<size_t LINKS>
+class Patch : public PatchBase {
 	public:
 	Patch();
 	~Patch() {};
 
+	void setSize(size_t x, size_t y, size_t maxepi);
+	void makeElements(int groupid, ElementGenerator gen);
+
 	void process();
+	void getPrimaryLinks(vector<Link*> &links);
 
 	private:
-	//std::array<dharc::Element<I>, kISize> layerI_;
-	static constexpr size_t kInputStart = ISTART;
-	static constexpr float kInputDecay = 0.9f;
 
-	static constexpr size_t kModSizeX = X / 2;
-	static constexpr size_t kModSizeY = Y / 2;
-	static constexpr size_t kModSize = kModSizeX * kModSizeY;
-
-	static constexpr size_t kBlobSizeX = X / 5;
-	static constexpr size_t kBlobSizeY = Y / 5;
-	static constexpr size_t kBlobSizeZ = EPI / 5;
-	static constexpr size_t kBlobSize = kBlobSizeX * kBlobSizeY * kBlobSizeZ;
-
-	static constexpr float kDensityDecay = 0.5f;
-	static constexpr float kDensityMax = 0.3f;
-
-	static constexpr float integral(float startval, float decayrate, size_t count) {
+	/*static constexpr float integral(float startval, float decayrate, size_t count) {
 		return (count == 0) ? 0 :
 			startval + integral(startval * decayrate, decayrate, count - 1);
-	}
+	}*/
 
-	template <size_t I, size_t M>
+	/*template <size_t I, size_t M>
 	struct AnalysisPatch : public AnalysisPatch<I - 1, M> {
 		typedef AnalysisPatch<I - 1, M> previous;
 		static constexpr size_t kMiddle = M / 2 + ((M % 2) ? 1 : 0);
@@ -64,6 +72,7 @@ class Patch {
 		static constexpr size_t kSize = kSizeX * kSizeY * kSizeZ;
 		static constexpr float kToMod = (float)kModSize * kSizeZ / (float)kSize;
 		static constexpr float kToBlob = (float)kBlobSize / (float)kSize;
+		static constexpr float kToGlobal = (float)kGlobalSize / (float)kSize;
 
 		static_assert(kDensity > 0.0f, "Cannot have 0 density");
 		static_assert(kSize != 0, "Analysis patch size must not be 0");
@@ -82,6 +91,8 @@ class Patch {
 			if (v >= dharc::ElementCore::kThreshold) {
 				blobs[IXF(ix, kToBlob)].push_back(
 					dharc::ElementState{v, &elements[ix], dharc::Element<kInputs>::learn});
+			} else {
+				elements[ix].setFrequency(0);
 			}
 		}
 	};
@@ -91,15 +102,20 @@ class Patch {
 		static constexpr size_t kFieldSize = MIN_FIELD;
 	};
 
-	AnalysisPatch<7,7> analysis_;
+	AnalysisPatch<7,7> analysis_;*/
+
+	vector<Element<LINKS>> elements_;
+	vector<ElementCore> inputs_;
 };
 };
 
 
 
-template<size_t X, size_t Y, size_t EPI, size_t MIN_FIELD, size_t MAX_FIELD, size_t ISTART>
-dharc::Patch<X,Y,EPI,MIN_FIELD,MAX_FIELD,ISTART>::Patch() {
-
+template<size_t X, size_t Y, size_t EPI>
+dharc::Patch<X,Y,EPI>::Patch() {
+	// Initialise links, perform a field search for every single element.
+	// For each element of each field size, randomly generate links with the neighbours.
+	// Link strengths decay with distance...
 }
 
 
@@ -177,12 +193,70 @@ void dharc::Patch<X,Y,EPI,MIN_FIELD,MAX_FIELD,ISTART>::process() {
 				return a.depol > b.depol;
 			});
 
-			// Perform leveling operation
-			// Generate action potential
-			// Call learn()
+			float threshold = dharc::ElementCore::kThreshold;
+			float factor = 1.0f;
+
+			for (auto e : blobs[b]) {
+				// If it matched enough then
+				if (e.depol * factor >= threshold) {
+					float newoutput = (e.depol - threshold) * (1.0f / (1.0f - threshold)) * factor;
+					factor *= (1.0f - newoutput);
+					e.ele->setFrequency((uint8_t)(newoutput * 255.0f));
+					e.learn(e.ele);
+				} else {
+					e.ele->setFrequency(0);
+				}
+			}
 		}
 
-		// Forward outputs		
+		n = AnalysisPatch<1,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<1,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<2,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<2,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<3,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<3,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<4,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<4,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<5,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<5,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<6,7>::kSize;
+		#pragma omp for nowait
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<6,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
+
+		n = AnalysisPatch<7,7>::kSize;
+		#pragma omp for
+		for (auto i = 0U; i < n; ++i) {
+			auto &patch = static_cast<AnalysisPatch<7,7>&>(analysis_);
+			patch.elements[i].forward();
+		}
 	}
 }
 
